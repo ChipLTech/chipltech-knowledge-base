@@ -1,6 +1,26 @@
 # chipltech-knowledge-base
 
-Chipltech-Family Accelerator 工程知识库。面向 DLC Platform 开发者、算子 owner、模型适配工程师和 AI agent，提供 DLC Ecosystem 的项目背景、术语体系、调试经验、精度定位方法、算子接入指南、测试框架说明和真实问题复盘。
+Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
+
+## 核心用途：AI 任务时的"项目大脑"
+
+用 Kilo / Claude Code 等 AI 工具做 DLC 相关任务时，直接让 AI 先读这个仓库的 `CONTEXT.md`，它就能拿到：
+
+- **统一的术语体系**：不会再出现 TPU、CUDA core、Tensor Core 等错误叫法混淆上下文，AI 全程使用正式术语，沟通不走样。
+- **硬件架构和软件栈**：XYS、PGX、NWS 等硬件单元定义，DLC Ecosystem 组件关系，与 CUDA 的差异对比。
+- **算子 dispatch 机制**：KernelDesc、enabled kernels、CPU/DLC fallback 等基础知识。
+- **精度定位方法论**：CPU Reference、Hardware-Aware Reference、Model-Site Dump → pytorch_test 复现的完整流程。
+- **debug 命令速查和 Runtime 排障**：常用调试命令、环境检查、异步错误定位等。
+- **测试框架用法**：pytorch_test Framework、dlc_kernel_test Framework 的使用指南。
+- **真实 case study**：跨模型、跨算子的精度问题和运行时故障复盘，AI 可直接参考相似案例。
+
+相当于给 AI 配了一个"项目 onboarding 包"，不用每次重新解释项目背景。
+
+## 持续积累
+
+每个人做完一个任务，把过程中的优化经验、定位过程和踩坑总结写成文档，回写到这个仓库里——按问题域（精度、算子、Runtime、vLLM 等）组织，不按模型名组织。
+
+仓库越用越厚，后面做同类问题越查越快，AI 能直接定位到相似 case study，减少重复排查。
 
 ## 仓库定位
 
