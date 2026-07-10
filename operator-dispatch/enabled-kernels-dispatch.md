@@ -8,7 +8,7 @@
 
 ## 核心结论
 
-DLC 算子的 dispatch 模式由 `enabled_kernels.hpp` 中的 `DispatchType` 常量控制。源文件位于 `/work/DLC_Custom_Kernel/dlc_src/enabled_kernels.hpp`，安装后常见路径为 `/usr/local/chipltech/synapse/include/enabled_kernels.hpp`。将某个算子的 `DispatchType::DLC` 改为 `DispatchType::CPU` 后，重新编译 PyTorch，该算子将在 CPU 上执行。
+DLC 算子的 dispatch 模式由 `enabled_kernels.hpp` 中的 `DispatchType` 常量控制。源文件位于 `/work/DLC_Custom_Kernel/dlc_src/enabled_kernels.hpp`，安装后常见路径为 `/usr/local/chipltech/synapse/include/enabled_kernels.hpp`。将某个算子的 `DispatchType::DLC` 改为 `DispatchType::CPU` 后，**必须重新编译 PyTorch 并重新跑带 Synapse log 的用例**，才能确认该算子真的切到 CPU fallback。
 
 CPU fallback 是**定位手段**，不是生产修复方案。
 
@@ -58,12 +58,35 @@ const DispatchType custom_matmul_t_pingpong = DispatchType::CPU;
 
 ```bash
 cd /work/pytorch
-USE_CUDA=0 DEBUG=1 MAX_JOBS=32 python3 setup.py develop
+export PYTORCH_BUILD_VERSION=2.5.0
+export PYTORCH_BUILD_NUMBER=0
+USE_CUDA=0 python setup.py develop
 ```
 
 ### 5. 验证
 
-运行原有测试或用例，确认算子已在 CPU 上执行。
+不要只看 header 文本，按下面闭环验证：
+
+```bash
+export DLC_SYN_BLOCKING=1
+export DLC_SYN_DEBUG=1
+export DLC_SYN_LOG_DIR=/tmp/dlc_dispatch_check
+export DLC_SYN_PROF_DIR=/tmp/dlc_dispatch_check
+export DLC_SYN_PROF_CYCLE=1
+export DLC_SYN_VERBOSE=4
+```
+
+然后运行原有测试、模型命令或最小复现，拿到 `syn_*.ansi`，再生成 kernel 摘要：
+
+```bash
+cd /work/llama2-fine-tune
+python3 tool.py /tmp/dlc_dispatch_check/syn_XXXX.ansi
+```
+
+判断标准：
+
+- 出现 `is redispatched to cpu`：dispatch key 真正走 CPU fallback
+- 仍出现 `launch custom_xxx on dlc:0`：runtime 仍在走 DLC，通常说明未 rebuild、生效 header 不对、或命中其他路径
 
 ## lambda name ≠ launch kernel name 常见案例
 
@@ -90,17 +113,24 @@ USE_CUDA=0 DEBUG=1 MAX_JOBS=32 python3 setup.py develop
 
 修改后，通过以下方式验证 fallback 生效：
 
-1. 用 `DLC_SYN_DEBUG=1 DLC_SYN_VERBOSE=1` 确认该算子不再出现在 DLC launch trace 中。
-2. 用精度对比确认 CPU 结果与预期一致。
-3. 做单变量实验：改回 `DLC` 确认问题重现，改回 `CPU` 确认问题消失。
+1. 用 `DLC_SYN_DEBUG=1 DLC_SYN_VERBOSE=4` 生成 `syn_*.ansi`。
+2. 用 `python3 tool.py <syn_*.ansi>` 生成 `*_kernels.txt`，快速查看本次 run 实际 launch 了哪些 kernel。
+3. 同时检查 `syn_*.ansi` 和 `*_kernels.txt`：
+   - 是否出现 `is redispatched to cpu`
+   - 是否仍出现 `launch custom_xxx on dlc:0`
+4. 用精度对比确认 CPU 结果与预期一致。
+5. 做单变量实验：改回 `DLC` 确认问题重现，改回 `CPU` 确认问题消失。
 
 ## 相关资料
 
 - [CONTEXT.md](../CONTEXT.md) — DispatchType、DLC_CHECK_RESULT 定义
 - [pytorch-dlc-backend/operator-integration-guide.md](../pytorch-dlc-backend/operator-integration-guide.md) — 算子接入和 dispatch 源码定位
 - [precision-debugging/precision-debugging-overview.md](../precision-debugging/precision-debugging-overview.md) — dispatch fallback 在精度定位中的使用
+- [operator-dispatch/dispatch-key-and-runtime-kernel-mapping.md](dispatch-key-and-runtime-kernel-mapping.md) — dispatch key 与 runtime kernel 的关系
+- [debugging-workflows/synapse-log-and-kernel-summary-workflow.md](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md) — 生成 `syn_*.ansi` 和 `*_kernels.txt` 的标准流程
 
 ## 来源
 
 - `/work/plans/算子dispatch.md`
+- `/work/plans/PyTorch_DLC算子插入_dispatch与runtime_kernel映射说明.md`
 - 多个 RSThinker handoff 中的 dispatch 操作经验

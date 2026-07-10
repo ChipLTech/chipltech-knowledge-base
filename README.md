@@ -13,6 +13,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - **debug 命令速查和 Runtime 排障**：常用调试命令、环境检查、异步错误定位等。
 - **测试框架用法**：pytorch_test Framework、dlc_kernel_test Framework 的使用指南。
 - **真实 case study**：跨模型、跨算子的精度问题和运行时故障复盘，AI 可直接参考相似案例。
+- **常用 prompt 示例**：团队内部沉淀的高频、好用的业务 prompt 模板，便于同事直接复用。
 
 相当于给 AI 配了一个"项目 onboarding 包"，不用每次重新解释项目背景。
 
@@ -46,6 +47,13 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 5. **[testing/pytorch-test-framework-guide.md](testing/pytorch-test-framework-guide.md)** 和 **[testing/dlc-kernel-test-framework-guide.md](testing/dlc-kernel-test-framework-guide.md)** — 理解两个测试框架的用法和区别。
 6. **[case-studies/paraformer-qkv-linear-precision.md](case-studies/paraformer-qkv-linear-precision.md)** — 读一个从模型 failure 到 pytorch_test 复现的完整案例。
 7. 根据当前任务，按需查阅对应专题文档。
+
+## Prompt 示例约定
+
+- 定稿后或已经在实际工作中证明“常用、好用、值得复用”的 prompt 示例，应同步沉淀到 `prompt-examples/`。
+- `prompt-examples/` 用来存放团队成员在日常工作中总结出的可直接复制使用的 prompt 模板，不放临时实验记录，不放一次性的聊天草稿。
+- 如果后续同事又产出了新的高频好用 prompt，也统一放到 `chipltech-knowledge-base/prompt-examples/` 目录下维护。
+- 这类文档的目标是“拿来即用”，所以优先保持结构清晰、占位符明确、少背景解释。
 
 ## 快速入口
 
@@ -92,6 +100,7 @@ chipltech-knowledge-base/
 ├── vllm-dlc/                   # vLLM DLC Custom Op、DLC Attention Backend、KV cache
 ├── debugging-workflows/        # VSCode 调试、日志分析、trace 分析
 ├── case-studies/               # 跨模型的真实问题复盘
+├── prompt-examples/            # 团队沉淀的常用、好用、可直接复用的 prompt 示例
 ├── agent-context/              # agent 使用的浓缩上下文和模板
 └── assets/                     # 图片等静态资产
 ```
@@ -103,3 +112,4 @@ chipltech-knowledge-base/
 - **术语以 CONTEXT.md 为准**：所有文档引用统一术语，不重复定义。
 - **区分事实、经验和未验证假设**：避免把经验性判断当成硬性结论。
 - **敏感信息必须移除**：API key、密码、token、个人敏感信息不得写入。
+- **常用 prompt 示例要沉淀到 `prompt-examples/`**：如果某个 prompt 在实际工作中已经证明常用、好用、值得复用，就放到 `chipltech-knowledge-base/prompt-examples/`，不要只留在个人 plans 或聊天记录里。
