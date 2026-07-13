@@ -73,7 +73,12 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 ### Runtime / Debug 入口
 
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
+- [runtime-debugging/dlc-workstation-env-rebuild.md](runtime-debugging/dlc-workstation-env-rebuild.md) — DLC 工作站环境重建总流程，覆盖 repo discovery、branch 安全规则、构建顺序、PyTorch wheel 重建、`vllm` / `vllm-dlc` 安装与最终 smoke。
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
+- [debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md) — PyTorch 2.5.0 wheel 与本地 `vllm` / `vllm-dlc` editable install 的 build preflight 清单。
+- [debugging-workflows/post-install-runtime-smoke.md](debugging-workflows/post-install-runtime-smoke.md) — 安装后的最小 runtime smoke 和失败回退路径。
+
+如需让 agent 自动执行 repo discovery、阶段化重建和 smoke，可配合 `/work/skills/skills/engineering/dlc-env-setup/` 中的 `dlc-env-setup` skill 使用。
 
 ## Agent 使用方式
 
