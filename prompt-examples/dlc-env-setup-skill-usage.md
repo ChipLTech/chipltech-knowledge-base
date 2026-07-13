@@ -48,6 +48,8 @@
 1. 先做 repo discovery，不要默认 `/home/workspace`。
    - 找到这些仓库：`cmake-3.27.0`、`dlc-thunk`、`DLCsim`、`DLCSynapse`、`DLC_CL`、`LLVM`、`DLC_Custom_Kernel`、`pytorch`。
    - 如果【是否包含 vllm / vllm-dlc】是“是”，再额外找到 `vllm` 和 `vllm-dlc`。
+   - 如果缺少关键仓库，先不要在这个模板里直接发明初始化步骤，转而参考：`/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`
+   - 只有当初始化完成、关键仓库已经齐备后，才继续当前重建模板。
    - 把最终 repo map 原样回显给我。
    - 找到后，把这些路径整理成后续步骤统一复用的 shell 变量：
      - `CMAKE_SRC`
@@ -71,6 +73,8 @@
    - 如果有同名仓库多个候选路径，先停下来说明候选项，不要擅自选。
 
 2. 对每个关键仓库验证入口文件：
+   - `cmake-3.27.0/bootstrap`
+   - `cmake-3.27.0/CMakeLists.txt`
    - `dlc-thunk/compile.sh`
    - `DLCsim/build.sh`
    - `DLCSynapse/compile.sh`
@@ -91,7 +95,7 @@
    - 所有需要联动切换的仓库都切好并确认后，再开始构建。
 
 4. 按依赖顺序重建，除非【模式】明确要求从中间阶段开始：
-   - CMake 3.27
+   - CMake 3.27.0 安装和版本验证
    - `dlc-thunk`
    - `DLCsim`
    - `DLCSynapse`
@@ -113,13 +117,15 @@
    - 如果【模式】是“只重装 wheel”，先确认 `dist/` 里已经存在 fresh `torch-2.5.0*.whl`。
    - 如果你无法确认更早阶段依赖仍然健康，就不要跳阶段，回退到更早阶段重建。
 
-5. CMake 3.27 阶段必须检查：
-   - `/usr/local/bin/cmake --version`
-   - `command -v cmake ctest cpack`
-   - `cmake --version`
-   - `ctest --version`
-   - `cpack --version`
-   - 如果遇到 OpenSSL 头文件缺失，先提示 `libssl-dev` 问题，再决定是否继续。
+5. CMake 3.27.0 阶段必须检查：
+   - 如果 `/usr/local/bin/cmake --version` 不是 `3.27.0`，先停止，并转去参考初始化模板：`/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`
+   - 只有当初始化模板已经把 CMake 3.27.0 安装好后，才继续当前重建模板。
+   - 当前模板里必须检查：
+     - `/usr/local/bin/cmake --version`
+     - `command -v cmake ctest cpack`
+     - `cmake --version`
+     - `ctest --version`
+     - `cpack --version`
 
 6. PyTorch 阶段必须先做 preflight：
    - 安装或升级 `typing_extensions`、`packaging`、`setuptools`、`setuptools-scm`、`wheel`、`ninja`、`jinja2`
@@ -202,11 +208,12 @@
    - 说明应该回退到哪一层处理
    - 不要在失败状态下盲目继续到后续阶段
    - 优先采用这些已验证回退路径，而不是临时发明新方案：
-     - CMake 因 `openssl/*.h` 失败：先补 `libssl-dev`，再从 CMake 阶段重来
-     - LLVM 失败：优先重试 `./build.sh -r`
-     - PyTorch 失败：先 `make clean`，再重建 wheel
-     - `DLC_Custom_Kernel` 失败：继续坚持显式 `/usr/bin/ninja` 路线
-     - repo discovery 出现多个同名候选路径：停下来让用户确认 authoritative root
+      - 关键 repo 缺失：转去参考 `/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`
+      - `cmake-3.27.0` 缺失或默认 `cmake` 不是 `3.27.0`：转去参考 `/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`
+      - LLVM 失败：优先重试 `./build.sh -r`
+      - PyTorch 失败：先 `make clean`，再重建 wheel
+      - `DLC_Custom_Kernel` 失败：继续坚持显式 `/usr/bin/ninja` 路线
+      - repo discovery 出现多个同名候选路径：停下来让用户确认 authoritative root
 
 交付物必须包括：
 - 最终 repo map。
@@ -264,23 +271,27 @@
    - 验证 `torch.tensor([0.1], dtype=torch.float32).numpy()`
    - 验证 `torch.backends.dlc` 是否可用
 2. 如果 PyTorch wheel 不健康，立即停止，并明确说明这不是单纯的 `vllm` 问题。
-3. 如果 PyTorch wheel 健康，再做 `vllm` preflight：
-   - 先确认 Python 版本在 `>=3.10,<3.12`
-   - `pip`、`packaging`、`setuptools`、`setuptools-scm`、`wheel`、`ninja`、`jinja2`
-   - `pybind11`
-   - `grpcio-tools`
-4. 优先用 editable install 最小修复：
+3. 先检查 `vllm` 和 `vllm-dlc` 仓库是否都存在。
+   - 如果缺少任意一个，不要在这个模板里临时发明初始化步骤，转去参考：`/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`
+   - 只有当 `vllm` 和 `vllm-dlc` 仓库都已齐备后，才继续当前 repair 模板。
+4. 如果 PyTorch wheel 健康，再做 `vllm` preflight：
+    - 先确认 Python 版本在 `>=3.10,<3.12`
+    - `pip`、`packaging`、`setuptools`、`setuptools-scm`、`wheel`、`ninja`、`jinja2`
+    - `pybind11`
+    - `grpcio-tools`
+    - 同时确认当前本地 `vllm` 与 `vllm-dlc` 至少在 Python import surface 上兼容；如果 `vllm-dlc` 代码引用的 `vllm.*` 模块在当前 `vllm` 仓库里根本不存在，先停止并要求对齐这两个仓库的匹配分支，而不是盲目继续安装
+5. 优先用 editable install 最小修复：
    - `vllm` 默认先走：`VLLM_TARGET_DEVICE=empty python3 -m pip install -v -e . --no-build-isolation`
    - metadata 坏了就优先修 metadata
    - 如果只是 metadata 损坏，优先走：`VLLM_TARGET_DEVICE=empty python3 -m pip install -v -e . --no-build-isolation --no-deps`
    - `UNKNOWN` 先清掉再重装
    - 只在需要时才扩展到依赖 churn
-5. 如果 `vllm-dlc` 里引用的 wheel 路径是别的机器路径，指出并改成当前机器真实 wheel 路径，例如把错误的 `file:///root/.../torch-2.5.0...whl` 改成当前机器真实存在的 wheel 路径。
-6. 安装 `vllm-dlc` 前先确保已经安装 `pybind11` 和 `grpcio-tools==1.78.0`，然后显式走：
+6. 如果 `vllm-dlc` 里引用的 wheel 路径是别的机器路径，指出并改成当前机器真实 wheel 路径，例如把错误的 `file:///root/.../torch-2.5.0...whl` 改成当前机器真实存在的 wheel 路径。
+7. 安装 `vllm-dlc` 前先确保已经安装 `pybind11` 和 `grpcio-tools==1.78.0`，然后显式走：
    - `python3 -m pip install -v -e . --no-build-isolation`
-7. 如果安装后仍残留 `triton`，按原始 skill 路线显式清理：
+8. 如果安装后仍残留 `triton`，按原始 skill 路线显式清理：
    - `python3 -m pip uninstall -y triton`
-8. 最后在源码树外验证：
+9. 最后在源码树外验证：
    - `import vllm`
    - `import vllm_dlc`
    - `pip show vllm`
@@ -313,3 +324,5 @@
 3. branch 切换前发现未提交改动。
 4. PyTorch wheel 未通过源码树外 smoke。
 5. `vllm` repair 实际暴露的是底层 PyTorch 问题，而不是 packaging 问题。
+6. `vllm` 或 `vllm-dlc` 仓库本地根本不存在，应先转去 bootstrap 模板初始化。
+7. `vllm-dlc` 依赖的 `vllm` Python 模块路径在当前本地 `vllm` 仓库中不存在，说明两个仓库版本不匹配，应先对齐匹配分支。
