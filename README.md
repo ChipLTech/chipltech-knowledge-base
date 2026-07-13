@@ -54,6 +54,8 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - `prompt-examples/` 用来存放团队成员在日常工作中总结出的可直接复制使用的 prompt 模板，不放临时实验记录，不放一次性的聊天草稿。
 - 如果后续同事又产出了新的高频好用 prompt，也统一放到 `chipltech-knowledge-base/prompt-examples/` 目录下维护。
 - 这类文档的目标是“拿来即用”，所以优先保持结构清晰、占位符明确、少背景解释。
+- `prompt-examples/dlc-env-setup-skill-usage.md` 用于直接调用 `dlc-env-setup` skill 做环境重建或修复。
+- `prompt-examples/dlc-env-setup-fresh-container-validation.md` 用于在全新容器中验证 `dlc-env-setup` 的 Kilo 暴露、调用方式和功能闭环。
 
 ## 快速入口
 
