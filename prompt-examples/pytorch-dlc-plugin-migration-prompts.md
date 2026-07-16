@@ -178,7 +178,7 @@
 
 ## 相关资料
 
-- [实际业务skill使用示例.md](实际业务skill使用示例.md)
-- [../CONTEXT.md](../CONTEXT.md)
-- [../operator-dispatch/enabled-kernels-dispatch.md](../operator-dispatch/enabled-kernels-dispatch.md)
-- [../runtime-debugging/runtime-troubleshooting.md](../runtime-debugging/runtime-troubleshooting.md)
+- [DLC 业务 skill 使用示例](实际业务skill使用示例.md)
+- [Chipltech-Family Accelerator 术语和规则](../CONTEXT.md)
+- [enabled_kernels Dispatch 与 CPU Fallback](../operator-dispatch/enabled-kernels-dispatch.md)
+- [Runtime 排障指南](../runtime-debugging/runtime-troubleshooting.md)
