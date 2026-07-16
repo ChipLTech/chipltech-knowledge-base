@@ -33,6 +33,7 @@
 
 先读取：
 - /work/chipltech-knowledge-base/CONTEXT.md
+- /work/chipltech-knowledge-base/README.md
 - <迁移计划文档>
 - <当前进度文档>
 
