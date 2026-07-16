@@ -98,6 +98,7 @@
 
 先读取：
 - /work/chipltech-knowledge-base/CONTEXT.md
+- /work/chipltech-knowledge-base/README.md
 - <权威计划文档>
 - <当前进度或日报>
 - 最近相关提交和工作树状态
