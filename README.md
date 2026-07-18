@@ -56,6 +56,8 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - 这类文档的目标是“拿来即用”，所以优先保持结构清晰、占位符明确、少背景解释。
 - `prompt-examples/dlc-env-setup-skill-usage.md` 用于直接调用 `dlc-env-setup` skill 做环境重建或修复。
 - `prompt-examples/dlc-env-setup-fresh-container-validation.md` 用于在全新容器中验证 `dlc-env-setup` 的 Kilo 暴露、调用方式和功能闭环。
+- [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
+- [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
 
 ## 快速入口
 
@@ -79,6 +81,12 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
 - [debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md) — PyTorch 2.5.0 wheel 与本地 `vllm` / `vllm-dlc` editable install 的 build preflight 清单。
 - [debugging-workflows/post-install-runtime-smoke.md](debugging-workflows/post-install-runtime-smoke.md) — 安装后的最小 runtime smoke 和失败回退路径。
+
+### vLLM-DLC workflow
+
+- [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](vllm-dlc/model-adaptation-and-main-to-main-decisions.md) — Model Adaptation 与 Main-to-Main Upgrade 的稳定决策、证据分类和当前只读边界。
+- [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) — Model Adaptation 可复用 prompt。
+- [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) — Main-to-Main Upgrade 可复用 prompt。
 
 如需让 agent 自动执行 repo discovery、阶段化重建和 smoke，可配合 `/work/skills/skills/engineering/dlc-env-setup/` 中的 `dlc-env-setup` skill 使用。
 

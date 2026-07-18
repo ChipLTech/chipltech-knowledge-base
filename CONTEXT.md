@@ -134,6 +134,9 @@
 
 **DLC Runtime Capability Boundary**：host 侧 custom kernel launch 支持与 CUDA 式 device 侧持久运行时控制之间的能力分界。
 
+**Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
+禁止使用：`alignment` 指未经强制回归验证的推测组合。
+
 ## 高效术语速查表
 
 | 禁用叫法 | 应使用 |
