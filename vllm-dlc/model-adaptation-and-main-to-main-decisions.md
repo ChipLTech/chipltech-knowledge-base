@@ -50,6 +50,7 @@ shared_contract: vllm-dlc-contract/v1
 - **经验 / Experience**：Qwen3.5-27B 类模型可能对 prompt 长度和 one-shot/CoT 结构敏感，表现为重复 `!`、空输出、长解释、超时或答案截断。此类现象应作为模型/参数/长上下文风险记录，不得把短 prompt smoke 通过提升为长上下文或 one-shot 已验证。
 - **建议 / Recommendation**：量化与 MoE 模型适配必须核对 `quant_method`、`bits`、`group_size`、`zero_point`、processor/tokenizer 类型和实际 kernel 路由。`compressed-tensors`、AWQ、AWQ-Marlin、W4A16、W8A16 不能只按目录名判断兼容。
 - **事实 / Fact**：如果当前 DLC 软件栈缺少目标量化/MoE fused kernel，Python 层绕路或修改模型 config 不构成长期适配完成；应报告为 kernel capability gap 或 `not_verified`，并说明需要 DLC Custom Op / DLC_Custom_Kernel Repository 支持。
+- **建议 / Recommendation**：需要 serving 稳定性或性能补充证据时，可引用 Arsenal 的 vLLM benchmark 和黑盒 HTTP 测试入口；这些结果应作为 serving 层 evidence 记录，不得提升为 Verified vLLM Alignment 或 Real DLC Hardware acceptance。
 
 ## Skill 所有权
 
@@ -107,3 +108,4 @@ shared_contract: vllm-dlc-contract/v1
 - [Model Adaptation reusable prompt](../prompt-examples/vllm-dlc-model-adaptation.md)
 - [Main-to-Main Upgrade reusable prompt](../prompt-examples/vllm-dlc-main-to-main-upgrade.md)
 - [precision-debugging/token-divergence-and-moe-contract-debugging.md](../precision-debugging/token-divergence-and-moe-contract-debugging.md)
+- [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)

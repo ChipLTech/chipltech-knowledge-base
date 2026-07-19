@@ -86,21 +86,24 @@ peek_multi.sh -s status
 ## 驱动版本
 
 ```bash
-# 获取驱动版本
-# 方式取决于驱动版本获取命令
+# 获取设备、固件、驱动和产品信息
+cltech_smi -q
+cltech_smi --versioncheck
 ```
 
 ## RDMA 和多卡
 
 ```bash
-# 验证 RDMA
-# 使用 RDMA 验证工具
+# DLCCL/LYP 检查
+cltech_smi --dlcclcheck
+cltech_smi --lypcheck=dlc_info_agg --verbose
 
-# 多卡连通性验证
-# 使用多卡连通性测试工具
+# 根据 loopcheck 结果输出 LYP link topology
+cltech_smi --loopcheck --verbose
+cltech_smi --lypportcheck
 
-# 检查是否掉卡
-# 查看设备列表
+# DLCCL hang 关系分析，需要目标设备排障授权
+python3 /work/arsenal/dlccl_check.py 0 1 2 3
 ```
 
 ## 硬件速度检查
@@ -123,11 +126,13 @@ peek_multi.sh -s status
 ## 版本信息
 
 ```bash
-# 检查各仓库版本；当前 /work 下确认存在的是 shell 入口
-/work/check_version.sh
+# Arsenal 版本检查工具
+python3 /work/arsenal/check_version.py
+python3 /work/arsenal/check_version.py offline
+python3 /work/arsenal/check_version.py --summary
 ```
 
-未在 `/work` 顶层发现 `check_version.py`；如需 Python 版本检查脚本，先确认具体仓库内是否另有工具。
+版本检查只能作为本地安装版本线索；无法读取时保持 `N/A` 或 `Unknown`，不要猜测。
 
 ## 多卡单算子测试
 
@@ -167,9 +172,13 @@ import torch.distributed as dist
 - [runtime-debugging/runtime-troubleshooting.md](../runtime-debugging/runtime-troubleshooting.md)
 - [runtime-debugging/common-error-log.md](../runtime-debugging/common-error-log.md)
 - [runtime-debugging/environment-setup-and-update.md](../runtime-debugging/environment-setup-and-update.md)
+- [runtime-debugging/chipltech-smi-observability.md](../runtime-debugging/chipltech-smi-observability.md)
+- [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 - [debugging-workflows/vscode-debug-setup.md](vscode-debug-setup.md)
 
 ## 来源
 
 - `/work/plan/dlc基础/DLC常用调试指令和方法.md`
 - `/work/plan/dlc基础/报错问题记录.md`
+- `/work/chipltech_smi_lib/README.md`
+- `/work/arsenal/README.md`

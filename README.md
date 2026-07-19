@@ -74,11 +74,13 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [pytorch-dlc-backend/operator-integration-guide.md](pytorch-dlc-backend/operator-integration-guide.md) — PyTorch DLC Backend 算子接入。
 - [operator-dispatch/enabled-kernels-dispatch.md](operator-dispatch/enabled-kernels-dispatch.md) — enabled kernels dispatch 机制和 CPU fallback 方法。
 - [testing/](testing/) — pytorch_test Framework、PyTorch 原生测试、Static Shape Test、Dynamic Fuzz Test。
+- [testing/arsenal-ci-and-blackbox-testing.md](testing/arsenal-ci-and-blackbox-testing.md) — Arsenal CI、vLLM benchmark、黑盒 HTTP 测试和 DLCCL hang 分析入口。
 - [vllm-dlc/custom-op-integration-and-testing.md](vllm-dlc/custom-op-integration-and-testing.md) — vLLM DLC Custom Op 接入。
 
 ### Runtime / Debug 入口
 
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
+- [runtime-debugging/chipltech-smi-observability.md](runtime-debugging/chipltech-smi-observability.md) — `cltech_smi` 设备观测、debug 上传和 operational evidence 边界。
 - [runtime-debugging/dlc-workstation-env-rebuild.md](runtime-debugging/dlc-workstation-env-rebuild.md) — DLC 工作站环境重建总流程，覆盖 repo discovery、branch 安全规则、构建顺序、PyTorch wheel 重建、`vllm` / `vllm-dlc` 安装与最终 smoke。
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
 - [debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md) — PyTorch 2.5.0 wheel 与本地 `vllm` / `vllm-dlc` editable install 的 build preflight 清单。

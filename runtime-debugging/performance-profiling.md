@@ -89,12 +89,20 @@ vLLM worker
 - trace 观察：copy/to/clone/contiguous、host scheduling、DLC Runtime queue/sync、TP 等待。
 - chunk size 对比：如果 `max_num_batched_tokens` 增大后 TTFT 反而变差，优先检查单步 tensor 尺寸、数据搬运、cache 写入和 TP 通信颗粒，而不是只归因于 chunk 数量。
 
+## Arsenal vLLM Benchmark 指标入口
+
+`/work/arsenal/vllm_benchmark_serving_script/` 提供了一个轻量 pipeline：启动 vLLM server、运行 `benchmark_serving.py`、从 client log 中提取 CSV。适合做模型 serving 性能横向对比，重点指标包括 request throughput、token throughput、TTFT、TPOT 和 ITL 的 mean/median/P99。
+
+使用时必须同时保存 server command、client command、模型路径、输入/输出长度、请求数量、dtype、TP/PP、Chunked Prefill、prefix caching 和日志目录。benchmark success 只证明该 workload 下服务跑完，不证明模型正确性、DLC Runtime dispatch 或 Real DLC Hardware acceptance。
+
 ## 相关资料
 
 - [runtime-debugging/runtime-troubleshooting.md](../runtime-debugging/runtime-troubleshooting.md)
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
+- [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 
 ## 来源
 
 - `/work/plan/newraw/TPU Profile 工具简介.docx`（已转换为 Markdown）
 - `/work/test/同事文档/DLC FlashAttention _ BLASST 在 vLLM Llama3.1-8B 64k Chunked Prefill 场景中的可行性评估.md`
+- `/work/arsenal/vllm_benchmark_serving_script/`

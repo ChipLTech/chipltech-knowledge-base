@@ -154,10 +154,15 @@ LYP 初始化或 repair 可以恢复多卡通信，但它不是模型 acceptance
 
 详见 [environment-setup-and-update.md](environment-setup-and-update.md)。
 
+## SMI 观测入口
+
+需要设备列表、HBM、功耗、温度、固件版本、进程占用或 debug 采集时，优先参考 [chipltech-smi-observability.md](chipltech-smi-observability.md)。`cltech_smi` 的 query-only 输出可以作为设备观测材料；reset、LYP repair、debug 上传和硬复位属于有副作用或外部通信的操作，必须明确授权。
+
 ## 相关资料
 
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
 - [runtime-debugging/environment-setup-and-update.md](environment-setup-and-update.md)
+- [runtime-debugging/chipltech-smi-observability.md](chipltech-smi-observability.md)
 - [CONTEXT.md](../CONTEXT.md) — DLCSynapse、DLC Runtime 等术语定义
 
 ## 来源
