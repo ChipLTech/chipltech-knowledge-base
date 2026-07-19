@@ -10,10 +10,27 @@
 
 ## 使用前提
 
-- 先确认 `/work/skills` 位于 commit `3f04504`，或重新阅读当前 `SKILL.md` 与脚本并以当前内容为准。
+- 以当前 `/work/skills/skills/engineering/dlc-env-setup/SKILL.md` 与同目录脚本为准；不要固定旧 commit。若怀疑本地 skill 未更新，先在 `/work/skills` 执行 `git status --short --branch` 并确认已同步到团队当前主线。
 - 全局安装：在 `/work/skills` 运行 `./scripts/link-kilo-skills.sh --with-commands`。
 - 项目本地安装：运行 `./scripts/link-kilo-skills.sh --project /path/to/project --with-commands`，链接写入项目的 `.kilo/skills` 和 `.kilo/command`。
 - linker 会清理其明确列出的 retired skill symlink 和生成式 command alias；真实文件/目录不会被删除。若旧 alias 不是该脚本可识别的 symlink 或生成文件，应先报告并由用户决定，不要手工盲删。
+
+## 和 Model Adaptation 的推荐串联方式
+
+可以、而且推荐把每日空镜像里的新模型工作拆成两个阶段：
+
+```text
+先 dlc-env-setup，把空每日镜像变成健康 DLC Ecosystem 工作站
+再 model-adaptation，对新模型做 vLLM-DLC / DLC Platform 适配分析
+```
+
+边界如下：
+
+- `dlc-env-setup` 负责环境层：repo discovery、Git 安全检查、DLC Ecosystem 分阶段重建、PyTorch 2.5.0 wheel、本地 `vllm` / `vllm-dlc` repair、源码树外 runtime smoke。
+- `model-adaptation` 负责模型层：在已健康环境上分析一个明确模型的 loading/serving 兼容性、deployment profile、模型级 Attention/tokenizer/processor/distributed 边界和 evidence 缺口。
+- 第一阶段未通过 `runtime-smoke.sh /tmp` 和请求范围内的 `vllm` / `vllm-dlc` import 验证时，不进入第二阶段。
+- 第二阶段不得把环境初始化结果当作新模型的 Real DLC Hardware acceptance、DLC Runtime dispatch 或 Verified vLLM Alignment 证据。
+- 可直接使用 [vllm-dlc-fresh-image-to-model-adaptation.md](vllm-dlc-fresh-image-to-model-adaptation.md) 作为两阶段 prompt 模板。
 
 ## 全量或分阶段重建
 
@@ -149,7 +166,7 @@
 
 ## 相关资料
 
-- `/work/skills/skills/engineering/dlc-env-setup/SKILL.md`（commit `3f04504`）
+- `/work/skills/skills/engineering/dlc-env-setup/SKILL.md`（以当前团队主线为准）
 - `/work/skills/skills/engineering/dlc-env-setup/scripts/pytorch-preflight.sh`
 - `/work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh`
 - `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh`
