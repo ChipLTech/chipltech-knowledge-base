@@ -28,6 +28,7 @@ claim_boundary: operational_or_not_verified_only
 - 第二阶段是模型兼容性分析，不负责重建 DLC Ecosystem。
 - 第一阶段通过只说明环境健康；不证明新模型已经 Real DLC Hardware accepted、Verified vLLM Alignment、DLC Runtime dispatch 或 request-correlated Chunked Prefill。
 - 第二阶段如果缺少模型资产、revision、deployment profile、硬件条件或 artifact destination，应先报告 blocker，不要继续假装完成。
+- `/mnt/jfs/models` 是团队模型文件服务器挂载根目录，模型路径优先从这里选择并记录完整绝对路径。
 - 所有 artifact destination 必须在 `vllm-dlc` 源码树外。
 
 ## 可复制 Prompt
@@ -46,6 +47,7 @@ claim_boundary: operational_or_not_verified_only
 1. 先把这个空每日镜像初始化成健康 DLC Ecosystem 工作站。
 2. 环境健康后，再对一个明确新模型做 vLLM-DLC / DLC Platform 适配分析。
 3. 不把环境初始化结果提升成新模型 acceptance、Verified vLLM Alignment 或 Real DLC Hardware 权威证据。
+4. 新模型验证按阶梯推进：先短 prompt serving smoke，再逐步扩展到长 prompt / one-shot 敏感场景。
 
 阶段 1：环境初始化，使用 `dlc-env-setup`
 
@@ -75,6 +77,11 @@ claim_boundary: operational_or_not_verified_only
 只有阶段 1 明确通过后，才能进入阶段 2。
 
 阶段 2：新模型适配分析，使用 `model-adaptation`
+
+模型文件来源：
+- 团队模型文件服务器根目录: `/mnt/jfs/models`
+- 目标模型目录: <例如 /mnt/jfs/models/Qwen3.5-27B>
+- 如果目标模型不在 `/mnt/jfs/models` 下，先报告原因、来源和完整路径，不要猜测或下载替代模型。
 
 模型身份：
 - model ID: <MODEL_ID>
@@ -107,6 +114,21 @@ deployment profile：
 - 不继承 Ticket 06 v12 operational evidence 给这个新 target。
 - 未针对该新模型执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
 - 输出写到声明的外部 artifact destination。
+
+阶段 2 serving smoke 阶梯：
+1. 先做短 prompt serving smoke。
+   - 使用短文本 prompt。
+   - 优先 `temperature=0`、`top_p=1.0`。
+   - `max_tokens` 先用 64 或 128。
+   - 目标是验证模型能加载、API 能返回非空生成结果、server liveness 正常。
+2. 短 prompt 通过后，再扩展到中等长度 prompt。
+   - 仍保持 greedy / deterministic 参数。
+   - 观察是否出现空输出、重复符号、明显降速或截断。
+3. 中等长度通过后，再验证长 prompt / one-shot 敏感场景。
+   - 可参考同事文档中 Qwen3.5-27B 的 one-shot、长 padding 和 CoT 敏感案例。
+   - 每次只改变一个变量：prompt 长度、one-shot 结构、temperature、`max_tokens` 或 Chunked Prefill 相关参数。
+   - 出现重复 `!`、空输出、速度下降或 timeout 时，记录 prompt token 数、decode 参数、返回内容、finish reason、server liveness 和日志位置。
+4. 不要把短 prompt smoke 通过解释为长上下文、Chunked Prefill runtime、DLC Runtime dispatch 或 Real DLC Hardware acceptance 已验证。
 ```
 
 ## 相关资料
