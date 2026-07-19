@@ -1,10 +1,10 @@
 # 新容器中验证 `dlc-env-setup` skill 的安装、识别与工作流
 
-面向全新容器或全新工作站环境的验证手册。验证以 `/work/skills` commit `3f04504` 中维护的 `dlc-env-setup` skill、安装脚本和稳定 skill 集合为准，并遵循知识库 `CONTEXT.md` 的 DLC Ecosystem 术语。
+面向全新容器或全新工作站环境的验证手册。验证以当前 `/work/skills` 主线中维护的 `dlc-env-setup` skill、安装脚本和稳定 skill 集合为准，并遵循知识库 `CONTEXT.md` 的 DLC Ecosystem 术语；commit `3f04504` 只作为最低兼容基线，不覆盖后续维护源。
 
 验证分为四层：
 
-1. **来源验证**：确认 `/work/skills` 正好位于 `3f04504`，或当前 commit 是它的后代。
+1. **来源验证**：确认 `/work/skills` 位于团队当前主线；若做最低兼容验证，确认当前 commit 包含 `3f04504`。
 2. **安装与暴露验证**：确认全局或项目级 skill symlink 和 slash command wrapper 正确生成，并清理旧别名。
 3. **识别与工作流理解验证**：确认 Kilo 识别 `dlc-env-setup`，并依据当前 `SKILL.md` 说明工作流和停止条件。
 4. **执行验证**：在真实 DLC Ecosystem 仓库和依赖齐全时，验证 rebuild、安装和源码树外 smoke 闭环。
@@ -22,7 +22,7 @@
 
 - 新容器刚准备安装 `skills` 和 `chipltech-knowledge-base`。
 - 需要确认 `dlc-env-setup` 不只是仓库文件，而是已被 Kilo 暴露和识别。
-- 需要验证安装脚本已从旧 skill 名称迁移到 commit `3f04504` 的稳定集合。
+- 需要验证安装脚本已从旧 skill 名称迁移到当前稳定集合，并保留对 `3f04504` 最低兼容基线的检查能力。
 - 需要验证知识库 prompt example 能驱动当前 skill 正确发现仓库、执行安全门并在条件不足时停止。
 
 ## 目标仓库与固定路径
@@ -54,9 +54,17 @@ git -C /work/chipltech-knowledge-base rev-parse --show-toplevel
 
 ---
 
-## 第一步：验证 `skills` commit
+## 第一步：验证 `skills` 来源与基线
 
-最低要求是 commit `3f04504` 已包含在当前历史中。先确保本地能解析该 commit；如不能解析，获取远端历史后再验证：
+先确认 `/work/skills` 是正确 remote 的 clean 工作树，并位于团队当前主线；不要把临时测试副本当作 Kilo skill 来源：
+
+```bash
+git -C /work/skills rev-parse --show-toplevel
+git -C /work/skills remote get-url origin
+git -C /work/skills status --short --branch
+```
+
+最低兼容基线是 commit `3f04504` 已包含在当前历史中。先确保本地能解析该 commit；如不能解析，获取远端历史后再验证：
 
 ```bash
 git -C /work/skills cat-file -e 3f04504^{commit} || git -C /work/skills fetch origin
@@ -79,7 +87,7 @@ else
 fi
 ```
 
-通过标准：HEAD 等于 `3f0450464f3ab8819e12a7575d56b586997bca8c`，或 `git merge-base --is-ancestor` 明确成功。仅比较短 hash 字符串、commit 日期或文件是否存在都不够。
+通过标准：`/work/skills` remote 指向 ChipLTech skills 仓库，工作树状态已记录，HEAD 处于团队当前主线；最低兼容验证中，HEAD 等于 `3f0450464f3ab8819e12a7575d56b586997bca8c` 或 `git merge-base --is-ancestor` 明确成功。仅比较短 hash 字符串、commit 日期或文件是否存在都不够。
 
 ---
 
@@ -172,7 +180,7 @@ grep -Fq '$ARGUMENTS' "$command_md"
 
 ### 3.3 验证旧别名已移除
 
-commit `3f04504` 的安装脚本会清理以下旧 skill symlink 和生成的 command wrapper：
+当前安装脚本应清理以下旧 skill symlink 和生成的 command wrapper；`3f04504` 是该迁移行为的最低兼容基线：
 
 ```text
 diagnose
@@ -207,7 +215,7 @@ done
 | `write-a-skill` | `writing-great-skills` |
 | `review` | `code-review` |
 
-commit `3f04504` 另外新增并稳定暴露六个 skills：
+当前稳定集合应暴露以下六个新 skills；`3f04504` 是它们进入默认集合的最低兼容基线：
 
 ```text
 ask-matt
@@ -286,6 +294,7 @@ Kilo 可能在现有 session 中缓存 skill 列表。安装完成后重启 Kilo
 【模式】全量重建
 【搜索根目录】/work,$HOME
 【需要切换的批准 ref】无
+【版本策略】不适用；本验证不 clone、不同步、不切换仓库
 【是否包含 vllm / vllm-dlc】否
 【是否允许修改 /usr/local】否
 
@@ -332,6 +341,7 @@ touch /tmp/dlc-smoke/pytorch/setup.py
 【模式】只重建 PyTorch wheel
 【搜索根目录】/tmp/dlc-smoke
 【需要切换的批准 ref】无
+【版本策略】不适用；本骨架不是 Git repository，不验证 CI 默认最新或固定 ref
 【是否包含 vllm / vllm-dlc】否
 【是否允许修改 /usr/local】否
 【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；本骨架只模拟源码入口，不证明系统 CMake 合格
@@ -370,7 +380,8 @@ rm -rf /tmp/dlc-smoke
 
 【模式】<全量重建 / 从 LLVM 开始 / 从 DLC_Custom_Kernel 开始 / 只重建 PyTorch wheel / 只重装 wheel / 修 vllm>
 【搜索根目录】<真实 repo 根目录>
-【需要切换的批准 ref】<每项提供 repo、批准的 remote URL、branch/tag 和可选 SHA；例如 LLVM|git@github.com:ChipLTech/LLVM.git|feature-x|<sha>；没有就写“无”>
+【版本策略】<CI默认最新 / 固定ref / 混合；已有仓库不需要切换时写“保持当前 checkout”>
+【需要切换的批准 ref】<CI默认最新可写“使用 Arsenal CI 默认分支最新 head”；固定ref/混合时每项提供 repo、批准的 remote URL、branch/tag 和可选 SHA；例如 LLVM|git@github.com:ChipLTech/LLVM.git|feature-x|<sha>；没有就写“无”>
 【是否包含 vllm / vllm-dlc】<是/否>
 【是否允许修改 /usr/local】<是/否>
 ```
@@ -392,7 +403,7 @@ rm -rf /tmp/dlc-smoke
 
 | 验证层级 | 验证内容 | 缺真实 DLC Ecosystem 仓库时的结果 | 通过依据 |
 |----------|----------|-----------------------------------|----------|
-| 来源层 | skills revision | 不受影响 | `3f04504` 是 exact commit 或 HEAD ancestor |
+| 来源层 | skills revision | 不受影响 | `/work/skills` 位于团队当前主线；最低兼容检查中 `3f04504` 是 exact commit 或 HEAD ancestor |
 | 安装层 | 全局或项目级 Kilo 暴露 | 可完成 | symlink、wrapper、旧别名清理和 stable 集合检查通过 |
 | 识别与工作流理解层 | Kilo 是否加载并理解当前 skill | 可完成 | 回答对应当前 `SKILL.md`、scripts 和停止条件 |
 | 停止语义层 | prompt example 是否安全停止 | 应列出缺失项并停止 | 不发明路径、不继续 build |
@@ -404,7 +415,7 @@ rm -rf /tmp/dlc-smoke
 - `/work/skills` 无法解析 `3f04504`：先 fetch；仍不存在则来源仓库或 remote 不正确。
 - skill symlink 指向其他目录：重新从 `/work/skills` 根目录执行安装脚本。
 - 项目级 skill 在 Kilo 中不可见：确认从 `/work/chipltech-knowledge-base` 启动新 session。
-- 旧名称仍是 symlink 或生成 wrapper：确认安装脚本包含 commit `3f04504`，然后重新执行 `--with-commands`。
+- 旧名称仍是 symlink 或生成 wrapper：确认安装脚本来自当前团队主线且至少包含 commit `3f04504`，然后重新执行 `--with-commands`。
 - 旧名称是用户真实目录或自定义 command：脚本按设计保护它，不得自动删除。
 - wrapper description 不匹配：重新生成 wrapper，并以当前 `SKILL.md` frontmatter 为准。
 - 轻量骨架被报告为完整验证通过：结论无效，必须降级为路径与 safety gate 语义验证。
@@ -426,7 +437,7 @@ rm -rf /tmp/dlc-smoke
 
 ## 来源与版本边界
 
-- stable skill 名称、旧别名清理规则和安装范围：`/work/skills` commit `3f04504` 的 `scripts/link-kilo-skills.sh`、`README.zh-CN.md` 和 `SKILLHUB.yaml`。
+- stable skill 名称、旧别名清理规则和安装范围：当前 `/work/skills` 的 `scripts/link-kilo-skills.sh`、`README.zh-CN.md` 和 `SKILLHUB.yaml`；commit `3f04504` 仅作为最低兼容基线。
 - `dlc-env-setup` 工作流、停止条件、验证标准和脚本资产：当前 `/work/skills/skills/engineering/dlc-env-setup/SKILL.md` 及同目录 `scripts/`。
 - DLC Ecosystem 术语：`/work/chipltech-knowledge-base/CONTEXT.md`。
 - prompt 调用模板：`/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-skill-usage.md`。

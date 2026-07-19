@@ -374,7 +374,7 @@
 - 新 session 可直接复制执行的 bootstrap prompt。
 - 明确完成判据和暂停条件。
 - suggested skills 必须按任务实际需要选择，不设不完整的硬编码白名单。
-- 每个 suggested skill 都必须能在 /work/skills commit 3f04504 的 `skills/**/SKILL.md` 中按同名 `name` 找到；禁止使用 retired names `diagnose`、`to-prd`、`to-issues`、`write-a-skill`、`review` 或自造别名。"
+- 每个 suggested skill 都必须能在当前 `/work/skills` 主线的 `skills/**/SKILL.md` 中按同名 `name` 找到；commit `3f04504` 只作为最低兼容基线。禁止使用 retired names `diagnose`、`to-prd`、`to-issues`、`write-a-skill`、`review` 或自造别名。"
 ```
 
 **关键点**：旧 session 收尾时就用 `/handoff` 生成唯一交接包路径。新 session 直接引用该路径并执行交接包里的 `新 Session Bootstrap Prompt`，不自动扫描其他 handoff 文件。

@@ -53,7 +53,8 @@ claim_boundary: operational_or_not_verified_only
 
 【模式】<全量重建 / 从 LLVM 开始 / 从 DLC_Custom_Kernel 开始 / 只重建 PyTorch wheel / 只重装 wheel / 修 vllm>
 【搜索根目录】<例如 /work,$HOME；不确定则写“请自动发现”>
-【需要切换的批准 ref】<逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA；没有则写“无”>
+【版本策略】<保持当前 checkout / CI默认最新 / 固定ref / 混合；空每日镜像缺仓库且授权 bootstrap 时默认推荐 CI默认最新>
+【需要切换的批准 ref】<保持当前 checkout 时写“无”；CI默认最新可写“使用 Arsenal CI 默认分支最新 head”；固定ref/混合时逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA>
 【是否包含 vllm / vllm-dlc】是
 【是否允许修改 /usr/local】<是/否>
 【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；若已满足则不要重装
@@ -72,6 +73,7 @@ claim_boundary: operational_or_not_verified_only
 阶段 1 停止条件：
 - repo root、remote、branch/tag、HEAD 不明确或不符合批准 ref。
 - 工作树有未提交改动且切换 ref 会覆盖它们。
+- 版本策略缺失；请求 bootstrap 但未明确使用 `CI默认最新`、`固定ref` 或 `混合`。
 - 必需 build entrypoint 缺失。
 - `/usr/local` 修改未授权但当前阶段需要安装到 `/usr/local`。
 - PyTorch、NumPy bridge、DLC Platform、请求范围内的 `vllm` / `vllm-dlc` import 或 runtime smoke 不健康。

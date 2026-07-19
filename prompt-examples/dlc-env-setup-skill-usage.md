@@ -51,7 +51,8 @@
 
 【模式】<全量重建 / 从 LLVM 开始 / 从 DLC_Custom_Kernel 开始 / 只重建 PyTorch wheel / 只重装 wheel / 修 vllm>
 【搜索根目录】<例如 /work,$HOME；不确定则写“请自动发现”>
-【需要切换的批准 ref】<逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA；没有则写“无”>
+【版本策略】<保持当前 checkout / CI默认最新 / 固定ref / 混合；缺仓库且授权 bootstrap 时默认推荐 CI默认最新>
+【需要切换的批准 ref】<保持当前 checkout 时写“无”；CI默认最新可写“使用 Arsenal CI 默认分支最新 head”；固定ref/混合时逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA>
 【是否包含 vllm / vllm-dlc】<是/否>
 【是否允许修改 /usr/local】<是/否>
 【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；若已满足则不要重装
@@ -64,7 +65,7 @@
    - 对每个 Git 仓库记录并回显：路径、`git rev-parse --show-toplevel`、`git remote -v`、`git branch --show-current`、`git rev-parse HEAD`、`git status --short`。
    - 验证发现路径确实位于该 Git root 下，remote 与批准来源一致，branch/tag 和 HEAD 满足输入约束。
    - 同名候选、remote 不匹配、detached HEAD 未获批准或 authoritative root 不明确时，按当前 SKILL.md 停止。
-   - 缺少必需仓库时按当前 SKILL.md 停止；只有用户明确授权 bootstrap 时，才转用 `/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`。
+   - 缺少必需仓库时按当前 SKILL.md 停止；只有用户明确授权 bootstrap 时，才转用 `/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`，并先确定 `CI默认最新`、`固定ref` 或 `混合` 版本策略。
    - 回显最终 repo map 和统一 shell 变量：`CMAKE_BIN`、可选 `CMAKE_SRC`、`DLC_THUNK_SRC`、`DLCSIM_SRC`、`DLCSYNAPSE_SRC`、`DLC_CL_SRC`、`LLVM_SRC`、`DLC_CUSTOM_KERNEL_SRC`、`PYTORCH_SRC`，以及可选的 `VLLM_SRC`、`VLLM_DLC_SRC`。
 
 2. 按当前 SKILL.md 验证每个源码树的预期 build entrypoint。不要以目录名存在替代入口验证，缺失时立即停止。
@@ -72,7 +73,7 @@
 3. 需要切换 ref 时先做 Git 安全检查。
    - 检查 status、current branch、remote 和 branch availability，并记录切换前 HEAD。
    - 有未提交改动立即停止，不覆盖、不 stash、不使用 destructive git 命令。
-   - 仅切换到用户批准且本地或 tracked remote 确实存在的 ref；不要无条件 `git pull`。
+   - 仅切换到用户批准且本地或 tracked remote 确实存在的 ref；不要无条件 `git pull`。若采用 `CI默认最新`，只能在 remote 匹配、工作树 clean、当前分支是 Arsenal CI 默认分支或用户批准切换时，同步到该默认分支最新 head。
    - 切换后再次验证 Git root、remote、branch/tag、HEAD 和 clean status。
    - 所有联动仓库都确认完成后再构建。
 
