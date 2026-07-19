@@ -41,7 +41,7 @@ export DLC_SYN_DEBUG=1
 
 ### 设备卡死
 
-**peek stuck**（会打断算子执行）：
+**peek stuck**（可能影响正在执行的算子，执行前确认授权和目标卡）：
 ```bash
 peek_stuck.sh
 ```
@@ -70,6 +70,26 @@ lsof -t /dev/dlc*
 # 软复位
 dlcpd_clnt -s
 ```
+
+在共享 host 或用户开发容器中，软复位、驱动重载、LYP repair、kill 非本任务进程和 reboot 都属于设备/宿主机操作。默认只记录证据并报告建议，获得明确授权后再执行。
+
+### vLLM DP/TP 初始化卡住
+
+常见现象包括：
+
+- 服务停在 DP/TP 初始化阶段。
+- `No available shared memory broadcast block found in 60 seconds` 长时间反复出现。
+- serving 进程仍在，但请求无响应或初始化不前进。
+
+排障顺序：
+
+1. 先记录完整启动命令、`DLC_VISIBLE_DEVICES`、TP/PP/EP、容器启动参数和日志路径。
+2. 检查是否有本任务之外的残留进程占用 `/dev/dlc*`；不要直接 kill 非本任务进程。
+3. 判断是慢还是 hang：结合 DLCSynapse verbose trace、DLC Runtime blocking 模式或服务日志最后一条有效进展。
+4. 获得授权后再对目标卡运行 stuck 检查；如果显示 `halting`，保存输出并反馈给对应算子/Runtime owner。
+5. 获得授权后才执行软复位、LYP repair、驱动重载或重启。
+
+开发容器如果只做端口映射而没有 host 网络/host namespace，软复位通信可能超时。需要设备级操作时，优先使用明确授权的 host 环境或一次性 privileged、host network 容器执行。
 
 ### 模型放置 hang
 
@@ -112,6 +132,18 @@ dlc_smi --dlcclcheck
 - AllReduce 结果不正确（检查数据分布和通信模式）。
 - 掉卡检测（全卡检查设备状态）。
 
+### LYP repair 边界
+
+LYP 初始化或 repair 可以恢复多卡通信，但它不是模型 acceptance 证据。记录时只说明：
+
+- 使用的工具和版本。
+- 目标卡组和 `DLC_VISIBLE_DEVICES`。
+- 日志路径。
+- 前/后卡组、内环/外环或 RDMA 检查结果。
+- 是否涉及驱动安装、HBM 频率配置或 loop repair。
+
+不要把 LYP 检查通过外推为新模型 Real DLC Hardware acceptance、DLC Runtime dispatch 或 Chunked Prefill runtime 已验证。
+
 ## 环境配置检查
 
 版本对齐问题常见表现：
@@ -133,3 +165,5 @@ dlc_smi --dlcclcheck
 - `/work/plan/dlc基础/DLC常用调试指令和方法.md`
 - `/work/plan/dlc基础/报错问题记录.md`
 - `/work/RSThinker/dlc_model_placement_hang_analysis.md`
+- `/work/test/同事文档/新人服务器环境配置.md`
+- `/work/test/同事文档/常见BUG和解决思路：.md`

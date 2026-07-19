@@ -42,6 +42,15 @@ shared_contract: vllm-dlc-contract/v1
 - **事实 / Fact**：`not_verified` 不等于 `not_applicable`。
 - **事实 / Fact**：Static、fake-server、Dummy、DLCsim、HTTP success 或 long-input construction 不得提升 Real DLC Hardware 或 DLC Runtime acceptance。
 
+## 新模型 serving 验证经验
+
+- **建议 / Recommendation**：新模型功能验证先从短 prompt、`temperature=0`、`top_p=1.0` 和小 `max_tokens` 开始，只验证模型加载、API 返回非空输出和 server liveness。
+- **建议 / Recommendation**：短 prompt 通过后，再逐步扩大到中等 prompt、长 prompt、one-shot/CoT、采样温度、Chunked Prefill 或并发；每轮只改变一个变量。
+- **事实 / Fact**：`--served-model-name` 会改变 OpenAI-compatible API 中可用的模型名；请求 JSON 的 `model` 必须使用该 alias，否则可能出现 model not found / 404，这不是模型文件缺失。
+- **经验 / Experience**：Qwen3.5-27B 类模型可能对 prompt 长度和 one-shot/CoT 结构敏感，表现为重复 `!`、空输出、长解释、超时或答案截断。此类现象应作为模型/参数/长上下文风险记录，不得把短 prompt smoke 通过提升为长上下文或 one-shot 已验证。
+- **建议 / Recommendation**：量化与 MoE 模型适配必须核对 `quant_method`、`bits`、`group_size`、`zero_point`、processor/tokenizer 类型和实际 kernel 路由。`compressed-tensors`、AWQ、AWQ-Marlin、W4A16、W8A16 不能只按目录名判断兼容。
+- **事实 / Fact**：如果当前 DLC 软件栈缺少目标量化/MoE fused kernel，Python 层绕路或修改模型 config 不构成长期适配完成；应报告为 kernel capability gap 或 `not_verified`，并说明需要 DLC Custom Op / DLC_Custom_Kernel Repository 支持。
+
 ## Skill 所有权
 
 ### Model Adaptation
@@ -97,3 +106,4 @@ shared_contract: vllm-dlc-contract/v1
 
 - [Model Adaptation reusable prompt](../prompt-examples/vllm-dlc-model-adaptation.md)
 - [Main-to-Main Upgrade reusable prompt](../prompt-examples/vllm-dlc-main-to-main-upgrade.md)
+- [precision-debugging/token-divergence-and-moe-contract-debugging.md](../precision-debugging/token-divergence-and-moe-contract-debugging.md)

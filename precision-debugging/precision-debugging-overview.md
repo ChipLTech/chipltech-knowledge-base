@@ -13,6 +13,7 @@
 2. **先判断是否属于 DLC Precision Difference**。PGX bf16 转换、硬件 exp/rsqrt、tiling、累加顺序造成的差异是预期行为。
 3. **从端到端收敛到算子级**：用 Model-Site Dump 捕捉 failure 现场，逐步缩小范围。
 4. **单变量定位**：一次只改动一个算子的 dispatch，确认边界后再继续。
+5. **生成分叉先压成单 token 问题**：多步 decode 的 token 分叉优先改写成“分叉前 token 拼回 prompt，`max_tokens=1`”的 prefill 问题，再排除 sampler、KV cache 和 scheduler 干扰。
 
 ## 精度差异的来源
 
@@ -56,6 +57,15 @@
 | PGX 相关 | 检查是否需要 bf16 转换 |
 | 非有限值位置差异 | 优先看 Finite Mask Mismatch |
 | 小 scale 差异被放大 | 看 RMSNorm、SiLU 等非线性/非均匀放大路径 |
+| MoE token 分叉 | 核对 expert routing、EP rank、activation type、clamp limit 和 quantization metadata |
+
+### 生成 token 分叉的特殊注意
+
+- 先建立严格等价 API 对照：相同 endpoint、prompt/token IDs、tokenizer、模型权重、TP/EP、`temperature=0` 和 `max_tokens`。
+- 不要混用 `/v1/chat/completions` 与 `/v1/completions` 结果直接比较；chat API 会应用 chat template。
+- 若第 N 个生成 token 分叉，将分叉前 token 拼入 prompt，仅生成 1 个 token，先判断问题是否可变成单步 prefill。
+- 比较 raw logits `argmax` 和 sampled token；两者一致时不要继续优先怀疑 sampler。
+- MoE 路径按 `layer -> branch -> EP rank -> expert -> W13/activation/W2` 收敛，并核对模型配置到 DLC Custom Op / DLC Custom Kernel 的语义契约。
 
 ## CPU Reference 策略
 
@@ -88,6 +98,7 @@
 ## 相关资料
 
 - [precision-debugging/model-site-dump-to-repro.md](model-site-dump-to-repro.md)
+- [precision-debugging/token-divergence-and-moe-contract-debugging.md](token-divergence-and-moe-contract-debugging.md)
 - [operator-dispatch/enabled-kernels-dispatch.md](../operator-dispatch/enabled-kernels-dispatch.md)
 - [testing/dlc-kernel-test-framework-guide.md](../testing/dlc-kernel-test-framework-guide.md)
 - [case-studies/](../case-studies/)

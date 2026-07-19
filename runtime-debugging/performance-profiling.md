@@ -69,6 +69,26 @@ vLLM worker
 
 硬件 counter 以 counter track 形式在同一时间轴上，可以判断耗时来源是模型结构、runtime 调度、kernel 执行、数据搬运还是硬件资源瓶颈。
 
+## Chunked Prefill 与 FlashAttention 优化上界
+
+在长上下文 vLLM serving 中，不要只看单个 DLC Attention Backend / FlashAttention 类 kernel 的 microbenchmark 收益来判断端到端 TTFT 收益。真实端到端路径还包含：
+
+- copy / to / clone / contiguous 等数据搬运和张量物化。
+- Chunked Prefill 循环中的 host 调度和 DLC Runtime 调度。
+- TP 通信编排和等待。
+- cache 管理、cat、index_select、reshape_and_cache 等非核心 compute 路径。
+- matmul、allreduce、norm、activation 等剩余热点。
+
+同事在 `Llama3.1-8B`、64k prompt、TP=2、Chunked Prefill 场景中的评估显示：单 kernel 中 softmax+PV 是 FlashAttention 内部主要部分，但将整个 FlashAttention 近似清空后，端到端 TTFT 只改善约 9%。因此，BLASST 这类只覆盖 FlashAttention 内部子阶段的优化，在该场景下的端到端收益上界会明显低于单 kernel 收益，合理预期应以几个百分点为量级，而不是按 kernel 内部比例直接外推。
+
+分析这类问题时建议同时保存：
+
+- workload：模型、prompt 长度、输出长度、TP/PP、`max_model_len`、`max_num_batched_tokens`、prefix caching、并发。
+- 请求指标：TTFT、latency、throughput、server liveness。
+- kernel 汇总：attention、matmul、allreduce、cache、cat/index_select、norm、activation。
+- trace 观察：copy/to/clone/contiguous、host scheduling、DLC Runtime queue/sync、TP 等待。
+- chunk size 对比：如果 `max_num_batched_tokens` 增大后 TTFT 反而变差，优先检查单步 tensor 尺寸、数据搬运、cache 写入和 TP 通信颗粒，而不是只归因于 chunk 数量。
+
 ## 相关资料
 
 - [runtime-debugging/runtime-troubleshooting.md](../runtime-debugging/runtime-troubleshooting.md)
@@ -77,3 +97,4 @@ vLLM worker
 ## 来源
 
 - `/work/plan/newraw/TPU Profile 工具简介.docx`（已转换为 Markdown）
+- `/work/test/同事文档/DLC FlashAttention _ BLASST 在 vLLM Llama3.1-8B 64k Chunked Prefill 场景中的可行性评估.md`

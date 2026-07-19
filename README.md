@@ -66,6 +66,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 - [precision-debugging/precision-debugging-overview.md](precision-debugging/precision-debugging-overview.md) — 精度定位方法论总览。
 - [precision-debugging/model-site-dump-to-repro.md](precision-debugging/model-site-dump-to-repro.md) — 从 Model-Site Dump 到 pytorch_test 复现的流程。
+- [precision-debugging/token-divergence-and-moe-contract-debugging.md](precision-debugging/token-divergence-and-moe-contract-debugging.md) — vLLM 生成 token 分叉、MoE rank/expert 和 activation contract 定位。
 - [case-studies/](case-studies/) — 跨模型、跨算子的真实精度问题复盘。
 
 ### 算子接入与测试入口
