@@ -54,6 +54,8 @@
 【需要切换的批准 ref】<逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA；没有则写“无”>
 【是否包含 vllm / vllm-dlc】<是/否>
 【是否允许修改 /usr/local】<是/否>
+【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；若已满足则不要重装
+【容器/宿主机约束】<是否挂载 /mnt/jfs、/dev、/sys、/lib/modules、/var/log；是否允许驱动/LYP/软重置操作>
 
 请严格按下面流程执行：
 
@@ -63,7 +65,7 @@
    - 验证发现路径确实位于该 Git root 下，remote 与批准来源一致，branch/tag 和 HEAD 满足输入约束。
    - 同名候选、remote 不匹配、detached HEAD 未获批准或 authoritative root 不明确时，按当前 SKILL.md 停止。
    - 缺少必需仓库时按当前 SKILL.md 停止；只有用户明确授权 bootstrap 时，才转用 `/work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-environment-bootstrap.md`。
-   - 回显最终 repo map 和统一 shell 变量：`CMAKE_SRC`、`DLC_THUNK_SRC`、`DLCSIM_SRC`、`DLCSYNAPSE_SRC`、`DLC_CL_SRC`、`LLVM_SRC`、`DLC_CUSTOM_KERNEL_SRC`、`PYTORCH_SRC`，以及可选的 `VLLM_SRC`、`VLLM_DLC_SRC`。
+   - 回显最终 repo map 和统一 shell 变量：`CMAKE_BIN`、可选 `CMAKE_SRC`、`DLC_THUNK_SRC`、`DLCSIM_SRC`、`DLCSYNAPSE_SRC`、`DLC_CL_SRC`、`LLVM_SRC`、`DLC_CUSTOM_KERNEL_SRC`、`PYTORCH_SRC`，以及可选的 `VLLM_SRC`、`VLLM_DLC_SRC`。
 
 2. 按当前 SKILL.md 验证每个源码树的预期 build entrypoint。不要以目录名存在替代入口验证，缺失时立即停止。
 
@@ -75,9 +77,10 @@
    - 所有联动仓库都确认完成后再构建。
 
 4. 按当前 SKILL.md 的 `Rebuild Order` 和 `Partial Rebuild Rules` 决定起点与顺序。
-   - 从中间阶段开始前，先验证更早的原生依赖和安装产物健康；无法确认时回退到更早阶段。
-   - wheel reinstall only 仅可使用 `dist/` 中已确认 fresh 的 `torch-2.5.0*.whl`。
-   - `/usr/local` 修改未授权时，不执行对应安装步骤并停止报告。
+    - 从中间阶段开始前，先验证更早的原生依赖和安装产物健康；无法确认时回退到更早阶段。
+    - wheel reinstall only 仅可使用 `dist/` 中已确认 fresh 的 `torch-2.5.0*.whl`。
+    - `/usr/local` 修改未授权时，不执行对应安装步骤并停止报告。
+    - 先验证 `cmake --version` 严格大于 `3.27.0`，且 `ctest`、`cpack` 可用；已满足时不要因为不是固定 `3.27.0` 而重装。
 
 5. PyTorch 阶段必须直接运行：
    - `/work/skills/skills/engineering/dlc-env-setup/scripts/pytorch-preflight.sh "$PYTORCH_SRC"`
@@ -87,10 +90,16 @@
    - packaging preflight 和 `USE_NUMPY:BOOL=ON` gate 都通过后，再按当前 SKILL.md 和仓库已验证流程构建、force-reinstall fresh PyTorch 2.5.0 wheel。
 
 6. LLVM 与 DLC_Custom_Kernel Repository 阶段保留以下本地策略：
-   - LLVM 曾失败、半构建或 build cleanliness 不明时，优先使用仓库已有的 clean rebuild 路径 `./build.sh -r`；否则可用 `./build.sh`。
-   - 配置 DLC_Custom_Kernel Repository 时显式令 `LLVM_PATH="$LLVM_SRC"`，并使用已验证的 `/usr/bin/ninja`，不要依赖意外的 PATH alias。
-   - 构建与安装命令必须来自当前仓库入口和知识库验证路径，不发明工具链参数。
-   - 安装后确认 DLC Custom Kernel 相关库、header 和测试工具落在预期 `/usr/local/chipltech/synapse/` 位置。
+    - LLVM 曾失败、半构建或 build cleanliness 不明时，优先使用仓库已有的 clean rebuild 路径 `./build.sh -r`；否则可用 `./build.sh`。
+    - 配置 DLC_Custom_Kernel Repository 时显式令 `LLVM_PATH="$LLVM_SRC"`，并使用已验证的 `/usr/bin/ninja`，不要依赖意外的 PATH alias。
+    - 构建与安装命令必须来自当前仓库入口和知识库验证路径，不发明工具链参数。
+    - 安装后确认 DLC Custom Kernel 相关库、header 和测试工具落在预期 `/usr/local/chipltech/synapse/` 位置。
+
+6a. 容器和设备可见性检查保留以下本地策略：
+   - 如果请求 `vllm` / `vllm-dlc` 或模型 serving smoke，先确认容器能看到 `/mnt/jfs` 与 `/dev/dlc*`，并记录 `DLC_VISIBLE_DEVICES`。
+   - 多卡、模型 serving 或本地 repair 场景需要关注 `--ipc=host`、`--pid=host`、足够 `--shm-size`、`memlock` 和 `stack` ulimit；缺失时报告环境 blocker，不用代码绕过。
+   - 驱动重载、软重置、`cltech-init`/`dlc-init`、LYP repair、物理机 reboot 只在用户明确授权时执行；否则只报告建议和证据。
+   - 如果出现卡在 DP/TP 初始化、shared memory broadcast 长时间无可用 block、显存被占用或 suspected operator hang，先记录日志和相关进程，再按授权检查 `peek_stuck.sh`、LYP 和设备状态；不要直接 kill 非本任务进程。
 
 7. 请求本地 `vllm` / `vllm-dlc` repair 时：
    - 先确认 PyTorch 2.5.0 wheel 和 DLC Runtime smoke 健康，再运行 `/work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh`。
@@ -104,7 +113,7 @@
    - `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh /tmp`
    - 该脚本是源码树外 PyTorch、NumPy bridge、DLC Platform 可用性、可选 `vllm` imports 和关键 package inventory 的可执行 source of truth。
    - 脚本会打印可选 import error；请求了 `vllm` 工作时，这些 error 是失败，不能因脚本继续运行而视为通过。
-   - 另按当前 SKILL.md 验证 CMake 3.27.0、PyTorch 2.5.0、`/usr/local/chipltech/synapse/bin` 中 DLC Custom Kernel 测试工具，以及请求的 `pip show` metadata。
+   - 另按当前 SKILL.md 验证 CMake 版本严格大于 `3.27.0`、PyTorch 2.5.0、`/usr/local/chipltech/synapse/bin` 中 DLC Custom Kernel 测试工具，以及请求的 `pip show` metadata。
 
 9. 任一阶段失败时按当前 SKILL.md 的停止条件立即停止，报告失败命令、第一批关键报错和应回退的阶段。不要在失败状态下盲目继续。
 
@@ -115,6 +124,7 @@
 - PyTorch wheel 路径与 reinstall 结果。
 - 三个 skill 脚本的执行结果，以及最终 DLC Runtime smoke 判定。
 - `UNKNOWN`、`triton` 或 wheel path 如被处置，列出证据和最小改动。
+- CMake 路径与版本门槛判定、容器挂载/设备可见性、宿主机/LYP 操作授权状态。
 - 如果失败：触发的当前 SKILL.md 停止条件、失败阶段、命令、关键报错和安全回退点。
 ```
 

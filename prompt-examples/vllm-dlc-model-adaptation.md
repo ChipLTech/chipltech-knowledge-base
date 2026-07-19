@@ -60,7 +60,16 @@ deployment profile：
 - artifact destination outside vllm-dlc: <ARTIFACT_DESTINATION>
 - optional parent run / assignment identities: <PARENT_AND_ASSIGNMENT_OR_NULL>
 
-先列出缺失输入并停止；资产类缺失使用 `blocked_missing_asset`，分配给 mandatory run 的硬件不足使用 `blocked_missing_hardware`。通过 `shared_contract: vllm-dlc-contract/v1` 的 skills-owned public seam 消费确定性检查，不自行实现 runner 行为。Dummy 仅可在合格 real-weight failure 后用于 diagnostic-only，不得提升 acceptance。保持 vllm-dlc 源码、manifest、alignment、metadata、branch、index 和 generated files 只读；不得更新、finalize 或声称 Verified vLLM Alignment。不要把 Ticket 06 v12 operational evidence 继承到此新 target；未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`，并将报告写到声明的外部 artifact destination。
+先列出缺失输入并停止；资产类缺失使用 `blocked_missing_asset`，分配给 mandatory run 的硬件不足使用 `blocked_missing_hardware`。模型路径优先从 `/mnt/jfs/models` 选择并记录完整绝对路径；如果资产不在该根目录下，先说明来源和批准依据。通过 `shared_contract: vllm-dlc-contract/v1` 的 skills-owned public seam 消费确定性检查，不自行实现 runner 行为。Dummy 仅可在合格 real-weight failure 后用于 diagnostic-only，不得提升 acceptance。保持 vllm-dlc 源码、manifest、alignment、metadata、branch、index 和 generated files 只读；不得更新、finalize 或声称 Verified vLLM Alignment。不要把 Ticket 06 v12 operational evidence 继承到此新 target；未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`，并将报告写到声明的外部 artifact destination。
+
+模型适配分析时额外检查：
+- serving 启动参数与请求中的 `model` 名必须一致；如果启动用了 `--served-model-name`，OpenAI 请求必须使用该 alias，而不是误用模型路径。
+- 先做短 prompt、`temperature=0`、`top_p=1.0`、小 `max_tokens` 的 serving smoke；通过后再增加 prompt 长度、one-shot/CoT、采样温度、Chunked Prefill 或并发，每轮只改变一个变量。
+- 长 prompt 或 one-shot 退化要单独记录 prompt token 数、decode 参数、finish reason、输出内容、latency、server liveness 和日志路径；重复 `!`、空输出、超时、异常截断不能归类为环境已通过。
+- 量化模型要核对 `quant_method`、`bits`、`group_size`、`zero_point` 与实际 kernel 路由，避免把 `compressed-tensors` 误判为 AWQ/AWQ-Marlin 兼容；W8A16、MoE、vision/multimodal processor 路径应单独列风险。
+- 多卡/MoE/精度问题先建立严格等价对照：相同 endpoint、prompt、tokenizer、模型权重、TP/EP、`temperature=0`、`max_tokens` 和可选 `logprobs`；不要混用 chat/completions 与 completions 的结果直接比较。
+- 若生成 token 与基线分叉，把多步 decode 改写为单步 prefill：将分叉前 token 拼入 prompt，仅生成 1 个 token，以隔离 KV cache、scheduler 和历史回灌变量。
+- 如果怀疑算子或设备卡住，记录 DP/TP 初始化日志、shared memory broadcast 日志和服务状态；`peek_stuck.sh`、软重置、LYP repair、kill 进程或 reboot 必须有明确授权，不作为默认自动步骤。
 ```
 
 ## 停止语义与 Evidence
@@ -69,6 +78,7 @@ deployment profile：
 - 本 prompt 没有执行模型或硬件；`not_verified` 不等于 `not_applicable`。
 - HTTP success、静态检查、fake-server、Dummy 或 DLCsim 不得提升 Real DLC Hardware 或 DLC Runtime acceptance。
 - Ticket 06 exact v12 profiles 只证明 `authoritativeness: operational_only`、`acceptance_eligible: false`、alignment unchanged 和 finalization `none` 的 bounded operational state，不证明新模型 target。
+- 单个短 prompt serving smoke 只能证明对应启动配置的最小可用性，不证明长上下文、one-shot、Chunked Prefill、DLC Runtime dispatch 或 Real DLC Hardware acceptance 已验证。
 
 ## 相关资料
 

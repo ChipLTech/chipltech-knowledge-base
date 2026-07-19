@@ -309,12 +309,12 @@ Kilo 可能在现有 session 中缓存 skill 列表。安装完成后重启 Kilo
 - 它不验证真实编译、安装、DLC Runtime smoke 或产物正确性。
 - 它不验证 Git repository branch safety、工作树状态或 branch 切换行为。
 
-创建包含 CMake 两个入口的骨架：
+创建包含新版 CMake 两个入口的骨架：
 
 ```bash
-mkdir -p /tmp/dlc-smoke/{cmake-3.27.0,dlc-thunk,DLCsim,DLCSynapse,DLC_CL,LLVM,DLC_Custom_Kernel,pytorch}
-touch /tmp/dlc-smoke/cmake-3.27.0/bootstrap
-touch /tmp/dlc-smoke/cmake-3.27.0/CMakeLists.txt
+mkdir -p /tmp/dlc-smoke/{cmake-source,dlc-thunk,DLCsim,DLCSynapse,DLC_CL,LLVM,DLC_Custom_Kernel,pytorch}
+touch /tmp/dlc-smoke/cmake-source/bootstrap
+touch /tmp/dlc-smoke/cmake-source/CMakeLists.txt
 touch /tmp/dlc-smoke/dlc-thunk/compile.sh
 touch /tmp/dlc-smoke/DLCsim/build.sh
 touch /tmp/dlc-smoke/DLCSynapse/compile.sh
@@ -334,6 +334,7 @@ touch /tmp/dlc-smoke/pytorch/setup.py
 【需要切换的批准 ref】无
 【是否包含 vllm / vllm-dlc】否
 【是否允许修改 /usr/local】否
+【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；本骨架只模拟源码入口，不证明系统 CMake 合格
 
 请验证 repo discovery、entrypoint、shell 变量映射和 partial rebuild safety gate，并说明还需要哪些真实安装前置条件。明确指出这些目录不是 Git repository，因此本次不验证 branch safety。不要把 touch 创建的入口当成可构建实现。
 ```
@@ -352,7 +353,7 @@ rm -rf /tmp/dlc-smoke
 
 只有真实仓库、构建入口、依赖和所需权限齐全时，才能进行完整执行验证：
 
-- `cmake-3.27.0`
+- 满足 `cmake --version > 3.27.0` 的可用 CMake
 - `dlc-thunk`
 - `DLCsim`
 - `DLCSynapse`

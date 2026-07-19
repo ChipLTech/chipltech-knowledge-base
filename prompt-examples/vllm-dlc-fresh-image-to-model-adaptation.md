@@ -56,6 +56,8 @@ claim_boundary: operational_or_not_verified_only
 【需要切换的批准 ref】<逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA；没有则写“无”>
 【是否包含 vllm / vllm-dlc】是
 【是否允许修改 /usr/local】<是/否>
+【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；若已满足则不要重装
+【容器/宿主机约束】<是否挂载 /mnt/jfs、/dev、/sys、/lib/modules、/var/log；是否允许驱动/LYP/软重置操作>
 
 阶段 1 必须交付：
 - 最终 repo map。
@@ -73,6 +75,9 @@ claim_boundary: operational_or_not_verified_only
 - 必需 build entrypoint 缺失。
 - `/usr/local` 修改未授权但当前阶段需要安装到 `/usr/local`。
 - PyTorch、NumPy bridge、DLC Platform、请求范围内的 `vllm` / `vllm-dlc` import 或 runtime smoke 不健康。
+- CMake 缺失或版本不满足 `>3.27.0`，且没有授权安装/切换到合格版本。
+- 后续 serving smoke 需要的 `/mnt/jfs` 或 `/dev/dlc*` 在当前容器不可见。
+- 驱动重载、软重置、`cltech-init`/`dlc-init`、LYP repair 或物理机 reboot 未获明确授权。
 
 只有阶段 1 明确通过后，才能进入阶段 2。
 
@@ -117,18 +122,23 @@ deployment profile：
 
 阶段 2 serving smoke 阶梯：
 1. 先做短 prompt serving smoke。
-   - 使用短文本 prompt。
-   - 优先 `temperature=0`、`top_p=1.0`。
-   - `max_tokens` 先用 64 或 128。
-   - 目标是验证模型能加载、API 能返回非空生成结果、server liveness 正常。
+    - 使用短文本 prompt。
+    - 优先 `temperature=0`、`top_p=1.0`。
+    - `max_tokens` 先用 64 或 128。
+    - 如果启动服务时指定了 `--served-model-name`，请求里的 `model` 必须使用该 alias；没有 alias 时才使用启动命令约定的模型路径/名称。
+    - 目标是验证模型能加载、API 能返回非空生成结果、server liveness 正常。
 2. 短 prompt 通过后，再扩展到中等长度 prompt。
-   - 仍保持 greedy / deterministic 参数。
-   - 观察是否出现空输出、重复符号、明显降速或截断。
+    - 仍保持 greedy / deterministic 参数。
+    - 观察是否出现空输出、重复符号、明显降速或截断。
 3. 中等长度通过后，再验证长 prompt / one-shot 敏感场景。
-   - 可参考同事文档中 Qwen3.5-27B 的 one-shot、长 padding 和 CoT 敏感案例。
-   - 每次只改变一个变量：prompt 长度、one-shot 结构、temperature、`max_tokens` 或 Chunked Prefill 相关参数。
-   - 出现重复 `!`、空输出、速度下降或 timeout 时，记录 prompt token 数、decode 参数、返回内容、finish reason、server liveness 和日志位置。
-4. 不要把短 prompt smoke 通过解释为长上下文、Chunked Prefill runtime、DLC Runtime dispatch 或 Real DLC Hardware acceptance 已验证。
+    - 可参考同事文档中 Qwen3.5-27B 的 one-shot、长 padding 和 CoT 敏感案例。
+    - 每次只改变一个变量：prompt 长度、one-shot 结构、temperature、`max_tokens` 或 Chunked Prefill 相关参数。
+    - 出现重复 `!`、空输出、速度下降或 timeout 时，记录 prompt token 数、decode 参数、返回内容、finish reason、server liveness 和日志位置。
+4. 多卡、量化、MoE、vision/multimodal 或长上下文场景需额外记录：
+   - `DLC_VISIBLE_DEVICES`、TP/PP/EP、dtype、quantization、`max_model_len`、`max_num_batched_tokens`、prefix caching、expert parallel、processor/tokenizer revision。
+   - 量化配置中的 `quant_method`、`bits`、`group_size`、`zero_point` 与实际 kernel 路由是否一致；`compressed-tensors`、W8A16、AWQ/AWQ-Marlin 不得只按目录名判断兼容。
+   - 如果卡在 DP/TP 初始化、shared memory broadcast 或疑似算子 hang，只记录日志和现象；`peek_stuck.sh`、软重置、LYP repair、kill 进程或 reboot 需要明确授权。
+5. 不要把短 prompt smoke 通过解释为长上下文、Chunked Prefill runtime、DLC Runtime dispatch 或 Real DLC Hardware acceptance 已验证。
 ```
 
 ## 相关资料
