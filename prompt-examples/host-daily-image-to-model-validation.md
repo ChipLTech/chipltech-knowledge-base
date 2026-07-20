@@ -115,11 +115,12 @@ claim_boundary: operational_or_not_verified_only
 
 阶段 0.5：Host 设备健康与 CLTech-Init 安全门
 
-5. 在模型或 DLC Runtime 验证需要 Real DLC Hardware 时，先执行只读健康检查：
+5. 在模型或 DLC Runtime 验证需要 Real DLC Hardware 时，先执行低风险健康检查：
    - `cltech-init --check`：仅做 Chipltech-Family Accelerator 硬件检测。
    - `cltech-init --check-lyp`：仅做 LYP 状态检查。
    - `cltech-init --smi`：仅在驱动已安装时采集设备观测。
    - 上述命令以当前 `cltech-init -h` 确认支持为前提。当前版本不支持时记录 `unsupported_by_installed_cltech_init`，不要退回旧 `dlc-init` 猜命令。
+   - 不要把 `--check`/`--check-lyp` 一概描述为无副作用只读命令。CLTech-Init v1.1.2 的实测行为包括创建临时检测容器，并尝试停止/启动 Cltech-Exporter；执行前后必须比较容器列表和 exporter 状态，保存工具日志，并清理由本次检查成功创建且确认不再使用的临时资源。
    - 将退出状态、开始/结束时间和 `/var/log/cltech-init/<hostname>.log` 对应片段保存到 artifact。只记录相关时间窗并脱敏，不使用无限跟踪命令阻塞流程。
 
 6. 根据检查结果分类，不直接升级为破坏性修复：
@@ -183,7 +184,8 @@ claim_boundary: operational_or_not_verified_only
 
 13. 启动 serving：
    - 使用 tracked background process 或容器内可追踪进程启动，不使用失管的 `nohup`/`&`。
-   - 将完整启动命令的脱敏版本、environment、PID、端口和日志路径写入 run manifest。
+   - 将完整启动命令的脱敏版本、environment、Host wrapper PID、`docker exec` PID、容器内 APIServer/EngineCore PID、端口和日志路径写入 run manifest。
+   - tracked wrapper 结束不等于容器内子进程已经退出。停止服务后必须同时检查 Host 和容器 process table、端口、`cltech_smi` 进程信息和 HBM；任一仍占用时不能启动下一 server epoch。
    - 请求中的 `model` 必须等于【served model name】；启动未设置 alias 时才使用启动契约规定的模型名。
    - 等待明确 readiness 日志并做 health/model-list 检查。超时后保存日志，不重复启动第二个竞争实例。
 
@@ -205,8 +207,9 @@ claim_boundary: operational_or_not_verified_only
 
 17. 建立不可歧义的 benchmark contract：
    - 先保存 `vllm --version` 和当前版本的 `vllm bench serve --help`。不同 vLLM 版本参数可能变化，只使用当前帮助明确支持的参数；不要照抄历史命令后忽略 unknown option。
-   - 固定 image digest、`vllm`/`vllm-dlc` full HEAD、实际 import path、模型和 tokenizer revision、served model name、endpoint、host/port、TP/PP/EP、dtype、quantization、block size、Chunked Prefill、`max_model_len`、`max_num_batched_tokens`、prefix caching、设备映射和 HBM 频率。
-   - 固定 dataset、random input length、random output length、`num_prompts`、request rate、seed 和 client 所在位置。`--num-prompts` 是总请求数，不等同于并发数；实际并发语义要结合 request rate、client 调度方式和结果中的 `Peak concurrent requests` 报告。
+   - 固定 image digest、`vllm`/`vllm-dlc` full HEAD、实际 import path、模型和 tokenizer revision、served model name、endpoint、host/port、TP/PP/EP、dtype、quantization、block size、Chunked Prefill、`max_model_len`、`max_num_batched_tokens`、`max_num_seqs`、prefix caching、设备映射和 HBM 频率。
+   - 固定 dataset、random input length、random output length、`num_prompts`、request rate、seed、temperature/top-p、ignore-EOS 选择和 client 所在位置。`--num-prompts` 是总请求数，不等同于并发数；实际并发语义要结合 request rate、client 调度方式、server `max_num_seqs` 和结果中的 `Peak concurrent requests` 报告。
+   - 功能 smoke 的 `max_num_seqs=1` profile 不应直接用于饱和并发 benchmark。性能 profile 需要单独声明 `max_num_seqs`，变更后重启服务并重跑 L0/L1；不能把两个 profile 的 evidence 混为一个 contract。
    - `request-rate=inf` 是饱和压力/吞吐 workload，不代表真实业务到达率。需要业务流量结论时，另建有限 request-rate case，不能复用饱和结果。
    - 比较两个结果时，上述 contract 必须一致。任何字段变化都视为新的 benchmark case，不直接计算“性能提升/回退”。
 
@@ -244,16 +247,20 @@ claim_boundary: operational_or_not_verified_only
      --random-output-len 256 \
      --num-prompts 150 \
      --request-rate inf \
+     --seed 1024 \
+     --temperature 0 \
      --port <PORT>
    ```
 
    - 如果当前版本要求 `--backend`、`--base-url`、`--endpoint`、`--request-rate` 或 seed，显式填写并写入 contract。
+   - 当前 vLLM 可能不再默认发送 `temperature=0`。需要 deterministic workload 时必须显式传入 `--temperature 0`；否则记录服务端实际 sampling default，不能假定 greedy。
    - `<MODEL_PATH>` 用于 tokenizer/workload 构造，`<SERVED_MODEL_NAME>` 必须匹配服务注册的 alias；二者不能因字符串不同就随意改成相同值。
    - 使用 tracked foreground command 执行 client，并把完整 stdout/stderr 同步保存到 `client.log`。benchmark 超时必须有明确上限，不能无限等待。
 
 21. 每个正式 attempt 必须提取并报告：
    - Successful requests、失败请求数/失败率和总请求数。
    - Benchmark duration、Total input tokens、Total generated tokens。
+   - requested input/output length 与 JSON 中实际 `input_lens`/`output_lens` 分布。tokenizer 或 endpoint 可能使实际输入长度与请求值相差一个或多个 token，比较时使用实际 token 总量并保留请求参数。
    - Request throughput、Output token throughput、Peak output token throughput、Total token throughput。
    - Peak concurrent requests；它是观测值，不是 `num_prompts` 的同义词。
    - Mean/Median/P99 TTFT。
@@ -305,6 +312,10 @@ claim_boundary: operational_or_not_verified_only
    - timeout/hang：保存进程状态、请求、日志、设备观测和最后通过 checkpoint。`peek_stuck.sh`、软重置、LYP repair、kill 非本任务进程或 reboot 需明确授权。
    - 输出异常：建立相同模型、tokenizer、prompt、decode 参数和 token budget 的等价对照；多步分叉可缩成“分叉前 token + 单步 decode”以隔离 KV cache/scheduler 变量。
    - 每次修复只改变一个变量，生成新的 attempt ID；成功后重跑导致失败的最小 case 和所有较低层级 smoke。
+   - 服务 wrapper 已停止但 HBM 仍占用：先比较 Host/容器 PID namespace、端口、`cltech_smi` 和 `lsof /dev/cltech*`。`lsof` 受权限、tracefs/ZFS 和 mount namespace 影响，空输出不能单独证明无设备占用。
+   - 已确认是本任务残留进程时，优先按 APIServer/EngineCore 精确 PID 发送 TERM，等待后再按需 KILL；Host 无权限 signal 容器 root PID 时，从所属容器内执行精确终止。完成后必须确认 HBM 归零。
+   - `lsof -t /dev/cltech* | xargs -r kill -9` 是全设备残留进程强制清理命令，可能终止其他用户或其他容器任务。只有独占维护窗口、已审计 `lsof /dev/cltech*` 全部 PID/命令归属且明确授权强制清理时才允许执行，不能作为普通 benchmark 收尾默认命令。
+   - 进程清理后 HBM 仍未释放时，`cltechpd_clnt -s` 可用于设备软重置；它属于 Host/设备变更，必须明确授权、确认目标设备无人使用，并在执行后重跑 `cltech-init --check`、请求范围内的 `--check-lyp`、`--smi`、设备映射和 runtime smoke。进程清理已释放 HBM 时不得额外软重置。
 
 28. CLTech-Init/驱动/LYP 问题：
    - `cltech-init` 命令不存在：先判断是工具未安装、PATH 问题还是旧 `dlc-init` 残留；不要自动建立 alias。只有安装授权存在时才安装当前 CLTech-Init。
@@ -317,7 +328,7 @@ claim_boundary: operational_or_not_verified_only
 
 阶段 4：收尾和交付
 
-29. 正常停止本任务启动的 serving 进程，确认释放 HBM。不要停止其他用户或其他任务进程。
+29. 正常停止本任务启动的 serving 进程，确认 Host wrapper、容器 APIServer/EngineCore、监听端口均退出且 HBM 释放。不要停止其他用户或其他任务进程；只有满足第 27 步安全门时才使用强制清理或软重置。
 30. 按【容器结束策略】保持容器运行或正常停止；不默认删除容器，不执行 `docker commit` 或 prune。
 31. 最终报告必须包含：
    - image tag、image ID、repo digest、容器名和脱敏后的运行契约。
@@ -362,6 +373,9 @@ claim_boundary: operational_or_not_verified_only
 - 环境 smoke 通过后直接声明模型通过：必须完成真实模型加载和请求验证。
 - 短 prompt 通过后声明长上下文/并发/Chunked Prefill 通过：每个层级需要独立 evidence。
 - OOM 后偷偷降低配置并报告成功：修改后的 deployment profile 是新的验证对象，必须单独记录。
+- 只停止 Host 侧 tracked wrapper：`docker exec` 内的 APIServer/EngineCore 可能仍运行并占用 HBM，必须做跨 namespace 的进程和设备复检。
+- 看到 `lsof -t /dev/cltech*` 空输出就认定设备空闲：权限和 mount namespace 会导致漏报，应与 `cltech_smi`、容器进程和端口交叉验证。
+- 无条件运行 `lsof -t /dev/cltech* | xargs -r kill -9` 或 `cltechpd_clnt -s`：前者可能误杀其他任务，后者是设备软重置，必须通过独占性、归属和授权安全门。
 - 把 `num_prompts` 当作并发数：它是总请求数，实际峰值并发应查看 `Peak concurrent requests` 并结合 request rate。
 - 只保存终端摘要：必须保留 client/server 原始日志、命令、contract 和健康检查，否则结果不可复现。
 - 只跑一次并选最好结果：正式基线应重复测量并报告 median 与离散范围。
