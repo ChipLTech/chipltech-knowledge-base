@@ -25,7 +25,9 @@ claim_boundary: operational_or_not_verified_only
 - 默认从每日镜像创建新容器，不在验证后用 `docker commit` 把运行态凭据、模型缓存或临时产物固化回镜像。
 - 源码、构建产物、报告和 serving 日志放在 Host 持久目录，通过 bind mount 进入容器；容器删除后 evidence 仍可审计。
 - Git/SSH 缺失时引用 Git bootstrap 模板执行，禁止把私钥放入 Dockerfile、image layer、Git 仓库或报告。
-- Host 驱动、设备初始化和 LYP 操作不属于普通环境适配。驱动重载、`cltech-init`/`dlc-init`、软重置、LYP repair、kill 非本任务进程和 reboot 必须另获明确授权。
+- Host 驱动、设备初始化和 LYP 操作不属于普通环境适配。`cltech-init -i <日期>` 是包含镜像拉取、硬件检测、驱动安装、`fix_hbm` 和 LYP 内环初始化的 All-in-One 操作，不得把它当作普通 `docker pull` 自动执行。
+- CLTech-Init 是当前工具名，`dlc-init` 只作为旧名称识别线索。执行前必须以当前主机的 `cltech-init -v`、`cltech-init -h` 和 `/etc/chipltech/cltech-init.conf` 为准，不能只依赖历史示例。
+- 驱动安装/更新、`fix_hbm`、LYP4/LYP8 初始化、质量测试、掉电上电、软/硬重置、LYP repair、kill 非本任务进程和 reboot 必须按操作类别另获明确授权。
 - 环境通过、模型加载通过、短 prompt 通过和长上下文通过是不同结论，必须分别报告。
 
 ## 可复制 Prompt
@@ -44,7 +46,9 @@ claim_boundary: operational_or_not_verified_only
 
 【Host 工作根目录】<例如 /home/user/daily-validation；必须位于持久磁盘>
 【每日镜像引用】<registry/repository:tag；必须填写，不得猜测 latest>
+【每日镜像日期】<YYYYMMDD；使用 CLTech-Init 时必须与镜像引用一致>
 【期望镜像 digest】<sha256:...；没有则写“拉取后记录实际 digest，不做预声明校验”>
+【芯片代际】<DLC Chip / TYD Chip；不确定则只读自动发现，不能从镜像名直接猜>
 【容器名】<包含日期且唯一，例如 daily-vllm-YYYYMMDD>
 【容器内工作根目录】<例如 /work>
 【源容器】<已有 Git/SSH 的受信容器；目标容器已有可用 Git/SSH 时写“不需要”>
@@ -61,7 +65,10 @@ claim_boundary: operational_or_not_verified_only
 【容器资源】<shm-size、ipc、pid、memlock/stack ulimit、CPU、内存>
 【允许安装系统包】<是/否>
 【允许修改 /usr/local】<是/否>
-【允许的宿主机/设备操作】<默认“无”；逐项列出明确授权>
+【允许安装或升级 CLTech-Init】<是/否；默认否>
+【允许的宿主机/设备操作】<默认“只读检查”；从“驱动安装/更新、fix_hbm、LYP4 内环、LYP8 外环、abs、matmul、hbmcopy、掉电上电、软重置、硬重置、reboot”中逐项批准>
+【目标物理设备】<例如 0,1,2；必须与 DLC_VISIBLE_DEVICES 的物理映射核对>
+【批准的 HBM 频率】<例如 2.8；未授权 fix_hbm 时写“不适用”>
 【artifact 目录】<Host 工作根目录下且位于 vllm-dlc 源码树外>
 【容器结束策略】<保持运行 / 正常停止；默认保持运行便于复查>
 
@@ -74,6 +81,10 @@ claim_boundary: operational_or_not_verified_only
    - 记录 `docker info` 是否健康、目标容器名是否已存在、每日镜像本地是否存在。
    - 只读记录 `/dev/dlc*`、`/mnt/jfs`、`/sys`、`/lib/modules` 和 `/var/log` 的可见性；不要因为缺失而执行驱动初始化。
    - 记录 Host 当前设备观测结果和 HBM 占用。如目标设备正在被其他任务使用，停止并报告，不 kill 或抢占。
+   - 检查 `command -v cltech-init`。存在时记录 `cltech-init -v`、`cltech-init -h` 支持的当前参数；不存在时只报告，除非【允许安装或升级 CLTech-Init】为“是”。
+   - 只读检查 `/etc/chipltech/cltech-init.conf` 是否存在、owner/mode 和非敏感配置项。记录 `REGION`、DLC/TYD image、image date、`UPDATE_IMAGE`、`UPDATE_DRIVER`、`HBM_CLOCK`、`LYP_INIT` 和质量测试开关；配置可能因版本变化或历史拼写问题存在重复 key，必须结合 `cltech-init -h` 和实际镜像引用判断，不能盲目 source 后执行。
+   - CLTech-Init 的命令行参数优先于配置文件。最终报告必须同时记录配置值和本次批准的命令行 override，防止“配置写 no、命令实际强制执行”的审计遗漏。
+   - 只读检查 `dlc-driver.service`、`persisd.service`（存在时）的状态和日志位置。服务不存在不等于可以自动安装；服务异常也不等于可以自动 restart。
 
 2. 准备持久目录：
    - 在【Host 工作根目录】下使用独立目录保存 `src/`、`build/`、`wheels/`、`artifacts/`、`logs/` 和必要 cache。
@@ -85,6 +96,8 @@ claim_boundary: operational_or_not_verified_only
    - pull 后记录 image ID、repo digest、created time、architecture 和基础 image metadata。
    - 若提供【期望镜像 digest】，实际 digest 不一致时停止。不要继续使用 tag 当前指向的其他镜像。
    - 不修改或覆盖该 tag，不执行 `docker image prune`。
+   - 默认使用显式 `docker pull <每日镜像引用>` 完成纯镜像拉取。不要用 `cltech-init -i <每日镜像日期>` 代替，因为后者默认还可能安装驱动、执行 `fix_hbm` 和初始化 LYP。
+   - 如果用户明确批准使用 CLTech-Init All-in-One，先验证镜像日期格式和【芯片代际】，回显它将触发的全部子操作，并逐项核对【允许的宿主机/设备操作】；任一隐含子操作未批准时不得执行 All-in-One，应拆分为纯 pull 和已批准的单项操作。
 
 4. 生成并回显容器运行契约后再创建容器：
    - bind mount 持久 `src/build/wheels/artifacts/logs` 到【容器内工作根目录】下对应路径。
@@ -96,15 +109,49 @@ claim_boundary: operational_or_not_verified_only
 
 阶段 0 验收：容器处于 running，image digest 与 run manifest 一致，持久目录可写，模型目录只读可见，目标设备与资源契约符合声明。保存 `docker inspect` 的脱敏结果。
 
+阶段 0.5：Host 设备健康与 CLTech-Init 安全门
+
+5. 在模型或 DLC Runtime 验证需要 Real DLC Hardware 时，先执行只读健康检查：
+   - `cltech-init --check`：仅做 Chipltech-Family Accelerator 硬件检测。
+   - `cltech-init --check-lyp`：仅做 LYP 状态检查。
+   - `cltech-init --smi`：仅在驱动已安装时采集设备观测。
+   - 上述命令以当前 `cltech-init -h` 确认支持为前提。当前版本不支持时记录 `unsupported_by_installed_cltech_init`，不要退回旧 `dlc-init` 猜命令。
+   - 将退出状态、开始/结束时间和 `/var/log/cltech-init/<hostname>.log` 对应片段保存到 artifact。只记录相关时间窗并脱敏，不使用无限跟踪命令阻塞流程。
+
+6. 根据检查结果分类，不直接升级为破坏性修复：
+   - `READY`：目标设备数量、驱动状态、HBM 和请求范围内的 LYP 状态满足 deployment profile，可继续。
+   - `BLOCKED_DRIVER`：驱动缺失、版本不匹配或 service 异常。报告 image/driver 版本、`dlc-driver.service` 和 `/var/log/dlc-driver/service.log`（存在时），等待“驱动安装/更新”授权。
+   - `BLOCKED_DEVICE`：设备缺失、PCIe/硬件检查失败或 HBM 异常。保留日志并停止，不执行掉电上电、reset 或 reboot。
+   - `BLOCKED_LYP`：请求多卡/跨卡且 LYP 检查失败。单卡 profile 不应因未请求的外环失败而自动做 LYP repair；多卡 profile 必须停止等待对应 LYP4/LYP8 授权。
+   - `BLOCKED_BUSY`：目标物理设备被其他任务占用。不要通过 reset、驱动重载或 kill 其他进程抢占。
+   - `BLOCKED_TOOLING`：CLTech-Init 缺失、版本不支持所需检查或配置有歧义。不得把工具缺失误报为硬件故障。
+
+7. 只有获得逐项授权后，才可执行对应 Host 变更：
+   - 安装/升级工具：优先使用已批准的 `/mnt/jfs/software/cltech-init/install.sh`；`install.sh -f` 会重新初始化配置，仅在明确批准覆盖配置且已保存脱敏配置快照时使用。无 JFS 时下载来源、版本和完整性校验必须先获批准。
+   - 驱动更新：`cltech-init -i <日期> -f` 会强制更新指定镜像版本的驱动，但它仍属于 All-in-One 路径；只有驱动更新、`fix_hbm` 和对应 LYP 子操作均逐项获批时才允许执行。若只批准驱动更新，应使用当前 `cltech-init -h` 明确提供的单项方式；当前版本没有单项方式时停止并报告，不能用 All-in-One 代替。执行前停止本任务 serving、确认目标卡无人使用，并说明可能影响整机其他容器。
+   - `fix_hbm`：仅作用于【目标物理设备】，使用批准的 `-t` 和 `-g`；不需要 LYP 时必须显式 `--skip-lyp`，避免隐式初始化。不得把容器内逻辑设备编号未经映射直接传给 Host `-t`。
+   - LYP 内环使用当前帮助确认的 `--lyp4`；外环使用 `--lyp8`，且需要完整拓扑和所有相关主机的变更窗口。不得把 LYP4 通过解释为 LYP8 通过。
+   - `abs`、`matmul`、`hbmcopy` 是手动、可能耗时的质量测试，分别只在对应授权后使用 `--test-abs`、`--test-matmul`、`--test-hbm`，并使用 `-t` 限定目标设备。
+   - 掉电上电/LYP 修复目前存在芯片代际能力差异，必须以当前 `cltech-init -h` 为准；不支持的 TYD Chip 操作不得尝试 DLC Chip 路径。
+
+8. 变更后必须重新验证而不是只看命令退出码：
+   - 重新运行 `--check`、请求范围内的 `--check-lyp` 和 `--smi`。
+   - 核对 `/dev/dlc*` 数量、目标设备映射、驱动/service 状态、HBM 频率/容量和错误日志。
+   - LYP4 日志读取 `/var/log/cltech-init/lyp4_init.log`，LYP8 日志读取 `/var/log/cltech-init/lyp8_init.log`；主流程日志读取 `/var/log/cltech-init/<hostname>.log`。
+   - 如果变更命令返回成功但复检失败，状态仍为 BLOCKED。禁止继续创建“环境健康”checkpoint。
+   - Host 驱动或设备状态变化后，重启或重建目标容器前先比较原运行契约；只处理本任务容器，不批量 restart 其他容器。
+
+阶段 0.5 验收：只读检查或获批修复后的复检证明目标物理设备、驱动和请求范围内的 LYP 健康；物理设备到容器 `DLC_VISIBLE_DEVICES` 的映射已记录。单卡任务可明确标记 LYP8 `not_applicable`，但不能标记 PASS。
+
 阶段 1：目标容器 Git/SSH 与 DLC Ecosystem 环境适配
 
-5. 先检查容器内 Git/SSH：
+9. 先检查容器内 Git/SSH：
    - 如果 Git、SSH identity 和目标私有仓库访问都已通过，记录版本与身份后跳过迁移。
    - 如果缺失，严格使用 `bootstrap-git-from-configured-container.md`，以【源容器】为来源并遵守【Git/SSH 私钥迁移授权】。
    - 不输出 key，不复制 credential store，不把 SSH 文件放进持久源码目录或 image layer。
    - 通过 `git ls-remote`、临时 clone、fetch 和 `git push --dry-run` 验证。只验证读权限但未验证写权限时必须明确标记。
 
-6. 使用 `dlc-env-setup` 做 repo discovery 和 bootstrap：
+10. 使用 `dlc-env-setup` 做 repo discovery 和 bootstrap：
    - 不假设固定源码路径；在持久 `src/` 中发现或 clone `dlc-thunk`、`DLCsim`、`DLCSynapse`、`DLC_CL`、`LLVM`、DLC_Custom_Kernel Repository、`pytorch`、`vllm` 和 `vllm-dlc`。
    - 对每个仓库记录 Git root、remote、branch/tag、full HEAD 和 `status --short`。
    - 已有 dirty 工作树时停止，不 stash、不 reset、不 clean、不覆盖。
@@ -113,7 +160,7 @@ claim_boundary: operational_or_not_verified_only
    - 按当前 `dlc-env-setup` skill 的依赖顺序进行必要的最小 rebuild/reinstall，不因单项失败跳到后续组件。
    - wheel、build log 和环境报告写入 Host 持久目录，不只保存在容器 writable layer。
 
-7. 运行阶段 1 验证：
+11. 运行阶段 1 验证：
    - `pytorch-preflight.sh`
    - `vllm-preflight.sh`
    - `runtime-smoke.sh <源码树外临时目录>`
@@ -124,62 +171,73 @@ claim_boundary: operational_or_not_verified_only
 
 阶段 2：模型身份检查、服务启动和功能验证
 
-8. 模型 preflight：
+12. 模型 preflight：
    - 验证【模型绝对路径】存在且是批准资产，记录 config、tokenizer/processor 文件和 revision；不输出模型敏感内容。
    - 检查模型架构、dtype、quantization metadata、所需设备数、估算 HBM 和 deployment profile 是否匹配。
    - 量化模型核对 `quant_method`、`bits`、`group_size`、`zero_point` 与可用 kernel 路由；不能根据目录名猜测 AWQ、AWQ-Marlin、W8A16 或 compressed-tensors 兼容性。
    - 资源、revision、processor 或 manifest 身份缺失时，在模型加载前报告 `blocked_missing_asset` 或 `blocked_missing_hardware`。
 
-9. 启动 serving：
+13. 启动 serving：
    - 使用 tracked background process 或容器内可追踪进程启动，不使用失管的 `nohup`/`&`。
    - 将完整启动命令的脱敏版本、environment、PID、端口和日志路径写入 run manifest。
    - 请求中的 `model` 必须等于【served model name】；启动未设置 alias 时才使用启动契约规定的模型名。
    - 等待明确 readiness 日志并做 health/model-list 检查。超时后保存日志，不重复启动第二个竞争实例。
 
-10. 按阶梯验证，每层通过后才进入下一层：
+14. 按阶梯验证，每层通过后才进入下一层：
    - L0 liveness：health endpoint、model list、server PID 和设备可见性正常。
    - L1 短 prompt：`temperature=0`、`top_p=1.0`、`max_tokens=64` 或 `128`，确认 HTTP 成功、非空输出、finish reason 和 server liveness。
    - L2 中 prompt：保持 deterministic 参数，只增加 prompt 长度，记录输入 token、输出 token、首 token latency、总 latency 和输出摘要。
    - L3 长 prompt/one-shot：每轮只改变一个变量，记录 prompt token 数、decode 参数、Chunked Prefill 选择、输出、finish reason、latency 和日志位置。
    - L4 可选扩展：并发、多卡、TP/PP/EP、MoE、量化、vision/multimodal 和长上下文必须单独授权、单独记录，不能由 L1/L2 推断通过。
 
-11. 每层做前后健康检查：
+15. 每层做前后健康检查：
    - 记录 server 是否仍存活、目标设备 HBM、关键错误日志和请求关联 ID。
    - 发现空输出、重复符号、timeout、异常截断、NaN/Inf、进程退出或明显降速时，停止提升层级，保存最小失败输入。
    - 不用一个失败层级覆盖前面已通过的 bounded 结论，也不把前面通过解释为失败层级已通过。
 
 问题诊断与恢复规则
 
-12. 镜像/容器问题：
+16. 镜像/容器问题：
    - pull 失败：区分 registry auth、DNS/TLS、tag 不存在和磁盘空间；不关闭 TLS，不切换到未经批准的镜像。
    - 容器立即退出：检查 entrypoint、command、architecture 和动态库，不用无限 restart loop 掩盖错误。
    - mount 缺失或权限错误：比较 Host 路径 owner/mode、容器 UID/GID 和 inspect 配置；不要递归 chmod 777。
    - 配置契约错误时保留失败容器和 manifest，使用新名称创建修正容器；未确认持久数据前不删除旧容器。
 
-13. Git/源码问题：
+17. Git/源码问题：
    - SSH 失败按 key owner/mode、有效 `ssh -G`、host key、port/proxy 和 GitHub identity 顺序定位，禁止打印私钥。
    - remote/ref 不匹配、dirty tree、detached HEAD 未批准或 submodule 失败时停止，不 reset/clean 强行通过。
    - 网络暂时失败只重试幂等 fetch/pull，限制次数并保留原始错误；认证失败不循环重试。
 
-14. 构建/import 问题：
+18. 构建/import 问题：
    - 保留首个根因错误和完整 log；不要只报告最后一行。
    - 比较 build 使用的 Python/pip/CMake/compiler 与 runtime import 环境，检查旧 wheel、editable install、`PYTHONPATH` 和动态库路径污染。
    - 只重建失败组件及当前 skill 要求的下游组件；上游健康证据不足时回到阶段 1 safety gate。
 
-15. serving/模型问题：
+19. serving/模型问题：
    - OOM：先核对实际 HBM、并发、TP、`max_model_len`、batching 和 cache 配置；未经批准不自动缩小 deployment profile 后声称原 profile 通过。
    - API 404/model mismatch：核对 `--served-model-name`、请求 endpoint 和 model 字段。
    - timeout/hang：保存进程状态、请求、日志、设备观测和最后通过 checkpoint。`peek_stuck.sh`、软重置、LYP repair、kill 非本任务进程或 reboot 需明确授权。
    - 输出异常：建立相同模型、tokenizer、prompt、decode 参数和 token budget 的等价对照；多步分叉可缩成“分叉前 token + 单步 decode”以隔离 KV cache/scheduler 变量。
    - 每次修复只改变一个变量，生成新的 attempt ID；成功后重跑导致失败的最小 case 和所有较低层级 smoke。
 
+20. CLTech-Init/驱动/LYP 问题：
+   - `cltech-init` 命令不存在：先判断是工具未安装、PATH 问题还是旧 `dlc-init` 残留；不要自动建立 alias。只有安装授权存在时才安装当前 CLTech-Init。
+   - `-i` 拉镜像后发生意外驱动或 LYP 变更：立即停止后续模型验证，保存主日志、当前配置、image/driver 身份和设备复检结果；不要再次执行 All-in-One 尝试“修好”。
+   - `--check` 失败但 `--smi` 有输出：分别报告硬件检测与观测结果，不能以 SMI 可读覆盖硬件检测 failure。
+   - `--check-lyp` 失败：确认 deployment profile 是否真的需要 LYP、目标是内环还是外环、物理拓扑和目标卡选择；没有授权时只保存 `lyp4_init.log`/`lyp8_init.log` 和主日志。
+   - 驱动 service 与设备节点不一致：同时检查 `dlc-driver.service`、`persisd.service`、相关日志和 `/dev/dlc*`，不要仅 restart service。任何 restart 都属于 Host 变更，需要授权和占用检查。
+   - HBM 频率或质量测试失败：隔离到明确的物理设备，记录 `-t`、`-g`、测试类型和日志；不要扩大到所有卡，不自动降低频率后声称原频率通过。
+   - CLTech-Init 卡住或超时：记录 PID、子进程、当前日志增长、设备占用和最后完成阶段；终止本任务进程也要先确认不会留下半完成驱动/LYP 状态，随后必须完整复检。
+
 阶段 3：收尾和交付
 
-16. 正常停止本任务启动的 serving 进程，确认释放 HBM。不要停止其他用户或其他任务进程。
-17. 按【容器结束策略】保持容器运行或正常停止；不默认删除容器，不执行 `docker commit` 或 prune。
-18. 最终报告必须包含：
+21. 正常停止本任务启动的 serving 进程，确认释放 HBM。不要停止其他用户或其他任务进程。
+22. 按【容器结束策略】保持容器运行或正常停止；不默认删除容器，不执行 `docker commit` 或 prune。
+23. 最终报告必须包含：
    - image tag、image ID、repo digest、容器名和脱敏后的运行契约。
    - Host 持久目录、mount、设备选择和资源配置。
+   - CLTech-Init version/help 能力、配置与 CLI override、芯片代际、image/driver 身份、物理卡映射、`--check`/`--check-lyp`/`--smi` 结果及相关日志路径。
+   - 所有获批 Host 变更的命令类别、目标设备、HBM 频率、LYP4/LYP8 范围、前后状态和复检结果；未授权操作明确列为未执行。
    - Git/SSH 验证状态及所引用的 bootstrap 报告，不包含 secret。
    - repo map、full HEAD、环境构建/reinstall 和三个 preflight/smoke 结果。
    - 模型身份、deployment profile、每个验证层级的 PASS/FAIL/BLOCKED、请求摘要和日志路径。
@@ -195,7 +253,8 @@ claim_boundary: operational_or_not_verified_only
 
 | Checkpoint | 最小通过条件 | 可恢复入口 |
 |------------|--------------|------------|
-| C0 Container Ready | digest、mount、设备和持久目录正确 | 从 Git/SSH 检查继续 |
+| C0 Container Ready | tag、digest、image ID、持久目录、mount 和容器资源契约正确 | 从 Host 设备检查继续 |
+| C0.5 Hardware Ready | 目标设备、驱动、物理卡映射和请求范围内的 LYP 健康 | 从 Git/SSH 检查继续 |
 | C1 Environment Ready | repo map、preflight、import 和 runtime smoke 通过 | 从模型 preflight 继续 |
 | C2 Server Ready | 模型加载、health 和 model list 通过 | 从 L1 请求继续 |
 | C3 Short Smoke | deterministic 短 prompt 非空且服务健康 | 从 L2/L3 继续 |
@@ -204,6 +263,10 @@ claim_boundary: operational_or_not_verified_only
 ## 常见误区
 
 - 把每日 tag 当作固定版本：tag 会移动，必须记录 digest 和 image ID。
+- 把 `cltech-init -i <日期>` 当成纯镜像拉取：它默认是 All-in-One，可能更新 Host 驱动、执行 `fix_hbm` 和初始化 LYP。
+- 只看 CLTech-Init 退出码：必须用 `--check`、`--check-lyp`、`--smi` 和对应日志做变更后复检。
+- 混淆 LYP4 与 LYP8：内环通过不证明外环通过，单卡不需要的外环应标记 `not_applicable` 而非 PASS。
+- 把容器 `DLC_VISIBLE_DEVICES=0` 直接当作 Host 物理卡 0：必须记录物理到逻辑设备映射后才能使用 `cltech-init -t`。
 - 只在容器 writable layer 保存源码和日志：容器重建后 evidence 丢失，应使用 Host bind mount。
 - 为方便把 Host 整个 `~/.ssh` 挂入容器：扩大凭据暴露面，应使用 Git bootstrap 的最小文件迁移策略。
 - 容器启动失败就删除重建：先保留 inspect、日志和 manifest，否则失去根因证据。
@@ -219,3 +282,9 @@ claim_boundary: operational_or_not_verified_only
 - [vllm-dlc-model-adaptation.md](vllm-dlc-model-adaptation.md)
 - [../runtime-debugging/dlc-workstation-env-rebuild.md](../runtime-debugging/dlc-workstation-env-rebuild.md)
 - [../debugging-workflows/post-install-runtime-smoke.md](../debugging-workflows/post-install-runtime-smoke.md)
+
+## CLTech-Init 来源边界
+
+- 本模板中的 CLTech-Init 命令语义来自《CLTech-Init用户使用说明（原dlc-init）》：工具支持 DLC Chip 和 TYD Chip，可执行每日镜像拉取、硬件检测、驱动安装、`fix_hbm`、LYP 初始化和手动质量测试。
+- 文档示例不是版本无关 API。实际执行必须先读取当前主机的 `cltech-init -v`、`cltech-init -h` 和 `/etc/chipltech/cltech-init.conf`。
+- 原说明中的 `TPU` 在本知识库统一表述为 Chipltech-Family Accelerator；不能沿用该旧称泛指 DLC Chip 或 TYD Chip。
