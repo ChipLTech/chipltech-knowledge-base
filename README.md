@@ -57,6 +57,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - `prompt-examples/dlc-env-setup-skill-usage.md` 用于直接调用 `dlc-env-setup` skill 做环境重建或修复。
 - `prompt-examples/dlc-env-setup-fresh-container-validation.md` 用于在全新容器中验证 `dlc-env-setup` 的 Kilo 暴露、调用方式和功能闭环。
 - [prompt-examples/bootstrap-git-from-configured-container.md](prompt-examples/bootstrap-git-from-configured-container.md) 用于从已验证容器安全提取 Git 配置和 SSH client key，为 Host 或其他容器补齐私有仓库 clone、fetch 与 push 能力。
+- [prompt-examples/host-daily-image-to-model-validation.md](prompt-examples/host-daily-image-to-model-validation.md) 用于从 Host 固定每日镜像、创建持久容器、补齐 Git/SSH 和 DLC Ecosystem 环境，再完成可恢复的分层模型功能验证。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) 用于每日空镜像先初始化 DLC Ecosystem，再对新模型做 vLLM-DLC / DLC Platform 适配分析的两阶段流程。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
