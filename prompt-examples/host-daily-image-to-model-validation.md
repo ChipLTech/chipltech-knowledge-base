@@ -62,6 +62,10 @@ claim_boundary: operational_or_not_verified_only
 【served model name】<API 请求使用的 alias>
 【设备选择】<DLC_VISIBLE_DEVICES 和所需设备数量>
 【deployment profile】<TP/PP/EP、dtype、quantization、max_model_len、max_num_batched_tokens、Chunked Prefill、prefix caching>
+【是否执行服务端到端 benchmark】<是/否；默认是>
+【benchmark workload】<dataset、random input/output length、num prompts、request rate、seed、重复次数；默认建议 random、256/256、150、inf、固定 seed、正式 3 次>
+【benchmark 结果根目录】<默认 /home/xuansun/vllm-dlc-workspace/artifacts；必须是 Host 持久目录并挂载进容器>
+【benchmark 比较基线】<同模型同 workload 的历史 artifact 路径或“无”；不得用不同配置结果直接判回归>
 【容器资源】<shm-size、ipc、pid、memlock/stack ulimit、CPU、内存>
 【允许安装系统包】<是/否>
 【允许修改 /usr/local】<是/否>
@@ -195,32 +199,114 @@ claim_boundary: operational_or_not_verified_only
    - 发现空输出、重复符号、timeout、异常截断、NaN/Inf、进程退出或明显降速时，停止提升层级，保存最小失败输入。
    - 不用一个失败层级覆盖前面已通过的 bounded 结论，也不把前面通过解释为失败层级已通过。
 
+阶段 3：服务端到端性能 benchmark
+
+16. 只有阶段 2 的 L0、L1 和请求范围内功能 smoke 通过，且【是否执行服务端到端 benchmark】为“是”时，才能执行 `vllm bench serve`。本阶段只做 serving 端到端 benchmark，不默认启用 DLC profiler，不采集算子 cycle 占比，也不根据单次结果推导理论性能上限。
+
+17. 建立不可歧义的 benchmark contract：
+   - 先保存 `vllm --version` 和当前版本的 `vllm bench serve --help`。不同 vLLM 版本参数可能变化，只使用当前帮助明确支持的参数；不要照抄历史命令后忽略 unknown option。
+   - 固定 image digest、`vllm`/`vllm-dlc` full HEAD、实际 import path、模型和 tokenizer revision、served model name、endpoint、host/port、TP/PP/EP、dtype、quantization、block size、Chunked Prefill、`max_model_len`、`max_num_batched_tokens`、prefix caching、设备映射和 HBM 频率。
+   - 固定 dataset、random input length、random output length、`num_prompts`、request rate、seed 和 client 所在位置。`--num-prompts` 是总请求数，不等同于并发数；实际并发语义要结合 request rate、client 调度方式和结果中的 `Peak concurrent requests` 报告。
+   - `request-rate=inf` 是饱和压力/吞吐 workload，不代表真实业务到达率。需要业务流量结论时，另建有限 request-rate case，不能复用饱和结果。
+   - 比较两个结果时，上述 contract 必须一致。任何字段变化都视为新的 benchmark case，不直接计算“性能提升/回退”。
+
+18. 在【benchmark 结果根目录】中为每次 run 创建独立目录，推荐：
+
+   ```text
+   /home/xuansun/vllm-dlc-workspace/artifacts/benchmarks/<date>/<model>/<case>/<attempt>/
+   ```
+
+   每个 attempt 至少保存：
+   - `manifest.md`：完整 benchmark contract、image/repo/model identity、开始结束时间和结论。
+   - `server-command.txt`：脱敏后的 serving 命令和环境变量。
+   - `client-command.txt`：脱敏后的 `vllm bench serve` 命令。
+   - `server.log`：覆盖 warm-up 和正式测量时间窗的服务日志。
+   - `client.log`：benchmark 原始 stdout/stderr，不只保存人工摘录。
+   - `metrics.md`：从原始结果抄录的结构化指标和单位。
+   - `health-before.txt`、`health-after.txt`：服务、进程和设备状态。
+   - 当前 vLLM 支持结构化 `--save-result`/JSON 输出时额外保存原始 JSON；不支持时保留完整 `client.log`，不要发明参数。
+   - case 目录额外保存 `summary.md` 和 `metrics.csv`：逐 attempt 保留原始指标，并汇总成功次数、median、min/max；不能只保存最佳 attempt。
+
+19. 先 warm-up，再正式测量：
+   - 使用与正式 workload 相同的模型、endpoint 和长度做小规模 warm-up，但 warm-up 请求数单独记录且不得计入正式结果。
+   - warm-up 后确认服务存活、模型 alias 正确、无失败请求、目标设备 HBM 稳定且没有其他客户端流量。
+   - 正式 benchmark 默认重复 3 次，每次使用相同 contract 和独立 attempt 目录。重复次数由【benchmark workload】覆盖时按声明执行。
+   - attempt 之间确认前一个 client 已退出、server 仍健康且没有遗留请求；不重启 server 来掩盖某一次失败。若确需重启，记录为新的 server epoch，不能与未重启 attempt 淆在一起。
+
+20. 参考命令形态如下，实际参数必须以当前 `--help` 和【benchmark workload】为准：
+
+   ```bash
+   vllm bench serve \
+     --model <MODEL_PATH> \
+     --served-model-name <SERVED_MODEL_NAME> \
+     --dataset-name random \
+     --random-input-len 256 \
+     --random-output-len 256 \
+     --num-prompts 150 \
+     --request-rate inf \
+     --port <PORT>
+   ```
+
+   - 如果当前版本要求 `--backend`、`--base-url`、`--endpoint`、`--request-rate` 或 seed，显式填写并写入 contract。
+   - `<MODEL_PATH>` 用于 tokenizer/workload 构造，`<SERVED_MODEL_NAME>` 必须匹配服务注册的 alias；二者不能因字符串不同就随意改成相同值。
+   - 使用 tracked foreground command 执行 client，并把完整 stdout/stderr 同步保存到 `client.log`。benchmark 超时必须有明确上限，不能无限等待。
+
+21. 每个正式 attempt 必须提取并报告：
+   - Successful requests、失败请求数/失败率和总请求数。
+   - Benchmark duration、Total input tokens、Total generated tokens。
+   - Request throughput、Output token throughput、Peak output token throughput、Total token throughput。
+   - Peak concurrent requests；它是观测值，不是 `num_prompts` 的同义词。
+   - Mean/Median/P99 TTFT。
+   - Mean/Median/P99 TPOT。
+   - Mean/Median/P99 ITL。
+   - 测量前后 server liveness、PID、目标设备 HBM 和关键服务错误。
+   - 若当前 vLLM 版本没有输出某项指标，标记 `not_emitted_by_this_vllm_version`，不得填 0 或从不等价指标推算。
+
+22. benchmark 通过标准和比较规则：
+   - 所有计划请求成功，或失败率不高于用户明确批准阈值；没有阈值时任何失败请求都使该 attempt 为 FAIL。
+   - client 正常结束，server 在 benchmark 后仍健康，没有 OOM、timeout、进程退出、NaN/Inf 或明显错误输出。
+   - 至少达到用户声明的重复次数；仅一次成功只能报告 single-run observation，不能称稳定性能基线。
+   - 多次结果分别保留，摘要报告 median，并同时报告 min/max 或离散程度；不得只挑最好一次。
+   - 只有 benchmark contract 完全一致且基线来源可审计时才计算相对变化。没有批准阈值时只报告数值变化，不自行判定 regression PASS/FAIL。
+   - 用户示例中的 150 requests、约 2.94 req/s、682 output tok/s、TTFT/TPOT/ITL 等只说明该特定运行结果格式，不作为其他 image、模型或 deployment profile 的默认门槛。
+
+23. benchmark 故障处理：
+   - client 连接失败：先核对 host/port、endpoint、server readiness 和容器端口映射；不要立即重启服务。
+   - 全部或部分请求失败：保存错误类别和失败样本，核对 alias、tokenizer、最大长度、timeout 和 server 日志；功能失败未解决前不继续加压。
+   - TTFT 很高但 output throughput 正常：检查请求突发程度、Peak concurrent requests、prefill 长度、Chunked Prefill 和 scheduler queue，不只归因于单个 kernel。
+   - TPOT/ITL 退化：检查 decode 并发、TP/LYP 状态、输出长度分布、其他设备负载和服务日志；保持 workload 不变后再重测。
+   - 吞吐波动大：检查是否存在其他客户端、设备占用、server epoch、热身不足、频率/温度状态和请求失败；不要增加重复次数来掩盖不稳定。
+   - OOM/hang/server crash：该 attempt 为 FAIL，保存 client/server 日志和设备状态，返回最近通过的功能 checkpoint。未经授权不降低 deployment profile 后覆盖原 case。
+   - client 卡住：在超时后记录客户端和服务进程、已完成请求数、最后日志和设备状态；只终止本任务 client。服务端终止按已有授权边界处理。
+
+阶段 3 验收：声明 workload 的正式 attempts 全部完成，原始日志和结构化指标已保存到【benchmark 结果根目录】，服务测后健康，重复测量摘要可审计。该结论只称为对应 contract 的 serving end-to-end benchmark，不证明模型正确性、Verified vLLM Alignment 或 Real DLC Hardware 权威 acceptance。
+
 问题诊断与恢复规则
 
-16. 镜像/容器问题：
+24. 镜像/容器问题：
    - pull 失败：区分 registry auth、DNS/TLS、tag 不存在和磁盘空间；不关闭 TLS，不切换到未经批准的镜像。
    - 容器立即退出：检查 entrypoint、command、architecture 和动态库，不用无限 restart loop 掩盖错误。
    - mount 缺失或权限错误：比较 Host 路径 owner/mode、容器 UID/GID 和 inspect 配置；不要递归 chmod 777。
    - 配置契约错误时保留失败容器和 manifest，使用新名称创建修正容器；未确认持久数据前不删除旧容器。
 
-17. Git/源码问题：
+25. Git/源码问题：
    - SSH 失败按 key owner/mode、有效 `ssh -G`、host key、port/proxy 和 GitHub identity 顺序定位，禁止打印私钥。
    - remote/ref 不匹配、dirty tree、detached HEAD 未批准或 submodule 失败时停止，不 reset/clean 强行通过。
    - 网络暂时失败只重试幂等 fetch/pull，限制次数并保留原始错误；认证失败不循环重试。
 
-18. 构建/import 问题：
+26. 构建/import 问题：
    - 保留首个根因错误和完整 log；不要只报告最后一行。
    - 比较 build 使用的 Python/pip/CMake/compiler 与 runtime import 环境，检查旧 wheel、editable install、`PYTHONPATH` 和动态库路径污染。
    - 只重建失败组件及当前 skill 要求的下游组件；上游健康证据不足时回到阶段 1 safety gate。
 
-19. serving/模型问题：
+27. serving/模型问题：
    - OOM：先核对实际 HBM、并发、TP、`max_model_len`、batching 和 cache 配置；未经批准不自动缩小 deployment profile 后声称原 profile 通过。
    - API 404/model mismatch：核对 `--served-model-name`、请求 endpoint 和 model 字段。
    - timeout/hang：保存进程状态、请求、日志、设备观测和最后通过 checkpoint。`peek_stuck.sh`、软重置、LYP repair、kill 非本任务进程或 reboot 需明确授权。
    - 输出异常：建立相同模型、tokenizer、prompt、decode 参数和 token budget 的等价对照；多步分叉可缩成“分叉前 token + 单步 decode”以隔离 KV cache/scheduler 变量。
    - 每次修复只改变一个变量，生成新的 attempt ID；成功后重跑导致失败的最小 case 和所有较低层级 smoke。
 
-20. CLTech-Init/驱动/LYP 问题：
+28. CLTech-Init/驱动/LYP 问题：
    - `cltech-init` 命令不存在：先判断是工具未安装、PATH 问题还是旧 `dlc-init` 残留；不要自动建立 alias。只有安装授权存在时才安装当前 CLTech-Init。
    - `-i` 拉镜像后发生意外驱动或 LYP 变更：立即停止后续模型验证，保存主日志、当前配置、image/driver 身份和设备复检结果；不要再次执行 All-in-One 尝试“修好”。
    - `--check` 失败但 `--smi` 有输出：分别报告硬件检测与观测结果，不能以 SMI 可读覆盖硬件检测 failure。
@@ -229,11 +315,11 @@ claim_boundary: operational_or_not_verified_only
    - HBM 频率或质量测试失败：隔离到明确的物理设备，记录 `-t`、`-g`、测试类型和日志；不要扩大到所有卡，不自动降低频率后声称原频率通过。
    - CLTech-Init 卡住或超时：记录 PID、子进程、当前日志增长、设备占用和最后完成阶段；终止本任务进程也要先确认不会留下半完成驱动/LYP 状态，随后必须完整复检。
 
-阶段 3：收尾和交付
+阶段 4：收尾和交付
 
-21. 正常停止本任务启动的 serving 进程，确认释放 HBM。不要停止其他用户或其他任务进程。
-22. 按【容器结束策略】保持容器运行或正常停止；不默认删除容器，不执行 `docker commit` 或 prune。
-23. 最终报告必须包含：
+29. 正常停止本任务启动的 serving 进程，确认释放 HBM。不要停止其他用户或其他任务进程。
+30. 按【容器结束策略】保持容器运行或正常停止；不默认删除容器，不执行 `docker commit` 或 prune。
+31. 最终报告必须包含：
    - image tag、image ID、repo digest、容器名和脱敏后的运行契约。
    - Host 持久目录、mount、设备选择和资源配置。
    - CLTech-Init version/help 能力、配置与 CLI override、芯片代际、image/driver 身份、物理卡映射、`--check`/`--check-lyp`/`--smi` 结果及相关日志路径。
@@ -241,6 +327,8 @@ claim_boundary: operational_or_not_verified_only
    - Git/SSH 验证状态及所引用的 bootstrap 报告，不包含 secret。
    - repo map、full HEAD、环境构建/reinstall 和三个 preflight/smoke 结果。
    - 模型身份、deployment profile、每个验证层级的 PASS/FAIL/BLOCKED、请求摘要和日志路径。
+   - benchmark contract、每个 attempt 的成功/失败请求、吞吐、TTFT、TPOT、ITL、Peak concurrent requests、server health、artifact 路径，以及 `summary.md`/`metrics.csv` 跨 attempt 摘要。
+   - 与历史基线比较时，列出 contract 等价性检查、基线来源、绝对值和相对变化；不同 contract 不输出回归结论。
    - 每次 failure 的根因或当前最小边界、采取的单变量修复、重验结果和最后通过 checkpoint。
    - 未验证范围：未实际执行的长上下文、并发、多卡、量化、Chunked Prefill runtime、DLC Runtime dispatch 或 Real DLC Hardware acceptance 必须标记 `not_verified`。
 
@@ -258,7 +346,8 @@ claim_boundary: operational_or_not_verified_only
 | C1 Environment Ready | repo map、preflight、import 和 runtime smoke 通过 | 从模型 preflight 继续 |
 | C2 Server Ready | 模型加载、health 和 model list 通过 | 从 L1 请求继续 |
 | C3 Short Smoke | deterministic 短 prompt 非空且服务健康 | 从 L2/L3 继续 |
-| C4 Requested Scope Done | 用户要求的最高层级完成 | 收尾与报告 |
+| C4 Functional Scope Done | 用户要求的最高功能层级完成 | 从 benchmark warm-up 或收尾继续 |
+| C5 Benchmark Done | 正式 attempts、原始日志、指标摘要和测后健康检查完成 | 收尾与报告 |
 
 ## 常见误区
 
@@ -273,6 +362,11 @@ claim_boundary: operational_or_not_verified_only
 - 环境 smoke 通过后直接声明模型通过：必须完成真实模型加载和请求验证。
 - 短 prompt 通过后声明长上下文/并发/Chunked Prefill 通过：每个层级需要独立 evidence。
 - OOM 后偷偷降低配置并报告成功：修改后的 deployment profile 是新的验证对象，必须单独记录。
+- 把 `num_prompts` 当作并发数：它是总请求数，实际峰值并发应查看 `Peak concurrent requests` 并结合 request rate。
+- 只保存终端摘要：必须保留 client/server 原始日志、命令、contract 和健康检查，否则结果不可复现。
+- 只跑一次并选最好结果：正式基线应重复测量并报告 median 与离散范围。
+- 将不同输入/输出长度、request rate、TP 或 Chunked Prefill 配置直接比较：contract 不一致时不能判定性能回归。
+- 把 `request-rate=inf` 当作业务 QPS：它是饱和压力 workload，不等价于线上流量。
 
 ## 相关资料
 
@@ -282,6 +376,8 @@ claim_boundary: operational_or_not_verified_only
 - [vllm-dlc-model-adaptation.md](vllm-dlc-model-adaptation.md)
 - [../runtime-debugging/dlc-workstation-env-rebuild.md](../runtime-debugging/dlc-workstation-env-rebuild.md)
 - [../debugging-workflows/post-install-runtime-smoke.md](../debugging-workflows/post-install-runtime-smoke.md)
+- [../testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
+- [../runtime-debugging/performance-profiling.md](../runtime-debugging/performance-profiling.md)
 
 ## CLTech-Init 来源边界
 
