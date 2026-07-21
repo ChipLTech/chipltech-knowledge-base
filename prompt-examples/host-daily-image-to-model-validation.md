@@ -15,6 +15,7 @@ claim_boundary: operational_or_not_verified_only
 
 本模板与以下模板配合使用：
 
+- [ModelZoo model 到 DLC/TYD images](modelzoo-model-to-dlc-tyd-images.md)
 - [从已配置容器为 Host 和其他容器赋能 Git/SSH](bootstrap-git-from-configured-container.md)
 - [每日空镜像到新模型 vLLM-DLC 适配](vllm-dlc-fresh-image-to-model-adaptation.md)
 - [DLC Ecosystem 环境 bootstrap](dlc-env-setup-environment-bootstrap.md)
@@ -429,6 +430,8 @@ claim_boundary: operational_or_not_verified_only
 
 ## 相关资料
 
+- [modelzoo-model-to-dlc-tyd-images.md](modelzoo-model-to-dlc-tyd-images.md)
+- [../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md)
 - [bootstrap-git-from-configured-container.md](bootstrap-git-from-configured-container.md)
 - [dlc-env-setup-environment-bootstrap.md](dlc-env-setup-environment-bootstrap.md)
 - [vllm-dlc-fresh-image-to-model-adaptation.md](vllm-dlc-fresh-image-to-model-adaptation.md)

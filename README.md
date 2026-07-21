@@ -59,6 +59,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/bootstrap-git-from-configured-container.md](prompt-examples/bootstrap-git-from-configured-container.md) 用于从已验证容器安全提取 Git 配置和 SSH client key，为 Host 或其他容器补齐私有仓库 clone、fetch 与 push 能力。
 - [prompt-examples/host-daily-image-to-model-validation.md](prompt-examples/host-daily-image-to-model-validation.md) 用于从 Host 固定每日镜像、创建持久容器、补齐 Git/SSH 和 DLC Ecosystem 环境，再完成可恢复的分层模型功能验证。
 - [prompt-examples/new-model-validation-quickstart.md](prompt-examples/new-model-validation-quickstart.md) 是只需填写模型名称和目录的傻瓜版入口，覆盖 skills 安装、环境适配、功能 smoke、服务端到端 benchmark 和安全收尾。
+- [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) 是只需 ModelZoo model name 的入口，生成 deterministic resolved manifest，并驱动证据受限的独立 DLC Chip/TYD Chip 镜像 contract。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) 用于每日空镜像先初始化 DLC Ecosystem，再对新模型做 vLLM-DLC / DLC Platform 适配分析的两阶段流程。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
@@ -91,6 +92,8 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 ### vLLM-DLC workflow
 
+- [vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) — ModelZoo 只读解析、manifest/blocked 状态、独立镜像 provenance 和 DLC/TYD 代际边界。
+- [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) — 只填写 ModelZoo model name 的可执行 prompt contract。
 - [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](vllm-dlc/model-adaptation-and-main-to-main-decisions.md) — Model Adaptation 与 Main-to-Main Upgrade 的稳定决策、证据分类和当前只读边界。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) — 每日空镜像初始化后接新模型适配的两阶段 prompt。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) — Model Adaptation 可复用 prompt。
