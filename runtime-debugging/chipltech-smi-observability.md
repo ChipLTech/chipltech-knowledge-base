@@ -114,6 +114,18 @@ cltech_smi --query-dlc=memory.total --format=csv,noheader,nounits
 
 TYD Chip 上，`--lypcheck=dlc_info_agg` 当前可用；其他 lypcheck 脚本可能提示 `Feature coming soon` 并跳过。
 
+### Reset 验收边界
+
+执行 `cltech_smi -sr ...` 前必须记录当前工具版本/help、完整参数、目标物理设备、设备到容器逻辑编号映射、共享/独占状态、任务进程、HBM 和 handles。Core soft reset 与 full soft reset 是不同维护动作，不能只写“做了 reset”。
+
+Reset 命令 exit 0 只证明工具接受并完成了命令流程，不证明 DLC Runtime execution 已恢复。每次 reset 后、下一恢复动作前必须在 fresh process 中重跑 allocation、H2D、device operation、synchronize、D2H 和 correctness。多卡 deployment 还应复验：
+
+- 每张目标设备独立执行。
+- 目标设备同时执行。
+- DLCCL collective correctness。
+
+如果多个恢复动作之间没有 fresh-process probe，只能记录为 `recovered_after_action_sequence`，不能将恢复唯一归因于最后一个 reset、service restart 或进程清理动作。
+
 ## cltech_device_info
 
 `cltech_device_info` 用于查看更底层的 XYS head/tail 状态：
@@ -170,6 +182,30 @@ Uploader SDK 的职责边界：
 - 新模型功能正确性。
 
 短 prompt serving smoke、SMI 查询、LYP 检查和进程占用观察应分别记录，不要合并成更强结论。
+
+SMI 显示设备存在、HBM 正常或无可见进程，也不证明首个 device operation 可以完成。Query-only evidence 必须与 fresh-process layered Runtime execution evidence 分开保存。
+
+## PCIe Link 观察边界
+
+采集 PCIe 状态时至少记录：
+
+- Chipltech-Family Accelerator device ID 与 PCI BDF 映射。
+- Current link speed 和 maximum link speed。
+- Current link width 和 maximum link width。
+- 采样时间、工作负载状态和设备是否 idle。
+- Pre-launch、active workload 和 post-cleanup 三个阶段的原始输出。
+- PCIe capability、AER 或 kernel log 是否因权限不可读。
+
+Current speed 低于 maximum speed，但 width 未降级、无 AER/设备错误且 workload 正常时，只能记录为未定性的 operational observation。Idle power management 可能影响 current speed，但没有电源状态证据时也不能断言一定是节能降速。
+
+以下证据出现时才考虑升级为明确设备或链路问题：
+
+- Link width 降级或 link down。
+- 可关联的 AER/kernel/firmware 错误。
+- 设备掉卡、DLC Runtime 错误或相同 workload 的可重复性能退化。
+- 经过批准的受控复验建立了时间和设备相关性。
+
+权限不足时标记 `not_observable_due_to_permission`。不得为了验证猜测自动执行 PCIe retrain、remove/rescan、reset 或 reboot，也不得把 post-cleanup link speed 观察与先前 DLC Runtime hang 或 benchmark 建立无证据因果关系。
 
 ## 相关资料
 
