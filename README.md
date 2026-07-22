@@ -63,6 +63,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) 用于每日空镜像先初始化 DLC Ecosystem，再对新模型做 vLLM-DLC / DLC Platform 适配分析的两阶段流程。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
+- [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) 用于固定 Prefill/Decode 拓扑、KV Cache Transfer Contract、分层验证和 evidence 边界。
 
 ## 快速入口
 
@@ -92,6 +93,8 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 ### vLLM-DLC workflow
 
+- [vllm-dlc/prefill-decode-separation.md](vllm-dlc/prefill-decode-separation.md) — Prefill/Decode Separation 的拓扑、MooncakeDLCConnector、KV Cache transfer、验证阶梯和 claim boundaries。
+- [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) — 配合已安装的 `pd-separation` skill 或 skills checkout，可直接填写并执行 PD 分离部署或诊断的 prompt。
 - [vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) — 本地模型优先、ModelZoo 可选只读 reference、ordinary daily-base runtime qualification 和独立 DLC/TYD delivery 状态机。
 - [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) — 填写模型名称、本地目录和 target 的 runtime-first image delivery prompt。
 - [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](vllm-dlc/model-adaptation-and-main-to-main-decisions.md) — Model Adaptation 与 Main-to-Main Upgrade 的稳定决策、证据分类和当前只读边界。

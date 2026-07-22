@@ -132,6 +132,14 @@
 
 **Separate KV Cache**：CUDA 风格 layout，K 和 V cache tensor 分别存储。
 
+**Prefill/Decode Separation**：将 prompt prefill 与 token decode 分配到独立 serving role 的 vLLM deployment topology。不得仅因两个 role 均 ready 就声称端到端 separation 已验证。
+
+**Prefill Worker**：执行请求 prefill，并产出供后续 decode 使用的 KV Cache 与 metadata 的 serving role。
+
+**Decode Worker**：消费与 request identity、model identity 和 cache contract 匹配的 KV Cache，并执行后续 token decode 的 serving role。
+
+**KV Cache Transfer Contract**：Prefill Worker 与 Decode Worker 之间关于 request correlation、layer/block/token ownership、cache layout/dtype、metadata、传输完成和失败语义的显式 contract。不得把 connector handshake 或进程存活等同于 KV transfer 已完成。
+
 **DLC Runtime Capability Boundary**：host 侧 custom kernel launch 支持与 CUDA 式 device 侧持久运行时控制之间的能力分界。
 
 **Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
@@ -169,6 +177,7 @@
 - **DLC_CHECK_RESULT** 使用 **CPU Reference** 在 **PyTorch DLC Backend** 中验证 **DLC Custom Kernel** 结果。
 - **pytorch_test Framework** 使用 **Variant**、**Static Shape Test**、**Dynamic Fuzz Test**、**SynShape** 和 **Model-Site Dump** 发现和最小化正确性问题。
 - **DLC Attention Backend** 可能使用 **Merged KV Cache**，CUDA 路径使用 **Separate KV Cache**。
+- **Prefill/Decode Separation** 要求 **Prefill Worker** 与 **Decode Worker** 的 model、tokenizer、cache layout、connector 和 request correlation identity 满足同一个 **KV Cache Transfer Contract**。
 
 ## 核心链路
 
