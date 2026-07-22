@@ -38,4 +38,4 @@
 qualification_and_image_delivery
 ```
 
-并使用 [ModelZoo 模型到 DLC/TYD Images Prompt](modelzoo-model-to-dlc-tyd-images.md) 声明 target 与 build/export 授权。
+并使用 [ModelZoo 模型到 DLC/TYD Images Prompt](modelzoo-model-to-dlc-tyd-images.md) 声明 target，以及 build/install、device execution、tar export、registry push 和 TYD full-stack rebuild 的逐项授权。该 prompt 会先交付 DLC，再以其 immutable Image ID 作为 TYD full-stack rebuild 的基线。

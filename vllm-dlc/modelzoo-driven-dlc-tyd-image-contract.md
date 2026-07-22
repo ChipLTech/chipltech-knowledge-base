@@ -21,7 +21,7 @@ I. Real-weight Functional Qualification
 J. Declared Benchmark Workload
 K. Sealed Delivery Record
 L. DLC Build -> Exact-image Validation -> Export
-M. TYD Base Resolution -> Build/Packaging -> Static/Exact-image Validation -> Export
+M. TYD Derivation from Qualified DLC Image -> Full-stack Rebuild/Packaging -> Static/Exact-image Validation -> Export
 N. Cleanup Closure
 O. DLC/TYD 独立 final status
 ```
@@ -33,7 +33,8 @@ Gate 规则：
 - Functional 失败：不执行 benchmark，不构建正式 image。
 - Benchmark workload 失败：不构建正式 image。
 - 在 J 前构建的 image 只能是 `prequalification_only`。
-- DLC 与 TYD target 独立报告；TYD blocked 不覆盖 DLC 结果。
+- TYD 是 qualified DLC image 的下游派生 target，只有 DLC delivery 已固定 immutable Image ID 后才可开始 TYD。
+- DLC 与 TYD target 独立报告 final status；TYD build、validation 或 export 失败不得回溯修改已完成 DLC delivery status。
 - Cleanup 未闭合时，受影响 target 为 `blocked_cleanup_incomplete`。
 
 ## 输入与授权
@@ -214,21 +215,19 @@ delivered_runtime_qualified_by_equivalent_environment
 
 ### TYD Target
 
-优先使用 qualified full-stack TYD base。Eligibility 至少包含 immutable Image ID、TYD generation/provenance mode、upstream attestation identity、full-stack 非 ENV-only 证明、package/static consistency，以及所选 DLC Platform/plugin identity。
+TYD delivery 默认从同一模型已交付 DLC image 的 immutable Image ID 派生。该 DLC image 是 TYD 的 build baseline，不替代 TYD full-stack qualification。
 
-基于 qualified base 的模型 packaging 使用：
+在该基线之上，必须以 `DLC_TPU_VERSION=2` 重编 dlc-thunk、LLVM、DLCsim、DLCSynapse、DLC_CL、DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和适用 vLLM-DLC extension。仅设置 image `ENV` 不证明完整重编。
 
-```text
-provenance_mode: inherited_full_stack_tyd_base
-```
+已有其他模型的 TYD image 只可作为 build recipe、attestation schema 或 component-provenance reference。除非它被明确审计为 model-agnostic、immutable、inspectable 的 reusable full-stack TYD base，否则不得直接替代当前模型的 qualified DLC image 作为最终 TYD delivery 的基础。
 
-无 qualified base 时默认：
+若当前模型没有已交付的 qualified DLC immutable Image ID，TYD target 为：
 
 ```text
-blocked_missing_qualified_tyd_base
+blocked_missing_qualified_dlc_base
 ```
 
-从 DLC base 重编 dlc-thunk、LLVM、DLCsim、DLCSynapse、DLC_CL、DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和适用 vLLM-DLC extension 是独立的 `create_tyd_full_stack_base` contract，必须另获构建授权；不能成为模型 prompt 的隐式 fallback。`ENV DLC_TPU_VERSION=2` 不证明重编。
+TYD full-stack rebuild 是当前模型 image delivery 的下游阶段，必须获得 build/install、tar export 和 `create_tyd_full_stack_rebuild` 授权。缺少继续所需授权时为 `blocked_missing_authorization`。
 
 DLC Chip Host 上 TYD target 仅允许 static/package/import、hash、label、attestation 和 export。以下状态固定为：
 
@@ -248,7 +247,8 @@ delivered_runtime_qualified_by_equivalent_environment
 delivered_static_package_only
 prequalification_only
 failed_validation
-blocked_missing_qualified_base
+blocked_unqualified_daily_base
+blocked_missing_qualified_dlc_base
 blocked_missing_hardware
 blocked_missing_authorization
 blocked_cleanup_incomplete
