@@ -69,7 +69,7 @@
    - CI 脚本在一次性 Runner 中常用 `git reset --hard`、`git clean -fdx`、删除 build 目录和强制 submodule；本模板在共享工作区默认禁止这些破坏性操作，除非用户明确声明当前目录是 disposable bootstrap workspace。
 
 2. 先做 repo discovery，不要默认 `/home/workspace`。
-   - 先检查 `command -v cmake`、`cmake --version`、`command -v ctest cpack`；如果默认 `cmake` 版本已严格大于 `3.27.0` 且 `ctest`、`cpack` 同源可用，记录路径和版本并跳过 CMake bootstrap。
+   - 先检查交互 shell 和计划使用的实际 Python/setuptools build subprocess 分别解析到的 `cmake`；只有二者为同一 approved binary 且版本严格大于 `3.27.0` 时，才记录路径/版本并跳过 CMake bootstrap。`ctest`、`cpack` 仅在本次会调用时检查。
    - 搜索可用 CMake 源码树、`dlc-thunk`、`DLCsim`、`DLCSynapse`、`DLC_CL`、`LLVM`、`DLC_Custom_Kernel`、`pytorch`。
    - 如果要求包含 `vllm` / `vllm-dlc`，再搜索这两个仓库。
    - 如果要求 SMI 观测、driver source、设备诊断工具 source 或 CI 对齐报告，再搜索 `chipltech_smi_lib`、`arsenal`、`cl-persistenced`、`DLC-Kernel-Driver` 和 `cl_tools`；这些不是 `dlc-env-setup` 的最小必需仓库，缺失时只在被请求时 clone。
@@ -108,14 +108,15 @@
    - 如果需要和 CI 完全一致的 destructive clean/rebuild 语义，必须由用户明确写明“这是一次性 disposable workspace，可按 CI 清理”，否则只做非破坏性同步。
    - 同步后记录 before/after branch、HEAD、remote、是否 fast-forward/rebase、submodule 状态和 `git status --short`。
 
-5. 缺少满足版本门槛的 CMake 时，仅在允许下载后准备官方 source tarball。
+5. 缺少满足版本门槛的 CMake 时，仅在允许下载后准备官方 source tarball 或官方 binary archive。
    - 下载前确认目标目录和 tarball 路径不会覆盖现有内容。
    - 仅使用用户批准且版本严格大于 `3.27.0` 的 Kitware 官方 release URL；不要把示例版本当作授权。
    - 解压前使用用户提供或官方发布的 SHA-256 校验。
    - SHA-256 未提供、来源未经批准或校验失败时不要解压，立即停止并报告。
-   - 校验通过后解压，并确认 `bootstrap` 与 `CMakeLists.txt` 存在。
+   - 校验通过后解压。source tarball 确认 `bootstrap` 与 `CMakeLists.txt` 存在；binary archive 确认 `bin/cmake` 存在。
 
 6. 整理并回显统一 shell 变量：
+   - `export ARTIFACT_ROOT=/approved/task-owned/artifact-root`（必须由【初始化目标根目录】下的明确可写路径解析得到；使用前确认非空、绝对且不等于 `/`）
    - `export CMAKE_BIN=/path/to/cmake`
    - `export CMAKE_SRC=/path/to/cmake-source`（仅在本次需要源码安装时设置）
    - `export DLC_THUNK_SRC=/path/to/dlc-thunk`
@@ -134,7 +135,7 @@
    - 可选：`export CL_TOOLS_SRC=/path/to/cl_tools`
 
 7. 验证当前 SKILL.md 要求的仓库入口文件：
-   - 已安装 CMake: `cmake --version` 严格大于 `3.27.0`，且 `ctest`、`cpack` 可用。
+   - approved CMake: `cmake --version` 严格大于 `3.27.0`，并在实际 Python/setuptools build subprocess 中解析到相同 binary；`ctest`、`cpack` 仅在实际调用时验证。
    - 如本次使用源码安装：`$CMAKE_SRC/bootstrap`、`$CMAKE_SRC/CMakeLists.txt`。
    - `dlc-thunk/compile.sh`
    - `DLCsim/build.sh`
@@ -150,12 +151,13 @@
    - 可选 cl_tools source：记录仓库 root、branch 和 HEAD；具体 build entrypoint 以仓库 README 或 CI 脚本为准，缺少明确入口时不要发明命令。
    - 任一入口缺失时按当前 SKILL.md 停止。
 
-8. 仅在允许修改 `/usr/local` 且当前 CMake 不满足版本门槛时安装新版 CMake。
-   - 先检查 `/usr/local/bin/cmake --version`、`command -v cmake ctest cpack` 和默认版本；版本严格大于 `3.27.0` 且工具同源可用时可跳过安装。
-   - 需要安装时，在 `$CMAKE_SRC` 中执行：`./bootstrap --prefix=/usr/local`、`make -j$(nproc)`、`make install`。
+8. 当前 CMake 不满足版本门槛时，默认安装到 task root，不要求修改 `/usr/local`。
+   - 先检查 actual build subprocess 的 CMake；版本严格大于 `3.27.0` 时可跳过 bootstrap。
+   - source tarball 在 `$CMAKE_SRC` 中执行 `./bootstrap --prefix=$ARTIFACT_ROOT/toolchain/cmake`、`make -j$(nproc)`、`make install`；binary archive 直接使用其已校验目录。将 `$ARTIFACT_ROOT/toolchain/cmake/bin` 置于 builder PATH，并从实际 build subprocess 验证路径/版本。
+   - 只有用户另行明确授权修改 `/usr/local` 时，才可把相同 approved CMake 安装或链接到 `/usr/local`。
    - 遇到缺少系统包时，先识别当前系统的 package manager、权限和变更授权；不要无条件运行 `apt-get`，也不要混用 package manager。
    - 只有确认是 Debian/Ubuntu、`apt-get` 可用且用户允许系统包变更时，OpenSSL 开发头缺失才可使用 `apt-get update && apt-get install -y libssl-dev`，然后从 CMake 阶段重来。
-   - 安装后验证 `/usr/local/bin/cmake --version`、`command -v cmake ctest cpack`、`cmake --version`、`ctest --version`、`cpack --version`。
+   - 安装后验证 task-root `cmake --version` 和实际 build subprocess 路径；`ctest`、`cpack` 仅在实际调用时验证。
 
 9. 记录容器与硬件可见性，但不要在未授权时操作宿主机驱动或 LYP。
    - 记录是否挂载 `/mnt/jfs`、`/dev`、`/sys`、`/lib/modules`、`/var/log`，以及是否使用 `--ipc=host`、`--pid=host`、足够 `--shm-size` 和 `memlock`/`stack` ulimit。
@@ -164,7 +166,7 @@
    - 如果用户授权检查 LYP，仅记录 `DLC_VISIBLE_DEVICES`、目标卡组、检测命令、日志路径和通过/失败，不把 LYP 通过解释为新模型 Real DLC Hardware acceptance。
    - 如果请求安装或构建 `chipltech_smi_lib`，先确认 `/usr/local` 修改授权和系统依赖变更授权；默认只做源码 discovery 和版本记录，不自动安装。
 
-10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。
+10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。固定重建顺序为 `dlc-thunk -> LLVM -> DLCsim -> DLCSynapse -> DLC_CL -> DLC_Custom_Kernel Repository -> PyTorch -> vLLM-DLC -> vLLM`；LLVM 变化必须重建 DLCsim 和全部下游。
     - 对 task-owned builder source 的所有主 repo 和 build-time submodule，输出 `safe.directory` 路径清单；不要配置宽泛的 `safe.directory '*'`。
     - 说明 PyTorch build version 必须在首次 configure 前设置，wheel metadata、generated `torch/version.py` 和 source-tree 外 import 必须完全相同。
     - 读取固定 vLLM source 的 `setup.py`，输出 core packaging mode。若 core 使用 `empty` platform 加独立 vLLM-DLC plugin，明确记录，不要传入不支持的 `VLLM_TARGET_DEVICE=dlc`。

@@ -18,7 +18,7 @@ ModelZoo 是可选只读 reference。先从 ordinary daily base 创建新的 tas
 模型名称：<MODEL_NAME>
 模型目录：<ABSOLUTE_LOCAL_MODEL_PATH>
 目标：<dlc | tyd | both，默认 both>
-授权：<build/install、device execution、tar export、registry push、create_tyd_full_stack_rebuild；逐项 yes | no>
+授权：<build/install、device execution、privileged Host integration、tar export、registry push、create_tyd_full_stack_rebuild；逐项 yes | no>
 ```
 
 ## 可直接复制 Prompt
@@ -36,6 +36,7 @@ Benchmark workload：<可空；自动提出保守 workload 并写入 contract>
 授权：
 - build/install：<yes | no>
 - device execution：<yes | no>
+- privileged Host integration：<yes | no；若 yes，附批准的 mount/privilege profile>
 - tar export：<yes | no>
 - registry push：<yes | no>
 - create_tyd_full_stack_rebuild：<yes | no>
@@ -44,6 +45,7 @@ Benchmark workload：<可空；自动提出保守 workload 并写入 contract>
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
 - <KNOWLEDGE_BASE_ROOT>/vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md
 - <KNOWLEDGE_BASE_ROOT>/prompt-examples/host-daily-image-to-model-validation.md
+- <KNOWLEDGE_BASE_ROOT>/prompt-examples/dlc-env-setup-environment-bootstrap.md
 - 当前安装的 modelzoo-image-validation、dlc-env-setup、model-adaptation SKILL.md 和实际脚本/--help
 
 执行要求：
@@ -56,10 +58,10 @@ Benchmark workload：<可空；自动提出保守 workload 并写入 contract>
 7. Benchmark 保存 --help、profile diff、warm-up、formal attempts、raw client/server logs、structured result 和 health-after。明确区分 benchmark_workload_pass 与 benchmark_stability_baseline_pass。
 8. DLC runtime gates 通过后，写 sealed delivery record，并构建、exact-image 验证和导出 DLC image；提前构建的 image 标记 prequalification_only。
 9. DLC 使用 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status。模型权重不进入 image。
-10. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。完整遵循 Contract 的 TYD Build Closure And Recovery，之后以 DLC_TPU_VERSION=2 重编 TYD stack；此动作需要 build/install、tar export 和 create_tyd_full_stack_rebuild 的明确授权。
-12. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
-13. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
-14. 只清理 task-owned resources，保留正式交付物和失败 epochs。最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup evidence 和 remaining risks。
+10. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。完整遵循 Contract 的 TYD Build Closure And Recovery；长编译前确认实际 CMake >3.27.0、LLVM -> DLCsim -> 全下游顺序和所需授权，再以 DLC_TPU_VERSION=2 重编 TYD stack。
+11. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
+12. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
+13. 只清理 task-owned resources，保留正式交付物和失败 epochs。最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup evidence 和 remaining risks。
 
 自动发现不授权 network download、clone/fetch、package install、Host maintenance、registry push、reset/reboot 或抢占设备。任一成为继续条件时输出 structured blocker 和最小恢复输入。
 ```
