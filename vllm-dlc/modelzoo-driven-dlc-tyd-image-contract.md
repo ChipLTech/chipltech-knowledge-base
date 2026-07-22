@@ -1,246 +1,280 @@
-# ModelZoo 驱动的 DLC Chip/TYD Chip 镜像与验证 Contract
+# 模型运行资格与 DLC/TYD 镜像交付 Contract
 
 ## 适用场景
 
-本文定义一个可复用的 SOP：未来 Agent 只接收 ModelZoo model name，即可只读发现模型条目，生成确定性的 resolved manifest，并在证据和授权充分时驱动相互独立的 DLC Chip 与 TYD Chip 镜像流程。术语以 [CONTEXT.md](../CONTEXT.md) 为准。
+本文是模型从本地资产和可选 ModelZoo reference 进入 DLC Chip/TYD Chip image 交付的唯一规范状态机。术语遵循 [CONTEXT.md](../CONTEXT.md)。执行细节由 [Host Daily Image Runbook](../prompt-examples/host-daily-image-to-model-validation.md) 提供；prompt 示例不得复制或改写本文状态语义。
 
-本文是执行 contract，不是某次真实构建记录。本文中的 tag、路径和状态字段均为 schema 或占位符，不证明已经生成镜像、tar、模型 artifact，或执行 Real DLC Hardware 验证。
+本文不证明任何具体模型、image 或硬件已通过。当前运行事实必须来自本次 evidence。
 
-## 核心结论
-
-1. ModelZoo 是只读发现来源和历史 claim 集合，不是当前 Host、源码、模型资产或硬件状态的事实来源。
-2. Agent 必须先完成 ModelZoo identity、exact entry resolution、source hashing 和当前 Host preflight，再写 resolved manifest；manifest 未达到 `resolved` 时不得进入 build。
-3. 当前自动执行 adapter 仅支持具有完整 contract 的 vLLM entry。其他 framework 可完成发现和 manifest，但必须返回 `blocked_unsupported_framework`，不得套用 vLLM 命令。
-4. DLC Chip 与 TYD Chip 是独立 build target，必须具有不同的 fixed tag、Image ID、tar、tar SHA-256、attestation 和 validation report。
-5. TYD 全栈构建要求每个实际编译进程继承 `DLC_TPU_VERSION=2`。仅向已有 DLC 镜像添加 `ENV DLC_TPU_VERSION=2` 不充分。
-6. TYD vLLM target 的完整链至少包括 dlc-thunk、LLVM、DLCsim、DLCSynapse、DLC_CL、DLC_Custom_Kernel Repository、PyTorch DLC Backend 和 vLLM。缺少任何 required component 的 build provenance 时不得称为 TYD full-stack build。
-7. TYD 产物严禁在 DLC Chip 上执行 device operation、C1b、DLCCL、模型加载、serving 或 benchmark；状态固定为 `intentionally_not_executed_on_dlc_gen1`。
-
-## 只读发现与选择
-
-### ModelZoo identity
-
-行动前记录：
-
-- 用户提供或只读发现的 authoritative ModelZoo root。
-- `git rev-parse --show-toplevel`、remote URL、branch/tag、full HEAD 和 `git status --short`。
-- root 不在预期 Git repository、存在多个 authoritative candidate，或 Git identity 无法读取时停止。
-- 不修改 ModelZoo，不 checkout、fetch、pull、reset、clean、生成 index 或修复 metadata。
-
-### Current Host observation trust boundary
-
-Current Host observation is not established by a caller-authored JSON file, a caller-provided boolean, a SHA-256 alone, or a historical README. The resolver accepts actionable observations only when each allowlisted observation payload and its detached signature verify against the protected local observer public key. A production caller-provided model path is a discovery hint, not a qualified asset observation, until the later sealed action record binds its asset identity. Production component roots must additionally match the root-owned, non-writable per-component allowlist provisioned outside the workflow input surface. A caller cannot select either trust root. SHA-256 closes bytes after producer authentication, but does not by itself authenticate a producer. Secret-bearing path segments are redacted before manifest serialization.
-
-Fixture-only diagnostic keys may be used for offline resolver tests. Their manifests must record `trust_class: fixture_diagnostic` and `action_eligible: false`; they are resolver behavior evidence only and cannot authorize build, export, package validation, hardware validation, device operation, model loading, serving, or benchmark. Resolver output is qualification-only even with a production observer. A production action must create its own sealed action record that binds the exact asset identity, approved component source/ref, authorization, and execution scope; it cannot inherit action authorization from a resolver preflight wrapper.
-
-### Exact entry resolution
-
-按 `metafile.yml` 的 `Name` 精确匹配 model name，并对候选路径做稳定字典序排序后记录。不得按目录遍历顺序、大小写近似、README 标题或顶层 index 的第一条结果猜测。
-
-| 发现结果 | 状态 | 行为 |
-|---|---|---|
-| 无精确匹配 | `blocked_model_not_found` | 列出 model name 和已搜索 root，停止 |
-| 一个精确匹配 | 继续解析 | 记录 framework 和 model directory |
-| 多个匹配且无 framework selector | `blocked_ambiguous_model` | 按 framework/path 排序列出全部候选，停止 |
-| selector 精确选中一个候选 | 继续解析 | 记录 selector 是 user override |
-| selector 无匹配或仍有多个匹配 | `blocked_ambiguous_model` | 不回退到任意候选 |
-
-`metafile.yml` 必须可安全解析为 mapping；`Name`、`Task`、`Infer`、`Train` 和 `Parameters` 保留原始值及类型。YAML parse error、非 mapping、重复关键字段导致语义不唯一，或 `Infer`/`Train` 不是 boolean 时返回 `blocked_malformed_metadata`。`Infer: false` 是 ModelZoo claim，不等同于通用不支持，但在没有额外 adapter evidence 时不能进入自动 inference workflow。
-
-README 缺失或缺关键字段不应被猜值掩盖。Agent 应列出 `missing_fields`；若无法形成 supported adapter 所需的 weight、component、serve 或 smoke contract，返回 `blocked_missing_required_field`。
-
-## 来源优先级与冲突
-
-优先级从高到低如下：
-
-1. **User override**：framework selector、批准的模型路径、固定 component refs、输出目录和明确授权。Override 是执行意图，不得覆盖实际文件不存在、Git ref 不可解析、硬件代际不符或操作未授权等事实。Model path override 与 README 权重声明不同必须同时保留两个值，并记录 `resolution_reason: user_override`。
-2. **Current Host observation**：当前文件存在性和 digest、Git identity、package/import identity、image identity、硬件代际、设备占用与授权状态。只有本次采集的 observation 才能成为当前事实。
-3. **Selected `metafile.yml`**：模型名称、任务、Infer/Train 和参数规模的结构化 ModelZoo claim；它负责索引，不证明当前可运行。
-4. **Selected model README**：权重路径、component SHA、环境变量、命令和历史结果的非统一历史线索。
-5. **Top-level or historical ModelZoo claim**：例如“支持但未充分测试”，只用于发现和 provenance，不能升级为当前功能 PASS。
-
-冲突处理采用 fail closed：
-
-- User override 与 README 不同：保留两者，选择 override，并记录 `resolution_reason=user_override`。
-- Host observation 与任意 claim 不同：当前执行采用 observation；claim 保留在 `source_claims`，冲突写入 `conflicts`。
-- `metafile.yml` 与 README 不同：不静默择一。结构化索引字段采用 metafile，运行字段保持 unresolved；关键字段冲突返回 `blocked_conflicting_source_claims`。
-- README 的 component SHA 只能作为 requested ref。当前 approved remote 无法解析时返回 `blocked_unresolved_component_ref`，不得回退 movable branch、tag 或 latest。
-- README 权重路径在当前 Host 不存在时返回 `blocked_missing_asset`，不得下载、重命名或猜测同名替代资产。
-- README 中的 Host、IP、旧工具名、命令、benchmark 数值和 SHA 均标记为 `historical_modelzoo_claim`。原文若需保留，使用引用块并明确“历史原文，不是当前 verified fact”。
-
-## Deterministic Resolved Manifest
-
-Resolved manifest 必须在任何 build、设备执行或模型加载前写入 artifact 目录。推荐 YAML/JSON 使用 UTF-8、固定 key order、候选和数组按稳定字典序排列、绝对路径规范化但不解析不存在路径，并为 source 文件记录 SHA-256。时间戳和 run ID 不参与 resolution identity；可另存为 run metadata。
-
-```yaml
-schema: modelzoo-dlc-tyd-resolved-manifest/v1
-resolution_status: resolved | blocked
-resolution_id: sha256:<canonical-resolution-payload>
-inputs:
-  model_name: <exact Name>
-  framework_selector: null
-  model_path_override: null
-modelzoo:
-  root: <absolute-path>
-  git_root: <absolute-path>
-  remote: <url>
-  branch_or_tag: <value-or-null>
-  head: <full-sha>
-  dirty_observation: <git-status-short>
-selection:
-  framework: vllm
-  model_directory: <relative-path>
-  candidates: []
-sources:
-  metafile:
-    path: <relative-path>
-    sha256: <sha256>
-    fields: {}
-  readme:
-    path: <relative-path-or-null>
-    sha256: <sha256-or-null>
-source_claims:
-  weight_paths: []
-  component_refs: {}
-  required_environment: {}
-  serve_contract: {}
-  smoke_contract: {}
-current_observations:
-  model_asset: {}
-  component_refs: {}
-  host_and_hardware: {}
-resolved:
-  model_path: <absolute-path>
-  component_refs: {}
-  required_environment: {}
-  serve_contract: {}
-  smoke_contract: {}
-  framework_adapter: vllm/v1
-missing_fields: []
-conflicts: []
-claim_boundary:
-  historical_modelzoo_claims_are_current_facts: false
-  unverified_scope: []
-blocked:
-  code: null
-  missing_or_conflicting_fields: []
-  evidence: []
-```
-
-Canonical payload 包含 `inputs`、ModelZoo Git identity、selection、source path/hash、source claims、current observations、resolved fields、missing fields、conflicts 和 blocked result；不包含 secret、credential、URL userinfo、私有模型内容、易变时间戳或绝对 Host 用户信息之外的不必要详情。相同输入与相同 source/observation 必须产生相同 `resolution_id`。
-
-## Blocked 状态
-
-Blocked 是安全结果，不是泛化 failure。每个结果必须给出 `code`、最小原因、缺失/冲突字段、已检查 evidence 和允许的恢复输入。
-
-| Code | 触发条件 | 禁止的回退 |
-|---|---|---|
-| `blocked_model_not_found` | 无 exact model name | 模糊匹配或换模型 |
-| `blocked_ambiguous_model` | 同名跨 framework/path 且 selector 不唯一 | 按目录顺序选择 |
-| `blocked_malformed_metadata` | YAML 或字段类型异常 | 用 README 猜 schema |
-| `blocked_missing_required_field` | supported adapter contract 缺关键字段 | 隐藏缺失值或填默认值 |
-| `blocked_conflicting_source_claims` | 关键 source claim 无法安全裁决 | 静默采用任一来源 |
-| `blocked_missing_asset` | 权重/processor/tokenizer 等批准资产不存在 | 下载或替换模型 |
-| `blocked_unresolved_component_ref` | component ref 无法从 approved source 固定 | 使用 latest/movable ref |
-| `blocked_missing_hardware` | mandatory run 无匹配硬件或资源 | 在错误代际执行 |
-| `blocked_missing_authorization` | build/export/device/Host action 缺明确授权 | 把自动发现视作授权 |
-| `blocked_unsupported_framework` | 没有已定义 adapter contract | 套用 vLLM workflow |
-| `blocked_cleanup_incomplete` | task-owned process/resource 未回到 sealed cleanup contract | 隐藏残留或删除非本任务资源 |
-
-## Framework Adapter 边界
-
-| Framework | Discovery/manifest | Build/validation adapter | 结论 |
-|---|---|---|---|
-| vLLM | Supported | `vllm/v1`，输入完整且安全门通过时可直接执行 | Supported, bounded |
-| SGLang、Transformers、PyTorch、NeMo、Diffusers、KTransformers、其他 | Supported | 本 contract 未定义 | `blocked_unsupported_framework` |
-
-vLLM adapter 必须解析真实模型路径、component refs、环境、serve command 和最小 smoke request，并复用 [Host 每日镜像到模型验证](../prompt-examples/host-daily-image-to-model-validation.md) 的 C1a、C1b、模型功能、安全进程 identity、HBM baseline 和 cleanup contract。不得把该长模板复制进新 prompt，也不得假设历史 skill script flags 存在；执行前读取当前可用模板、skill 和脚本能力。
-
-## 独立镜像 Contract
-
-### DLC Chip target
-
-构建前固定 base image ID/digest、每个 source full SHA、dirty-tree policy、模型不进入 image 的边界和 fixed tag。构建和导出获授权后，交付至少包含：
-
-- DLC Chip fixed tag，不以 `latest` 作为交付身份。
-- DLC Chip Image ID、image configuration 和 provenance labels。
-- DLC Chip tar 绝对路径、size 和 SHA-256。
-- DLC Chip build attestation 与 validation report。
-- 独立状态：C1a、C1b、model functional、benchmark、not verified、blocked。
-
-DLC Chip 上先执行 C1a。只有目标硬件、占用、授权和 fresh-process gate 满足时才执行 C1b；只有 C1b 通过后才允许最小模型 functional smoke。Benchmark 不是默认功能验收，必须另有 workload contract、资源和授权。
-
-### TYD Chip target
-
-TYD fixed tag、Image ID、tar、hash 和 attestation 必须与 DLC target 独立。TYD attestation 至少逐组件记录 source full SHA、build command identity、build epoch、artifact hash，以及实际 build process 的 `DLC_TPU_VERSION=2` evidence。
-
-完整 vLLM 构建链至少覆盖：
+## 核心状态机
 
 ```text
-dlc-thunk -> LLVM -> DLCsim -> DLCSynapse -> DLC_CL
-          -> DLC_Custom_Kernel Repository -> PyTorch DLC Backend -> vLLM
+A. 输入与授权
+B. 本地模型资产解析
+C. 可选 ModelZoo reference 解析
+D. Ordinary Daily Base 资格
+E. Runtime Qualification Contract
+F. Task-owned Validation Environment
+G. C1a Package/Import
+H. C1b DLC Runtime Execution
+I. Real-weight Functional Qualification
+J. Declared Benchmark Workload
+K. Sealed Delivery Record
+L. DLC Build -> Exact-image Validation -> Export
+M. TYD Base Resolution -> Build/Packaging -> Static/Exact-image Validation -> Export
+N. Cleanup Closure
+O. DLC/TYD 独立 final status
 ```
 
-镜像 config 中存在 `ENV DLC_TPU_VERSION=2` 只证明运行环境声明，不证明上述二进制由继承该变量的进程编译。任一 required component 缺少实际 process-environment evidence 时返回 `blocked_missing_required_field`，并在 `missing_or_conflicting_fields` 列出缺失 provenance；不能使用正式 TYD tag，也不能声称 full-stack build PASS。历史 partial image 只能作为 `historical_modelzoo_claim` 或外部历史 evidence，不是本 contract 的 validation state。
+Gate 规则：
 
-在 DLC Chip Host 上，TYD target 只允许不触发设备执行的 static/package/import、artifact hash、image label 和 attestation consistency checks。所有 TYD device scope 必须报告 `intentionally_not_executed_on_dlc_gen1`。只有 Agent 已证明位于 TYD Chip Host、目标资源可用且另有执行授权时，才可按独立 contract 执行 TYD functional smoke。
+- C1a 失败：不执行 C1b。
+- C1b 失败：不加载模型。
+- Functional 失败：不执行 benchmark，不构建正式 image。
+- Benchmark workload 失败：不构建正式 image。
+- 在 J 前构建的 image 只能是 `prequalification_only`。
+- DLC 与 TYD target 独立报告；TYD blocked 不覆盖 DLC 结果。
+- Cleanup 未闭合时，受影响 target 为 `blocked_cleanup_incomplete`。
 
-## Validation 与 Claim 状态
+## 输入与授权
 
-| 状态 | 最小 evidence | 明确不证明 |
+最小输入：
+
+```text
+model_name
+absolute_local_model_path
+mode: qualification_only | qualification_and_image_delivery
+```
+
+可选输入：
+
+```text
+framework_selector
+modelzoo_root
+benchmark_workload
+requested_targets: dlc | tyd | both
+artifact_root
+```
+
+授权按动作分类，不从“自动执行”推导：image pull、network dependency access、clone/fetch、package install、build、device execution、tar export、registry push、Host maintenance。缺少继续所需授权时返回 `blocked_missing_authorization`，并列出最小授权。
+
+## 四类记录
+
+### 1. Resolved Model Manifest
+
+`modelzoo-dlc-tyd-resolved-manifest/v1` 只包含稳定解析信息：
+
+- 输入 model name/path/framework。
+- 本地 config、weight shards、tokenizer/processor applicability 与 digest。
+- 可选 ModelZoo Git/source identity、exact candidates、metafile/README hashes 和 claims。
+- adapter decision、missing fields、conflicts、reference statuses。
+
+不包含 PID、port、HBM、occupancy、时间戳或执行结果。`resolution_id` 仅覆盖 canonical stable payload。
+
+### 2. Runtime Qualification Contract
+
+固定：ordinary daily base、source refs、dependency/extension identities、model asset、device mapping、functional assertions、benchmark workload、artifact root、authorization 与 cleanup baseline policy。
+
+### 3. Runtime Action Record
+
+记录本次 Host observations、container/process identity、命令、server/failure epochs、C1a/C1b/function/benchmark evidence 和 cleanup observations。每个 retry 新建 epoch，每次只改变一个变量。
+
+### 4. Sealed Delivery Record
+
+绑定前三类记录的 digest、DLC/TYD fixed tags、build context、export scope、exact-image validation level、tar identity 和 cleanup closure。`sealed` 表示本 workflow 内 content-addressed 且关闭修改，不表示外部签名、可信时间或独立认证。
+
+## 本地模型资产
+
+本地资产优先于目录名和 README：
+
+- 必须有 `config.json` 和非空权重。
+- tokenizer/processor 按架构判定 required、not applicable 或 not verified。
+- 记录架构、dtype、quantization、shard inventory、大小和 digest，不输出模型内容。
+- selected local path 不存在或缺必需资产：`blocked_missing_asset`。
+- README 中历史 weight path 不存在只记录 `historical_weight_path_not_present`，不覆盖完整的 selected local path。
+
+## ModelZoo Reference
+
+ModelZoo 是可选、只读、历史 reference channel，不是 runtime gate。
+
+Reference statuses：
+
+```text
+modelzoo_reference_resolved
+modelzoo_reference_unavailable
+modelzoo_reference_incomplete
+modelzoo_reference_ambiguous
+modelzoo_reference_malformed
+```
+
+解析规则：
+
+- 按 `metafile.yml` 的 `Name` 精确匹配并稳定排序。
+- framework selector 只消除 reference ambiguity，不覆盖本地 adapter evidence。
+- ModelZoo root 缺失、非 Git、无 exact entry、README 缺失、metadata malformed、`Infer: false` 均不自动阻断完整本地模型。
+- `Infer: false` 记录为 `historical_modelzoo_negative_claim`。只有本地 config、当前 runner、package/import identity 和 CLI capability 能独立解析 adapter 时才可执行。
+- README 命令、component refs、environment 和 benchmark 是历史线索；与当前 CLI/Host 不符时记录差异。
+- 不修改、checkout、fetch、pull、reset、clean 或生成 ModelZoo 文件。
+
+只有某个执行必需字段没有任何其他当前可信来源时，才使用相应 workflow blocker，例如 `blocked_unresolved_runtime_contract`，不能把 optional reference 状态升级为全局 blocker。
+
+## Ordinary Daily Base Eligibility
+
+ordinary daily base 必须完成以下检查：
+
+- immutable Image ID；repo digest 在可用时记录，缺失时为 null，不猜测。
+- source/tag 仅作 provenance，不以 tag 证明不可变性。
+- 不包含目标模型权重、tokenizer/processor。
+- 不继承模型专用 registry alias、patch、plugin 配置、model server、cache、HBM state 或历史 acceptance claim。
+- 记录原始 package inventory/import paths。
+- task-owned offline dependency overlay、clean source archive 和 extension 允许使用，但必须有 provenance/hash，并能绑定到后续 image build context。
+- validation container 为 task-owned，container Image ID 必须与 qualified base 相等。
+- pre-launch process、port、device occupancy 和 HBM baseline 已记录。
+
+模型专用、historical golden、candidate 或来源无法解释的 image 为 `blocked_unqualified_daily_base`。
+
+## Runtime Qualification
+
+### C1a
+
+`c1a_package_import_pass` 至少证明：
+
+- fresh process、源码树外运行。
+- Python executable、package metadata、actual import paths。
+- PyTorch DLC Backend、DLC Platform、vLLM 和适用 plugin/extension identity。
+- NumPy bridge 和 backend availability。
+
+C1a 不证明 device execution。
+
+### C1b
+
+`c1b_runtime_execution_pass` 必须 fresh-process 分层完成：
+
+```text
+device enumeration/properties
+allocation
+H2D
+nontrivial device operation
+synchronize
+D2H
+correctness
+```
+
+多设备 deployment 对每张 logical device 分别运行，再做同时 probe；使用 collective communication 的 TP/PP/EP profile 还需对应 DLCCL correctness。
+
+### Model Functional
+
+`model_functional_pass` 至少要求：
+
+- exact model asset 与 serving profile。
+- real-weight load、health-before、model alias。
+- 至少两个适合该模型/endpoint 的正交 deterministic assertions。
+- raw requests/responses、HTTP status、request completion、non-empty output、semantic/assertion result、finish reason/token count（可观测时）。
+- 明显 repetition/corruption、NaN/Inf、异常截断或 server error 检查。
+- health-after 与 exact server epoch/process identity。
+
+HTTP 200、weight load、health 或非空输出均不能单独构成功能 PASS。CPU Reference 可用于诊断，不替代 DLC Chip 功能 evidence。
+
+### Benchmark
+
+Benchmark contract 固定 model/alias、endpoint、functional/benchmark profile diff、dataset/corpus digest、input/output token policy、request count/rate/concurrency、seed、sampling、timeout、warm-up 和 formal attempt count。
+
+状态分离：
+
+- `benchmark_workload_pass`：声明的 warm-up 和至少一个 formal attempt 完成；满足 contract 的请求成功阈值、client 正常退出、server health-after、raw client/server logs 和 structured result。若 delivery contract 明确接受单次 observation，它足以解锁 image build。
+- `benchmark_stability_baseline_pass`：声明的重复 attempts 完成并报告 median、min/max 或离散度。仅稳定性能、回归或 baseline claim 需要此状态。
+
+单次成功不得称为稳定 baseline，但不被全局禁止作为明确声明的 delivery qualification workload。
+
+## Image Delivery
+
+### Pre-build 与 Exact-image Evidence
+
+pre-build validation environment 与 produced image 是不同身份。报告必须独立记录：
+
+```text
+runtime_qualification_pass
+exact_image_c1a_pass
+exact_image_c1b_pass | not_executed
+exact_image_model_functional_pass | not_executed
+exact_image_benchmark_pass | not_executed
+```
+
+若 exact image 未重复 C1b/function/benchmark，允许的 bounded delivery 状态是：
+
+```text
+delivered_runtime_qualified_by_equivalent_environment
+```
+
+等价性 record 必须绑定 base identity、source SHAs/dirty state、package/import paths、extension/dependency hashes、environment、build context identity、validation environment 与 image 差异，以及 exact-image C1a。
+
+### DLC Target
+
+交付完成条件：fixed non-`latest` tag、Image ID、base/source/model identity、模型资产未进入 image、exact-image C1a、build attestation、validation report、tar absolute path/size/SHA-256、export exit status 和 cleanup evidence。Tar re-import 未执行时记录 `not_verified`。
+
+### TYD Target
+
+优先使用 qualified full-stack TYD base。Eligibility 至少包含 immutable Image ID、TYD generation/provenance mode、upstream attestation identity、full-stack 非 ENV-only 证明、package/static consistency，以及所选 DLC Platform/plugin identity。
+
+基于 qualified base 的模型 packaging 使用：
+
+```text
+provenance_mode: inherited_full_stack_tyd_base
+```
+
+无 qualified base 时默认：
+
+```text
+blocked_missing_qualified_tyd_base
+```
+
+从 DLC base 重编 dlc-thunk、LLVM、DLCsim、DLCSynapse、DLC_CL、DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和适用 vLLM-DLC extension 是独立的 `create_tyd_full_stack_base` contract，必须另获构建授权；不能成为模型 prompt 的隐式 fallback。`ENV DLC_TPU_VERSION=2` 不证明重编。
+
+DLC Chip Host 上 TYD target 仅允许 static/package/import、hash、label、attestation 和 export。以下状态固定为：
+
+```text
+intentionally_not_executed_on_dlc_gen1
+```
+
+适用于 TYD device operation、C1b、DLCCL、model load、serving、benchmark。
+
+## 独立 Target Status
+
+每个 target 独立记录：
+
+```text
+delivered_runtime_qualified
+delivered_runtime_qualified_by_equivalent_environment
+delivered_static_package_only
+prequalification_only
+failed_validation
+blocked_missing_qualified_base
+blocked_missing_hardware
+blocked_missing_authorization
+blocked_cleanup_incomplete
+```
+
+最终使用 matrix，不把 DLC/TYD 压缩成单一 PASS/FAIL。
+
+## Cleanup
+
+只处理 task-owned resources。完成条件：task APIServer/EngineCore/workers/clients 退出，task ports 释放，task HBM delta 回到 sealed baseline/tolerance，builder/static containers 和未完成 staging/export 清理，正式 tags/tars/logs/failed epochs 保留。共享 Host 不要求全机 HBM 为 0，不触碰预存在资源。
+
+## Claim Matrix
+
+| Evidence | 可以证明 | 不能证明 |
 |---|---|---|
-| `c1a_package_import_pass` | package/import、实际 import path、metadata 和 backend availability | device execution |
-| `c1b_runtime_execution_pass` | fresh process 的 allocation、H2D、device operation、synchronize、D2H、correctness | 模型功能或 benchmark |
-| `static_package_pass` | 不触发 device execution 的 package/static/hash/label/attestation checks | C1b 或功能 |
-| `model_functional_pass` | 已批准真实资产、指定 profile、liveness、非空输出和可观察 correctness | benchmark 或广泛 acceptance |
-| `benchmark_pass` | 独立固定 workload、warm-up gate、原始结果和测后健康 | 其他 profile 或模型正确性 |
-| `not_verified` | 本次未执行且不构成 blocker | PASS/FAIL/not applicable |
-| `blocked_*` | 结构化 blocker evidence | 执行已尝试或部分 PASS |
-| `intentionally_not_executed_on_dlc_gen1` | TYD 产物位于 DLC Chip Host 的代际禁止规则 | 普通 pending 或 TYD 功能 PASS |
-
-最终报告必须将 `modelzoo_claims`、`current_observations`、`inferences`、`execution_evidence` 和 `unverified_scope` 分栏。历史 benchmark 数值不能成为默认 acceptance threshold。
-
-## Evidence 与 Cleanup
-
-每个 image target 的 attestation 和报告至少包含：
-
-- Manifest schema/resolution ID、ModelZoo Git identity、selected source path/hash 和 override 决策。
-- Base image immutable identity、source refs、actual package/import identity 和 build scope。
-- Fixed tag、Image ID、tar path/size/SHA-256；registry digest 仅在实际获批 push/pull 后记录。
-- 命令、cwd、environment allowlist、start/end、exit code、stdout/stderr artifact path；不写 secret。
-- 每个 validation layer 的独立状态、最早失败边界、blocked/not verified/prohibited scope。
-- 任务进程、端口、device handles 和 HBM 的 sealed pre-launch baseline 与 post-cleanup observation。
-
-只停止已证明属于本任务的进程。默认不得下载权重或依赖、更新 Host driver、restart service、reset/reboot、push registry、覆盖 dirty tree、kill 无关进程或 prune 用户资源。任何一项成为继续执行的必要条件而未获授权时返回 `blocked_missing_authorization`。
-
-构建和导出收尾还必须精确清理本任务创建且已记录 identity 的 builder/static-check containers、临时 staging tags、临时 build directories 和未完成 export artifacts。正式 fixed tag、已完成 tar、attestation、logs 和失败 epoch evidence 按交付 contract 保留。不得删除预先存在的容器、tag、目录或其他任务 artifact；cleanup 未完成时返回 `blocked_cleanup_incomplete`，不得声称交付闭环。
-
-## 恢复策略
-
-- ModelZoo entry 不完整：保留 manifest 和 source hashes，列出缺失字段，不进入 build。
-- Ref 不可解析：保留 requested ref 与 approved remote evidence，不切换 latest。
-- Asset 不存在：报告已检查路径，不下载。
-- Build failure：保留首个错误、失败 epoch 和已完成组件 provenance；修复后创建新 epoch，不覆盖失败 evidence。
-- C1a 失败：回到 package/build identity；不得执行 C1b。
-- C1b 失败或 hang：按 [安装后的 Runtime Smoke](../debugging-workflows/post-install-runtime-smoke.md) 记录最早边界；不得加载模型。
-- Model smoke 失败：保留前面已通过的 bounded state，不提升 benchmark。
-- Cleanup 未回到 baseline：返回 `blocked_cleanup_incomplete`；未经授权不 restart service、reset 或 kill 其他任务。
-
-## Supported / Blocked / Prohibited 矩阵
-
-| 类别 | Supported | Blocked | Prohibited |
-|---|---|---|---|
-| ModelZoo | 只读 identity、exact discovery、hash、manifest | missing、ambiguity、malformed、conflict | 修改、生成 index、猜 selector |
-| Framework | 完整输入的 vLLM adapter | 无 adapter 的 framework | 伪称所有 framework supported |
-| Assets/refs | 已批准且当前可验证的路径/full ref | missing asset/unresolved ref | 自动下载、使用 movable latest |
-| DLC target | 独立 build/export；安全门满足时 C1a/C1b/model smoke | hardware/authorization/evidence 不足 | 抢占设备、未授权 Host 变更 |
-| TYD target | 全链 `DLC_TPU_VERSION=2` build 与 static/package | 链不完整、缺 TYD Host/授权 | 在 DLC Chip 上 device execution |
-| Delivery | fixed tag、Image ID、tar、SHA-256、attestation/report | identity/evidence 不完整 | 用 latest 代替固定身份、未授权 push |
+| ModelZoo resolved | reference 已解析 | 当前 runtime/image PASS |
+| C1a | package/import ready | device execution |
+| C1b | bounded DLC Runtime execution | model correctness/benchmark |
+| Functional PASS | exact profile 语义正确 | 性能/其他 profile |
+| Benchmark workload PASS | exact workload 完成 | 稳定 baseline/其他模型 |
+| Static package PASS | import/hash/label consistency | C1b/功能 |
+| Docker build/export | image/tar 产生 | hardware/model PASS |
 
 ## 相关资料
 
-- [ModelZoo model 到 DLC/TYD images Prompt](../prompt-examples/modelzoo-model-to-dlc-tyd-images.md)
-- [Host 每日镜像到模型验证](../prompt-examples/host-daily-image-to-model-validation.md)
-- [新模型验证 quickstart](../prompt-examples/new-model-validation-quickstart.md)
+- [ModelZoo 到 DLC/TYD Prompt](../prompt-examples/modelzoo-model-to-dlc-tyd-images.md)
+- [Host Daily Image Runbook](../prompt-examples/host-daily-image-to-model-validation.md)
+- [新模型 Quickstart](../prompt-examples/new-model-validation-quickstart.md)
 - [安装后的 Runtime Smoke](../debugging-workflows/post-install-runtime-smoke.md)
-- [模型适配与 Main-to-Main 决策记录](model-adaptation-and-main-to-main-decisions.md)
