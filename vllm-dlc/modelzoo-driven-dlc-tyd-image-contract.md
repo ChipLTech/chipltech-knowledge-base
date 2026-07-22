@@ -14,7 +14,7 @@ B. 本地模型资产解析
 C. 可选 ModelZoo reference 解析
 D. Ordinary Daily Base 资格
 E. Runtime Qualification Contract
-F. Task-owned Validation Environment
+F. Task-owned Daily-image Environment Initialization
 G. C1a Package/Import
 H. C1b DLC Runtime Execution
 I. Real-weight Functional Qualification
@@ -33,6 +33,7 @@ Gate 规则：
 - Functional 失败：不执行 benchmark，不构建正式 image。
 - Benchmark workload 失败：不构建正式 image。
 - 在 J 前构建的 image 只能是 `prequalification_only`。
+- 模型加载、功能验证和 benchmark 只能在 task-owned daily-image environment 完成 DLC Ecosystem 初始化且 C1a/C1b 通过后执行。
 - TYD 是 qualified DLC image 的下游派生 target，只有 DLC delivery 已固定 immutable Image ID 后才可开始 TYD。
 - DLC 与 TYD target 独立报告 final status；TYD build、validation 或 export 失败不得回溯修改已完成 DLC delivery status。
 - Cleanup 未闭合时，受影响 target 为 `blocked_cleanup_incomplete`。
@@ -133,6 +134,17 @@ ordinary daily base 必须完成以下检查：
 - pre-launch process、port、device occupancy 和 HBM baseline 已记录。
 
 模型专用、historical golden、candidate 或来源无法解释的 image 为 `blocked_unqualified_daily_base`。
+
+### Task-owned Daily-image Environment Initialization
+
+qualified ordinary daily base 不是已验证的模型环境。必须从该 Image ID 新建 task-owned persistent container，并按 [Host Daily Image Runbook](../prompt-examples/host-daily-image-to-model-validation.md) 完成 DLC Ecosystem 初始化与环境验证：
+
+- 创建独立 `src/build/wheels/artifacts/logs` 和可写 cache，模型资产只读挂载。
+- 发现并固定 active source refs、dirty state、offline dependency/wheel provenance、Python/pip/CMake/compiler 以及 DLC Platform/plugin/extension identity。
+- 仅在获得对应授权后执行 clone/fetch、package install 或 build；安装脚本必须先读取，不能因名称包含 preflight 而假定只读。
+- 在 fresh process 完成 C1a package/import 和 C1b layered DLC Runtime execution；C1b 必须覆盖 enumeration、allocation、H2D、nontrivial device operation、synchronize、D2H 和 correctness。
+
+不得复用共享、已变更、已有模型服务、模型专用、golden 或 candidate container 的 package/import/source 状态作为本次模型资格证据。初始化或 C1a/C1b 未闭合时不得加载模型。
 
 ## Runtime Qualification
 

@@ -10,7 +10,7 @@ default_mode: qualification_and_image_delivery
 
 这是薄入口。它收集模型、target 和授权，具体状态机统一由 [模型运行资格与镜像交付 Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) 定义，Host 操作统一由 [Host Daily Image Runbook](host-daily-image-to-model-validation.md) 定义。DLC 先完成交付；TYD 从该 DLC image 的 immutable Image ID 派生并独立报告状态。
 
-ModelZoo 是可选只读 reference。功能和性能必须先在 ordinary daily base 环境通过，之后才构建正式 image。
+ModelZoo 是可选只读 reference。先从 ordinary daily base 创建新的 task-owned container，按 Host Daily Image Runbook 初始化 DLC Ecosystem 并完成 C1a/C1b；该已验证环境才可用于模型功能和性能验证，之后才构建正式 image。
 
 ## 最少填写
 
@@ -48,16 +48,17 @@ Benchmark workload：<可空；自动提出保守 workload 并写入 contract>
 
 执行要求：
 1. 先验证本地模型资产；ModelZoo 缺失、不完整、歧义或 malformed 只记录 reference status，除非本次明确要求它为必需来源。
-2. 从 immutable ordinary daily base 创建 task-owned validation environment；禁止使用 Jiutian 或其他模型专用/golden/candidate image 继承当前结论。
-3. 写 resolved model manifest、runtime qualification contract 和 runtime action record，再按 C1a -> C1b -> real-weight functional -> declared benchmark 顺序执行。
-4. Functional 至少保存两个正交 deterministic assertions 的 raw request/response，并区分 HTTP、request completion、non-empty、semantic correctness 和 health-after。
-5. Benchmark 保存 --help、profile diff、warm-up、formal attempts、raw client/server logs、structured result 和 health-after。明确区分 benchmark_workload_pass 与 benchmark_stability_baseline_pass。
-6. DLC runtime gates 通过后，写 sealed delivery record，并构建、exact-image 验证和导出 DLC image；提前构建的 image 标记 prequalification_only。
-7. DLC 使用 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status。模型权重不进入 image。
-8. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。在该镜像基础上以 DLC_TPU_VERSION=2 完整重编 TYD stack；此动作需要 build/install、tar export 和 create_tyd_full_stack_rebuild 的明确授权。
-9. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
-10. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
-11. 只清理 task-owned resources，保留正式交付物和失败 epochs。最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup evidence 和 remaining risks。
+2. 从 immutable ordinary daily base 创建新的 task-owned persistent container，禁止复用共享或已变更 container，也不得使用 Jiutian 或其他模型专用/golden/candidate image 继承当前结论。
+3. 严格按 Host Daily Image Runbook 在该容器中初始化 DLC Ecosystem：创建独立 src/build/wheels/artifacts/logs 和可写 cache，模型只读挂载；固定 source refs/dirty state、offline wheel/dependency provenance、Python/pip/CMake/compiler、DLC Platform/plugin/extension identity。任何 clone/fetch、package install 或 build 均需对应授权。
+4. 写 resolved model manifest、runtime qualification contract 和 runtime action record；先在 fresh process 完成 C1a 和 C1b。只有该 daily-image environment 的 C1a/C1b 通过，才允许加载模型并按 real-weight functional -> declared benchmark 顺序执行。
+5. Functional 至少保存两个正交 deterministic assertions 的 raw request/response，并区分 HTTP、request completion、non-empty、semantic correctness 和 health-after。
+6. Benchmark 保存 --help、profile diff、warm-up、formal attempts、raw client/server logs、structured result 和 health-after。明确区分 benchmark_workload_pass 与 benchmark_stability_baseline_pass。
+7. DLC runtime gates 通过后，写 sealed delivery record，并构建、exact-image 验证和导出 DLC image；提前构建的 image 标记 prequalification_only。
+8. DLC 使用 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status。模型权重不进入 image。
+9. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。在该镜像基础上以 DLC_TPU_VERSION=2 完整重编 TYD stack；此动作需要 build/install、tar export 和 create_tyd_full_stack_rebuild 的明确授权。
+10. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
+11. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
+12. 只清理 task-owned resources，保留正式交付物和失败 epochs。最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup evidence 和 remaining risks。
 
 自动发现不授权 network download、clone/fetch、package install、Host maintenance、registry push、reset/reboot 或抢占设备。任一成为继续条件时输出 structured blocker 和最小恢复输入。
 ```
