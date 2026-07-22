@@ -164,7 +164,12 @@
    - 如果用户授权检查 LYP，仅记录 `DLC_VISIBLE_DEVICES`、目标卡组、检测命令、日志路径和通过/失败，不把 LYP 通过解释为新模型 Real DLC Hardware acceptance。
    - 如果请求安装或构建 `chipltech_smi_lib`，先确认 `/usr/local` 修改授权和系统依赖变更授权；默认只做源码 discovery 和版本记录，不自动安装。
 
-10. 初始化完成后停止，不继续长构建。交付：
+10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。
+    - 对 task-owned builder source 的所有主 repo 和 build-time submodule，输出 `safe.directory` 路径清单；不要配置宽泛的 `safe.directory '*'`。
+    - 说明 PyTorch build version 必须在首次 configure 前设置，wheel metadata、generated `torch/version.py` 和 source-tree 外 import 必须完全相同。
+    - 读取固定 vLLM source 的 `setup.py`，输出 core packaging mode。若 core 使用 `empty` platform 加独立 vLLM-DLC plugin，明确记录，不要传入不支持的 `VLLM_TARGET_DEVICE=dlc`。
+
+11. 初始化完成后停止，不继续长构建。交付：
    - 最终 repo map，以及每个仓库的 Git root、remote、branch/tag、HEAD、status。
    - 版本策略、CI 默认分支映射、每个仓库 before/after HEAD 和是否同步到最新 head。
    - 最终 shell 变量映射。

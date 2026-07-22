@@ -49,16 +49,17 @@ Benchmark workload：<可空；自动提出保守 workload 并写入 contract>
 执行要求：
 1. 先验证本地模型资产；ModelZoo 缺失、不完整、歧义或 malformed 只记录 reference status，除非本次明确要求它为必需来源。
 2. 从 immutable ordinary daily base 创建新的 task-owned persistent container，禁止复用共享或已变更 container，也不得使用 Jiutian 或其他模型专用/golden/candidate image 继承当前结论。
-3. 严格按 Host Daily Image Runbook 在该容器中初始化 DLC Ecosystem：创建独立 src/build/wheels/artifacts/logs 和可写 cache，模型只读挂载；固定 source refs/dirty state、offline wheel/dependency provenance、Python/pip/CMake/compiler、DLC Platform/plugin/extension identity。任何 clone/fetch、package install 或 build 均需对应授权。
-4. 写 resolved model manifest、runtime qualification contract 和 runtime action record；先在 fresh process 完成 C1a 和 C1b。只有该 daily-image environment 的 C1a/C1b 通过，才允许加载模型并按 real-weight functional -> declared benchmark 顺序执行。
-5. Functional 至少保存两个正交 deterministic assertions 的 raw request/response，并区分 HTTP、request completion、non-empty、semantic correctness 和 health-after。
-6. Benchmark 保存 --help、profile diff、warm-up、formal attempts、raw client/server logs、structured result 和 health-after。明确区分 benchmark_workload_pass 与 benchmark_stability_baseline_pass。
-7. DLC runtime gates 通过后，写 sealed delivery record，并构建、exact-image 验证和导出 DLC image；提前构建的 image 标记 prequalification_only。
-8. DLC 使用 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status。模型权重不进入 image。
-9. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。在该镜像基础上以 DLC_TPU_VERSION=2 完整重编 TYD stack；此动作需要 build/install、tar export 和 create_tyd_full_stack_rebuild 的明确授权。
-10. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
-11. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
-12. 只清理 task-owned resources，保留正式交付物和失败 epochs。最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup evidence 和 remaining risks。
+3. 严格按 Host Daily Image Runbook 在该容器中初始化 DLC Ecosystem：创建独立 src/build/wheels/artifacts/logs 和可写 cache，模型只读挂载；在加载模型前闭合 driver API、container C1b-compatible mount/privilege profile、source refs/dirty state、递归 submodule worktree entrypoints、offline wheel/dependency/extension provenance、Python/pip/CMake/compiler、DLC Platform/plugin/extension identity。任何 clone/fetch、package install 或 build 均需对应授权。
+4. 仅在所需授权和已批准 remote/ref 仍有效时，按 Contract 的 task-owned recovery 规则处理已知中断；不得把非 container 的 C1b failure 归因为 container profile，不得触碰共享资源。每次 recovery 都新建 failure epoch 且只改变一个变量。
+5. 写 resolved model manifest、runtime qualification contract 和 runtime action record；先在 fresh process 完成 C1a 和 C1b。只有该 daily-image environment 的 C1a/C1b 通过，才允许加载模型并按 real-weight functional -> declared benchmark 顺序执行。启动前读取实际 server --help，使用显式 absolute --model、HF_HUB_OFFLINE=1、TRANSFORMERS_OFFLINE=1，并保存未回退远端模型的 server log evidence。
+6. Functional 至少保存两个正交 deterministic assertions 的 raw request/response，并区分 HTTP、request completion、non-empty、semantic correctness 和 health-after。
+7. Benchmark 保存 --help、profile diff、warm-up、formal attempts、raw client/server logs、structured result 和 health-after。明确区分 benchmark_workload_pass 与 benchmark_stability_baseline_pass。
+8. DLC runtime gates 通过后，写 sealed delivery record，并构建、exact-image 验证和导出 DLC image；提前构建的 image 标记 prequalification_only。
+9. DLC 使用 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status。模型权重不进入 image。
+10. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。完整遵循 Contract 的 TYD Build Closure And Recovery，之后以 DLC_TPU_VERSION=2 重编 TYD stack；此动作需要 build/install、tar export 和 create_tyd_full_stack_rebuild 的明确授权。
+12. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
+13. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
+14. 只清理 task-owned resources，保留正式交付物和失败 epochs。最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup evidence 和 remaining risks。
 
 自动发现不授权 network download、clone/fetch、package install、Host maintenance、registry push、reset/reboot 或抢占设备。任一成为继续条件时输出 structured blocker 和最小恢复输入。
 ```

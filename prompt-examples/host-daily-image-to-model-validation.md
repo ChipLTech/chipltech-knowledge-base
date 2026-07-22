@@ -29,13 +29,13 @@ authorization_matrix
 1. 记录 OS/kernel、Docker client/server、存储、设备节点、hardware generation、occupancy、HBM、已有 containers/ports。Complete when：目标设备可唯一映射且 baseline 已保存；busy 则 `blocked_missing_hardware`。
 2. 只读检查 local images；获 pull 授权时才 pull。记录 Image ID，repo digest 在可用时记录。Complete when：base 通过 contract 的 ordinary eligibility；否则 `blocked_unqualified_daily_base`。
 3. 创建 Host 持久 `src/build/wheels/artifacts/logs`。模型只读挂载，可写 cache 独立。Complete when：artifact root 位于源码树外且运行契约已脱敏保存。
-4. 创建 task-owned persistent container；最小 mount/device/ipc/shm/ulimit，不默认 `--privileged`。Complete when：container Image ID 等于 qualified base、模型只读可见、设备映射一致。
+4. 创建 task-owned persistent container；先使用记录的最小 mount/device/ipc/shm/ulimit profile，不默认 `--privileged`。C1a 通过且 device execution 已获授权后，再运行完整 fresh C1b；只有该 C1b 将失败定位为 container mount/privilege/profile mismatch 时，才删除并重建 task container 到已记录的 driver-compatible profile，再从 fresh C1a/C1b 开始。Complete when：container Image ID 等于 qualified base、模型只读可见、设备映射一致且 C1b profile 已闭合。
 
 ## 2. DLC Ecosystem 环境
 
 5. 发现实际 source roots、full SHAs、dirty status、Python/pip/CMake/compiler、offline wheels/dependency bundles。读权限验证用 `git ls-remote`；仅在明确 push 任务中检查写权限。Complete when：所有 active sources/imports 可唯一解释，dirty conflict 已阻断或显式纳入 policy。
-6. 优先使用现有离线 wheel/source。Network、clone/fetch、package install 各自需要授权。安装脚本执行前读取内容；名称含 preflight 不代表只读。Complete when：每项 mutation 的来源、命令、输出和 artifact 已记录。
-7. 记录 actual Python executable、package metadata、module paths、DLC Platform/plugin/extension identity。Complete when：C1a fresh process 输出 `c1a_package_import_pass`；C1a 不允许加载模型。
+6. 优先使用现有离线 wheel/source。Network、clone/fetch、package install 各自需要授权。安装脚本执行前读取内容；名称含 preflight 不代表只读。对每个 task-owned repo 和 build-time submodule 验证 fixed commit object、detached checkout、worktree entrypoint 和 Git ownership；builder UID 与 source owner 不同时，只把 canonical task paths 写入 task-local Git global config 的 `safe.directory`，cleanup 时删除该 config。Complete when：每项 mutation 的来源、命令、输出和 artifact 已记录。
+7. 记录 actual Python executable、package metadata、module paths、DLC Platform/plugin/extension identity。若 source archive 不含编译 extension，单独记录 binary overlay 的来源/hash。验证 approved CMake、ctest、cpack 在 interactive shell 和实际 Python/setuptools subprocess 中同源可用。Complete when：C1a fresh process 输出 `c1a_package_import_pass`；C1a 不允许加载模型。
 
 ## 3. C1b DLC Runtime Execution
 
@@ -46,7 +46,7 @@ authorization_matrix
 
 ## 4. Real-weight Functional
 
-10. 由 config、weight bytes、dtype/quantization、HBM 和 deployment 需求导出 TP/PP/EP、max lengths、batching、block size、Chunked Prefill、prefix caching 和 port。Complete when：profile 六类依据可审计。
+10. 由 config、weight bytes、dtype/quantization、HBM 和 deployment 需求导出 TP/PP/EP、max lengths、batching、block size、Chunked Prefill、prefix caching 和 port。启动前读取实际 server `--help`，固定 CLI 参数；使用显式 absolute `--model` 路径和离线 Hub guard，禁止模型位置参数回退为默认远端模型。Complete when：profile 六类依据可审计。
 11. 每个 server epoch 记录 container ID、Host/container PID、NSpid、namespace、starttime、cmdline、PPID、cgroup、port 和 HBM baseline。tracked wrapper 退出不等于 container child 退出。
 12. readiness 后保存 health-before 和 model-list/alias。执行 runtime contract 中至少两个正交 assertions，分别记录 HTTP、completion、non-empty、semantic result、finish reason/token count 和 raw JSON。Complete when：全部 assertions 和 health-after 通过，状态为 `model_functional_pass`。
 13. 空文本、错误答案、重复/损坏文本、异常截断、NaN/Inf、timeout 或 server death 均停止提升。CPU Reference 可诊断但不能提升 DLC functional 状态。

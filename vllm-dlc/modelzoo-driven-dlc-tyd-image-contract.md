@@ -129,9 +129,10 @@ ordinary daily base 必须完成以下检查：
 - 不包含目标模型权重、tokenizer/processor。
 - 不继承模型专用 registry alias、patch、plugin 配置、model server、cache、HBM state 或历史 acceptance claim。
 - 记录原始 package inventory/import paths。
-- task-owned offline dependency overlay、clean source archive 和 extension 允许使用，但必须有 provenance/hash，并能绑定到后续 image build context。
+- task-owned offline dependency overlay、clean source archive 和 extension 允许使用，但必须有 provenance/hash，并能绑定到后续 image build context。source archive 不包含 build-time `.so` 时，必须把对应 binary overlay 作为独立输入记录；source SHA 不能替代 binary SHA-256。
 - validation container 为 task-owned，container Image ID 必须与 qualified base 相等。
 - pre-launch process、port、device occupancy 和 HBM baseline 已记录。
+- 在创建 container 前从 Host driver 的权威版本面记录 driver API compatibility、目标 logical device、完整 mount/privilege/ipc/shm/ulimit profile。C1a 通过且 device execution 已获授权后，若完整 C1b 证明是 container mount/privilege/profile mismatch，才可只重建 task-owned container 并升级到已记录的 driver-compatible profile；不得修改共享 container、驱动或其他任务。
 
 模型专用、historical golden、candidate 或来源无法解释的 image 为 `blocked_unqualified_daily_base`。
 
@@ -141,10 +142,13 @@ qualified ordinary daily base 不是已验证的模型环境。必须从该 Imag
 
 - 创建独立 `src/build/wheels/artifacts/logs` 和可写 cache，模型资产只读挂载。
 - 发现并固定 active source refs、dirty state、offline dependency/wheel provenance、Python/pip/CMake/compiler 以及 DLC Platform/plugin/extension identity。
+- 对每个会在 build 中调用 Git 的 task-owned repo 与递归 submodule，预先完成 Git ownership 检查；builder UID 与 source owner 不同时，只把 canonical task source root 及其 build-time submodule 写入 task-local Git global config 的 `safe.directory`，任务结束后删除该临时 config。不得修改用户持久 global config 或使用宽泛 trust rule。
+- source closure 需要验证指定 commit object、detached checkout、递归 submodule status 和实际 build entrypoint。submodule status 显示 commit 不足以证明 worktree 完整；必须确认所需 `CMakeLists.txt`、`setup.py`、Makefile 或脚本实际存在。
+- CMake gate 同时验证 interactive shell 与 Python/setuptools/CMake subprocess 的实际 `cmake`、`ctest`、`cpack` 来源和版本。仅 export `PATH` 不足以证明 build subprocess 使用了批准的 CMake。
 - 仅在获得对应授权后执行 clone/fetch、package install 或 build；安装脚本必须先读取，不能因名称包含 preflight 而假定只读。
 - 在 fresh process 完成 C1a package/import 和 C1b layered DLC Runtime execution；C1b 必须覆盖 enumeration、allocation、H2D、nontrivial device operation、synchronize、D2H 和 correctness。
 
-不得复用共享、已变更、已有模型服务、模型专用、golden 或 candidate container 的 package/import/source 状态作为本次模型资格证据。初始化或 C1a/C1b 未闭合时不得加载模型。
+不得复用共享、已变更、已有模型服务、模型专用、golden 或 candidate container 的 package/import/source 状态作为本次模型资格证据。初始化或 C1a/C1b 未闭合时不得加载模型。启动 server 前必须读取当前 CLI `--help`，使用显式 absolute `--model` 路径和离线 Hub guard，避免位置参数漂移或默认远端模型回退。
 
 ## Runtime Qualification
 
@@ -240,6 +244,37 @@ blocked_missing_qualified_dlc_base
 ```
 
 TYD full-stack rebuild 是当前模型 image delivery 的下游阶段，必须获得 build/install、tar export 和 `create_tyd_full_stack_rebuild` 授权。缺少继续所需授权时为 `blocked_missing_authorization`。
+
+### TYD Build Closure And Recovery
+
+在开始长编译前，TYD builder contract 必须一次性闭合：
+
+- 从 DLC Image ID 创建新的 task-owned builder，固定 `DLC_TPU_VERSION=2`，模型权重不挂入 image。
+- 从 Host driver 的权威版本面记录 driver API version，并选择明确兼容该 version 的最小 DLCSynapse ref；历史 tag、已有 TYD image 或 tag 名称不能替代 Host driver version、source header、installed library 和 fresh import 的四层 compatibility 证明。该 fresh import 只证明 userspace compatibility；TYD target runtime 仍只能在允许的 TYD hardware 上证明。
+- 记录 dlc-thunk、DLCsim、DLCSynapse、DLC_CL、LLVM、DLC_Custom_Kernel Repository、PyTorch、vLLM、vLLM-DLC 的 source ref、submodule refs、build entrypoint、build log 和安装目标 hash。
+- CMake、compiler、Python build environment、wheel build version、extension binary 和 package import path 必须在 builder 内实际闭合。
+- 先探测 fixed vLLM source 的 packaging mode。core 使用 `empty` platform 且 DLC 由独立 vLLM-DLC plugin 提供时，必须显式记录该模式；不得强行传入不被 core 支持的 `VLLM_TARGET_DEVICE=dlc`。
+
+下列自动恢复只在所需 network dependency access、clone/fetch、package install、build 或 device execution 授权仍然有效，且 remote/ref 已批准时适用；否则保持 `blocked_missing_authorization`。恢复只适用于 task-owned source、container 和 artifact root：
+
+```text
+container C1b profile mismatch
+  -> recreate only the task container with the recorded driver-compatible profile
+large clone interruption
+  -> partial clone, verify requested commit object, detached checkout
+incomplete submodule worktree
+  -> re-run recursive update; verify entrypoint; restore the same fixed commit only
+CMake subprocess mismatch
+  -> pin approved CMake for the actual build subprocess and verify its log
+PyTorch runtime version mismatch
+  -> remove task build/dist/generated version file; rebuild from clean tree with fixed build version
+native dependency/API change
+  -> rebuild every downstream component from the changed dependency through vLLM-DLC/vLLM
+```
+
+每次自动恢复必须新建 failure epoch、保存第一失败边界，并在恢复后执行受影响的最小 fresh validation。不能安全归入上述路径的失败保持 blocker，不用已有 image 或静态 library 存在性伪造成功。
+
+每个 native component 的 completed 条件是：task build output 存在、build log terminal success、install log 写入目标、installed target 的 timestamp/SHA-256，以及适用时 `ldd`/`nm`/fresh import。仅发现同名 base library 不构成重编成功。
 
 DLC Chip Host 上 TYD target 仅允许 static/package/import、hash、label、attestation 和 export。以下状态固定为：
 
