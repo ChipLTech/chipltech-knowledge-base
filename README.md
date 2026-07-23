@@ -95,6 +95,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 - [vllm-dlc/prefill-decode-separation.md](vllm-dlc/prefill-decode-separation.md) — Prefill/Decode Separation 的拓扑、MooncakeDLCConnector、KV Cache transfer、验证阶梯和 claim boundaries。
 - [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) — 配合已安装的 `pd-separation` skill 或 skills checkout，可直接填写并执行 PD 分离部署或诊断的 prompt。
+- [case-studies/vllm-dlc-pd-transport-and-lyp-recovery.md](case-studies/vllm-dlc-pd-transport-and-lyp-recovery.md) — Transport Qualification Gate、LYP group 修复、direct DLCCL 和 Site Recovery Contract 的真实复盘。
 - [vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) — 本地模型优先、ModelZoo 可选只读 reference、ordinary daily-base runtime qualification 和独立 DLC/TYD delivery 状态机。
 - [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) — 填写模型名称、本地目录和 target 的 runtime-first image delivery prompt。
 - [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](vllm-dlc/model-adaptation-and-main-to-main-decisions.md) — Model Adaptation 与 Main-to-Main Upgrade 的稳定决策、证据分类和当前只读边界。

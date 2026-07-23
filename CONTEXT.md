@@ -140,6 +140,10 @@
 
 **KV Cache Transfer Contract**：Prefill Worker 与 Decode Worker 之间关于 request correlation、layer/block/token ownership、cache layout/dtype、metadata、传输完成和失败语义的显式 contract。不得把 connector handshake 或进程存活等同于 KV transfer 已完成。
 
+**Transport Qualification Gate**：在加载两个 serving role 前，用与目标部署相同的 transport、设备可见性和进程边界完成非空 payload 的 endpoint 初始化、send/receive completion 与内容校验。进程退出、延迟样本或单端初始化不构成通过。
+
+**Site Recovery Contract**：Host maintenance 前固定的现场恢复 contract，包含既有 workload 的 process/container、设备、HBM/频率、端口、模型、完整启动命令、健康探针和最小功能请求。维护完成后必须逐项恢复并验证。
+
 **DLC Runtime Capability Boundary**：host 侧 custom kernel launch 支持与 CUDA 式 device 侧持久运行时控制之间的能力分界。
 
 **Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
@@ -178,6 +182,7 @@
 - **pytorch_test Framework** 使用 **Variant**、**Static Shape Test**、**Dynamic Fuzz Test**、**SynShape** 和 **Model-Site Dump** 发现和最小化正确性问题。
 - **DLC Attention Backend** 可能使用 **Merged KV Cache**，CUDA 路径使用 **Separate KV Cache**。
 - **Prefill/Decode Separation** 要求 **Prefill Worker** 与 **Decode Worker** 的 model、tokenizer、cache layout、connector 和 request correlation identity 满足同一个 **KV Cache Transfer Contract**。
+- **Transport Qualification Gate** 在加载双 role 模型前验证实际 data plane；**Site Recovery Contract** 约束会改变 Host 状态的 LYP/driver/firmware/reboot 操作及其收尾。
 
 ## 核心链路
 
