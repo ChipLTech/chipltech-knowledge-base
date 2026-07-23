@@ -59,6 +59,7 @@ deployment profile：
 - manifest/dependency input identity: <MANIFEST_DEPENDENCY_IDENTITY>
 - artifact destination outside vllm-dlc: <ARTIFACT_DESTINATION>
 - optional parent run / assignment identities: <PARENT_AND_ASSIGNMENT_OR_NULL>
+- SMI Observation Envelope：<artifact paths | execute through dlc-hardware-observability | not_applicable with reason>
 
 先列出缺失输入并停止；资产类缺失使用 `blocked_missing_asset`，分配给 mandatory run 的硬件不足使用 `blocked_missing_hardware`。模型路径优先从 `/mnt/jfs/models` 选择并记录完整绝对路径；如果资产不在该根目录下，先说明来源和批准依据。通过 `shared_contract: vllm-dlc-contract/v1` 的 skills-owned public seam 消费确定性检查，不自行实现 runner 行为。Dummy 仅可在合格 real-weight failure 后用于 diagnostic-only，不得提升 acceptance。保持 vllm-dlc 源码、manifest、alignment、metadata、branch、index 和 generated files 只读；不得更新、finalize 或声称 Verified vLLM Alignment。不要把 Ticket 06 v12 operational evidence 继承到此新 target；未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`，并将报告写到声明的外部 artifact destination。
 
@@ -70,6 +71,7 @@ deployment profile：
 - 多卡/MoE/精度问题先建立严格等价对照：相同 endpoint、prompt、tokenizer、模型权重、TP/EP、`temperature=0`、`max_tokens` 和可选 `logprobs`；不要混用 chat/completions 与 completions 的结果直接比较。
 - 若生成 token 与基线分叉，把多步 decode 改写为单步 prefill：将分叉前 token 拼入 prompt，仅生成 1 个 token，以隔离 KV cache、scheduler 和历史回灌变量。
 - 如果怀疑算子或设备卡住，记录 DP/TP 初始化日志、shared memory broadcast 日志和服务状态；`peek_stuck.sh`、软重置、LYP repair、kill 进程或 reboot 必须有明确授权，不作为默认自动步骤。
+- Real DLC Hardware serving epoch 通过 `dlc-hardware-observability` 保存 `before_launch`、`after_ready`、`during_request` 和 `after_cleanup`；SMI 正常不证明模型正确，observer 缺失不改写为硬件 failure。若只做 static/read-only compatibility analysis，填写 `not_applicable` 及依据，不新增 device execution。
 ```
 
 ## 停止语义与 Evidence
@@ -83,3 +85,4 @@ deployment profile：
 ## 相关资料
 
 - [模型适配与 Main-to-Main 决策记录](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md)

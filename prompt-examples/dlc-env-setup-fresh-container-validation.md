@@ -392,6 +392,7 @@ rm -rf /tmp/dlc-smoke
 - 如请求切换 ref，真实 Git repository 的 remote 身份、工作树、当前 ref、批准 ref 可用性、目标 SHA 和切换结果。
 - 实际选择的 rebuild 起点、前置依赖健康证据和依赖顺序。
 - `scripts/pytorch-preflight.sh`、可选 `scripts/vllm-preflight.sh` 和 `scripts/runtime-smoke.sh` 的执行结果。
+- 如果本次执行 Real DLC Hardware C1b/serving，保存 `dlc-hardware-observability` 的 tool/source identity 与四阶段 raw/normalized evidence；仅 package/import 验证时记录 `not_applicable`，不改变原验证层级。
 - CMake、PyTorch 2.5.0、NumPy bridge、DLC_Custom_Kernel Repository 安装工具和可选 vLLM metadata/import 检查。
 - 任一失败阶段的命令、首批关键错误和停止位置。
 
@@ -426,6 +427,7 @@ rm -rf /tmp/dlc-smoke
 - [../runtime-debugging/dlc-workstation-env-rebuild.md](../runtime-debugging/dlc-workstation-env-rebuild.md)
 - [../debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](../debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md)
 - [../debugging-workflows/post-install-runtime-smoke.md](../debugging-workflows/post-install-runtime-smoke.md)
+- [../runtime-debugging/chipltech-smi-observability.md](../runtime-debugging/chipltech-smi-observability.md)
 - `/work/chipltech-knowledge-base/CONTEXT.md`
 - `/work/skills/README.zh-CN.md`
 - `/work/skills/SKILLHUB.yaml`

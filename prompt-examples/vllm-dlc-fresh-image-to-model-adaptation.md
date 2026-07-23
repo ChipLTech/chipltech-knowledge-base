@@ -40,6 +40,7 @@ claim_boundary: operational_or_not_verified_only
 - /work/chipltech-knowledge-base/CONTEXT.md
 - /work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-skill-usage.md
 - /work/chipltech-knowledge-base/prompt-examples/vllm-dlc-model-adaptation.md
+- /work/chipltech-knowledge-base/runtime-debugging/chipltech-smi-observability.md
 - /work/skills/skills/engineering/dlc-env-setup/SKILL.md
 - /work/skills/skills/engineering/model-adaptation/SKILL.md
 
@@ -69,6 +70,7 @@ claim_boundary: operational_or_not_verified_only
 - `/work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh` 结果。
 - `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh /tmp` 结果。
 - `vllm` / `vllm-dlc` import 与 package metadata 验证结果。
+- 实际执行 Real DLC Hardware 时，`dlc-hardware-observability` 的 observer identity、四阶段 raw/normalized evidence 和 cleanup closure；仅环境静态检查时记录 `not_applicable`。
 
 阶段 1 停止条件：
 - repo root、remote、branch/tag、HEAD 不明确或不符合批准 ref。
@@ -139,7 +141,7 @@ deployment profile：
 4. 多卡、量化、MoE、vision/multimodal 或长上下文场景需额外记录：
    - `DLC_VISIBLE_DEVICES`、TP/PP/EP、dtype、quantization、`max_model_len`、`max_num_batched_tokens`、prefix caching、expert parallel、processor/tokenizer revision。
    - 量化配置中的 `quant_method`、`bits`、`group_size`、`zero_point` 与实际 kernel 路由是否一致；`compressed-tensors`、W8A16、AWQ/AWQ-Marlin 不得只按目录名判断兼容。
-   - 如果卡在 DP/TP 初始化、shared memory broadcast 或疑似算子 hang，只记录日志和现象；`peek_stuck.sh`、软重置、LYP repair、kill 进程或 reboot 需要明确授权。
+    - 如果卡在 DP/TP 初始化、shared memory broadcast 或疑似算子 hang，只记录日志和现象；先关联 SMI Observation Envelope、server PID/PGID、端口和 runtime log。`peek_stuck.sh`、软重置、LYP repair、kill 进程或 reboot 需要明确授权。
 5. 不要把短 prompt smoke 通过解释为长上下文、Chunked Prefill runtime、DLC Runtime dispatch 或 Real DLC Hardware acceptance 已验证。
 ```
 

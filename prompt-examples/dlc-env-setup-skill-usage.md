@@ -47,6 +47,7 @@
 - /work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh
 - /work/chipltech-knowledge-base/runtime-debugging/dlc-workstation-env-rebuild.md
 - /work/chipltech-knowledge-base/debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md
+- /work/chipltech-knowledge-base/runtime-debugging/chipltech-smi-observability.md
 - /work/chipltech-knowledge-base/debugging-workflows/post-install-runtime-smoke.md
 
 【模式】<全量重建 / 从 LLVM 开始 / 从 DLC_Custom_Kernel 开始 / 只重建 PyTorch wheel / 只重装 wheel / 修 vllm>
@@ -159,7 +160,7 @@
 
 执行顺序：
 1. 对两个仓库检查 Git root、remote、branch、HEAD 和 status；身份不匹配、候选不唯一或工作树不干净时按当前 SKILL.md 停止。
-2. 从源码树外运行 `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh /tmp`。PyTorch、NumPy bridge 或 DLC Platform 不健康时停止，归类为底层问题。
+2. 从源码树外运行 `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh /tmp`。PyTorch、NumPy bridge 或 DLC Platform 不健康时停止，归类为底层问题。若本次追加 Real DLC Hardware execution/serving，委托 `dlc-hardware-observability` 保存 SMI Observation Envelope；只修 package/import 时记录 `not_applicable`，不扩大本 prompt 的执行范围。
 3. 运行 `/work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh`，并确认它使用预期 Python/pip 环境。
 4. 验证当前 `vllm` 与 `vllm-dlc` 批准 ref 的 Python import surface 兼容；缺少被引用模块时停止并报告 ref mismatch。
 5. 优先做最小 editable-install repair。只有证据确认问题仅限 metadata 且依赖健康时才使用 `--no-deps`。
@@ -186,3 +187,4 @@
 - [../runtime-debugging/dlc-workstation-env-rebuild.md](../runtime-debugging/dlc-workstation-env-rebuild.md)
 - [../debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](../debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md)
 - [../debugging-workflows/post-install-runtime-smoke.md](../debugging-workflows/post-install-runtime-smoke.md)
+- [../runtime-debugging/chipltech-smi-observability.md](../runtime-debugging/chipltech-smi-observability.md)

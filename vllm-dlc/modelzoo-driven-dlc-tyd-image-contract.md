@@ -75,11 +75,11 @@ artifact_root
 
 ### 2. Runtime Qualification Contract
 
-固定：ordinary daily base、source refs、dependency/extension identities、model asset、device mapping、functional assertions、benchmark workload、artifact root、authorization 与 cleanup baseline policy。
+固定：ordinary daily base、source refs、dependency/extension identities、model asset、device mapping、functional assertions、benchmark workload、artifact root、authorization、cleanup baseline policy，以及实际执行 Real DLC Hardware 时的 SMI Observation Envelope identity/policy。Static/read-only target 可记录 `not_applicable` 及依据。
 
 ### 3. Runtime Action Record
 
-记录本次 Host observations、container/process identity、命令、server/failure epochs、C1a/C1b/function/benchmark evidence 和 cleanup observations。每个 retry 新建 epoch，每次只改变一个变量。
+记录本次 Host observations、container/process identity、命令、server/failure epochs、C1a/C1b/function/benchmark evidence、四阶段 SMI raw/normalized evidence 和 cleanup observations。每个 retry 新建 epoch，每次只改变一个变量。
 
 ### 4. Sealed Delivery Record
 
@@ -131,7 +131,7 @@ ordinary daily base 必须完成以下检查：
 - 记录原始 package inventory/import paths。
 - task-owned offline dependency overlay、clean source archive 和 extension 允许使用，但必须有 provenance/hash，并能绑定到后续 image build context。source archive 不包含 build-time `.so` 时，必须把对应 binary overlay 作为独立输入记录；source SHA 不能替代 binary SHA-256。
 - validation container 为 task-owned，container Image ID 必须与 qualified base 相等。
-- pre-launch process、port、device occupancy 和 HBM baseline 已记录。
+- pre-launch process、port、device occupancy 和 HBM baseline 已记录；Real DLC Hardware run 同时封存官方 `cltech_smi` identity 和 `before_launch` observation。
 - 在创建 container 前从 Host driver 的权威版本面记录 driver API compatibility 和 canonical runtime/container fingerprint。fingerprint 至少覆盖 kernel release、hardware generation、Host driver API/version、container runtime name/version/config digest、ordinary base immutable Image ID、device-node inventory、requested logical-device mapping，以及 mount/privilege/ipc/shm/ulimit profile digest。driver-compatible profile 必须由一次成功 C1b record 绑定到完全相等的 fingerprint 和 profile digest；不接受 `base family`、tag 或近似版本匹配。该 record 可来自本次或历史 sealed evidence，但必须仍可读取且 profile 的全部 privilege/mount 已重新获本次授权。完全匹配时首次 container 直接使用该 profile，避免重复已知失败；否则使用最小 profile 探测。C1a 通过且 device execution 已获授权后，若完整 C1b 证明是 container profile mismatch，才可在精确 profile diff 已获授权后重建 task-owned container；不得修改共享 container、驱动或其他任务。
 
 模型专用、historical golden、candidate 或来源无法解释的 image 为 `blocked_unqualified_daily_base`。
@@ -147,6 +147,7 @@ qualified ordinary daily base 不是已验证的模型环境。必须从该 Imag
 - CMake gate 验证 interactive shell 与实际 Python/setuptools build subprocess 的 `cmake` 来源和版本；`ctest`、`cpack` 仅在本次调用时记录实际来源和版本。仅 export `PATH` 不足以证明 build subprocess 使用了批准的 CMake。
 - 仅在获得对应授权后执行 clone/fetch、package install 或 build；安装脚本必须先读取，不能因名称包含 preflight 而假定只读。
 - 在 fresh process 完成 C1a package/import 和 C1b layered DLC Runtime execution；C1b 必须覆盖 enumeration、allocation、H2D、nontrivial device operation、synchronize、D2H 和 correctness。
+- 通过 Host Daily Image Runbook 复用 `dlc-hardware-observability`，保存 `before_launch`、`after_ready`、`during_request`、`after_cleanup`。SMI evidence 与 C1b/model acceptance 分开；observer failure 为 `blocked_missing_observability`，不是 device failure。
 
 不得复用共享、已变更、已有模型服务、模型专用、golden 或 candidate container 的 package/import/source 状态作为本次模型资格证据。初始化或 C1a/C1b 未闭合时不得加载模型。启动 server 前必须读取当前 CLI `--help`，使用显式 absolute `--model` 路径和离线 Hub guard，避免位置参数漂移或默认远端模型回退。
 

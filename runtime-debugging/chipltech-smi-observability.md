@@ -185,6 +185,51 @@ Uploader SDK 的职责边界：
 
 SMI 显示设备存在、HBM 正常或无可见进程，也不证明首个 device operation 可以完成。Query-only evidence 必须与 fresh-process layered Runtime execution evidence 分开保存。
 
+## SMI Observation Envelope
+
+Real DLC Hardware 上的模型 serving、benchmark、PD、daily-image qualification 和 runtime debug 应复用同一个四阶段 envelope，而不是在每个 prompt 中重新发明命令：
+
+| Sample point | 绑定身份 | 目的 |
+|---|---|---|
+| `before_launch` | run、目标物理/逻辑设备、已有 holders | 封存 inventory、exclusions、HBM capacity/occupancy 和 cleanup baseline |
+| `after_ready` | server PID/PGID、container/server epoch | 证明声明的 workload 与设备持有关系 |
+| `during_request` | 同一 PID/PGID、active request/benchmark attempt | 关联执行中 HBM 和进程状态 |
+| `after_cleanup` | run 与 sealed baseline | 验证 task-owned process/handle/HBM delta 闭合；共享 Host 不要求全局为 0 |
+
+每个 sample point 同时保存：
+
+- 当前官方 `cltech_smi` raw output。
+- executable path/digest、`chipltech_smi_lib` source full SHA（可用时）和当前 `-h`。
+- Host/container PID 与 mount namespace、physical/logical device mapping。
+- skills-owned `vllm-dlc-smi-observation/v1` normalized JSON（adapter 可用时）。
+
+完整 skills checkout 中优先使用：
+
+```text
+<SKILLS_ROOT>/scripts/qualify-vllm-dlc-smi-environment.py
+<SKILLS_ROOT>/scripts/observe-cltech-smi.py
+```
+
+adapter 会交叉检查 device inventory/exclusions、finite positive HBM capacity、两次稳定 handle 采样、vendor process table 与 Host PGID。adapter 缺失、query 无法解析或交叉检查不一致时，normalized evidence 为 `blocked_missing_observability`；保留 raw evidence，但不得手工伪造 schema，也不得改写成硬件故障。
+
+该 envelope 是增强层，不改变 owning workflow 的原有 gate：
+
+- C1a/C1b、模型功能、benchmark、PD KV transfer 和 image delivery 仍由各自 contract 判定。
+- 不执行 Real DLC Hardware 的 static/read-only workflow 可以记录 `not_applicable` 及依据，不因 envelope 引入新的设备执行要求。
+- 已执行 Real DLC Hardware 但 observation 缺失时，不得提升依赖该 evidence 的 cleanup/ownership claim；返回最小 `blocked_missing_observability` 恢复输入。
+
+### Debug 分层
+
+SMI observation 只定位下一层：
+
+1. missing/excluded device、unexpected holder、HBM delta：停止 model mutation，先闭合 device ownership。
+2. allocation/H2D/device operation/synchronize/D2H failure：执行 fresh-process C1b，不从 SMI 正常推断 DLC Runtime 正常。
+3. 多设备或通信 failure：增加 group-scoped LYP/DLCCL 检查和 content-validating collective/transport gate。
+4. serving hang 且 PID/HBM 静止：联合 server log、Host/container process、port 和可选 `cltech_device_info` head/tail；任何单一信号都不建立根因。
+5. model output 错误但 observation 正常：转入 model/算子/精度诊断，不把设备状态当作模型正确性。
+
+reset、LYP repair、driver/HBM/firmware、power cycle、debug 上传和 reboot 仍是 envelope 外动作，必须独立授权并在动作后重跑 C1b 和 owning workload。
+
 ## PCIe Link 观察边界
 
 采集 PCIe 状态时至少记录：

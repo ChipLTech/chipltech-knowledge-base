@@ -21,13 +21,14 @@ functional_assertions
 benchmark_workload
 authorization_matrix
 approved_driver_container_profile
+optional_smi_observation_profile_or_auto_discover
 ```
 
 未提供的非敏感运行字段可自动发现并写入 contract；变更授权不能自动推导。
 
 ## 1. Host 与 Ordinary Daily Base
 
-1. 记录 OS/kernel、Docker client/server、存储、设备节点、hardware generation、occupancy、HBM、已有 containers/ports。Complete when：目标设备可唯一映射且 baseline 已保存；busy 则 `blocked_missing_hardware`。
+1. 记录 OS/kernel、Docker client/server、存储、设备节点、hardware generation、occupancy、HBM、已有 containers/ports。对实际执行 Real DLC Hardware 的 run，按 [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md) 自动发现并封存 SMI Observation Envelope；只读/static run 可记录 `not_applicable` 及依据。Complete when：目标设备可唯一映射、baseline 已保存且 observer 有 terminal state；busy 则 `blocked_missing_hardware`，工具缺失/不可解析则 `blocked_missing_observability`，不得改写为硬件故障。
 2. 只读检查 local images；获 pull 授权时才 pull。记录 Image ID，repo digest 在可用时记录。Complete when：base 通过 contract 的 ordinary eligibility；否则 `blocked_unqualified_daily_base`。
 3. 创建 Host 持久 `src/build/wheels/artifacts/logs`。模型只读挂载，可写 cache 独立。Complete when：artifact root 位于源码树外且运行契约已脱敏保存。
 4. 创建 task-owned persistent container。只有 sealed C1b record 的 canonical fingerprint 与当前 kernel、hardware generation、Host driver API/version、container runtime/config、base Image ID、device nodes/mapping 和 profile digest 完全相等，且 profile 全部 mount/privilege 已通过本次 `privileged Host integration` 明确授权，首次才直接使用该 driver-compatible profile；否则使用最小 profile 探测。不得把 device execution 授权解释为 `--privileged` 或 Host system mounts 授权。C1a 通过且 device execution 已获授权后，再运行完整 fresh C1b；只有该 C1b 将失败定位为 container profile mismatch，且精确 profile diff 已获授权时，才重建 task container 并从 fresh C1a/C1b 开始。Complete when：container Image ID 等于 qualified base、模型只读可见、设备映射一致且 C1b profile 已闭合。
@@ -48,7 +49,7 @@ approved_driver_container_profile
 ## 4. Real-weight Functional
 
 10. 由 config、weight bytes、dtype/quantization、HBM 和 deployment 需求导出 TP/PP/EP、max lengths、batching、block size、Chunked Prefill、prefix caching 和 port。启动前读取实际 server `--help`，固定 CLI 参数；使用显式 absolute `--model` 路径和离线 Hub guard，禁止模型位置参数回退为默认远端模型。Complete when：profile 六类依据可审计。
-11. 每个 server epoch 记录 container ID、Host/container PID、NSpid、namespace、starttime、cmdline、PPID、cgroup、port 和 HBM baseline。tracked wrapper 退出不等于 container child 退出。
+11. 每个 server epoch 记录 container ID、Host/container PID、NSpid、namespace、starttime、cmdline、PPID、cgroup、port 和 HBM baseline。按同一 run ID 保存 `before_launch` 与 `after_ready` raw/normalized SMI evidence；tracked wrapper 退出不等于 container child 退出。
 12. readiness 后保存 health-before 和 model-list/alias。执行 runtime contract 中至少两个正交 assertions，分别记录 HTTP、completion、non-empty、semantic result、finish reason/token count 和 raw JSON。Complete when：全部 assertions 和 health-after 通过，状态为 `model_functional_pass`。
 13. 空文本、错误答案、重复/损坏文本、异常截断、NaN/Inf、timeout 或 server death 均停止提升。CPU Reference 可诊断但不能提升 DLC functional 状态。
 
@@ -56,20 +57,20 @@ approved_driver_container_profile
 
 14. 保存当前 `vllm bench serve --help`，固定 workload 与 functional/benchmark profile diff。新 profile 使用新 server epoch，并重跑 readiness、alias 和 strict smoke。
 15. 运行同形小规模 warm-up，确认成功且服务健康；warm-up 不计入 formal result。
-16. 执行声明 formal attempts，保存 commands、environment allowlist、raw client/server logs、JSON、actual token distributions、throughput、TTFT/TPOT/ITL、Peak concurrent requests 和 health-after。
+16. 执行声明 formal attempts，保存 commands、environment allowlist、raw client/server logs、JSON、actual token distributions、throughput、TTFT/TPOT/ITL、Peak concurrent requests、`during_request` SMI evidence 和 health-after。
 17. Complete when：达到 contract 的请求成功阈值、client 正常退出、server 测后健康。一个成功 attempt 可为 `benchmark_workload_pass`；只有 contract 要求并完成重复 attempts 时才为 `benchmark_stability_baseline_pass`。
 
 ## 6. Failure Epoch
 
-18. 保存第一失败边界、最小输入、raw response/log、PID/device snapshot。每次 retry 新建 epoch且只改变一个变量。没有中间 fresh probe 时只报告 `recovered_after_action_sequence`。
+18. 保存第一失败边界、最小输入、raw response/log、PID/device snapshot 和对应 SMI sample。按 device ownership -> C1b -> group-scoped communication -> model/runtime 的层次选择下一 probe；每次 retry 新建 epoch且只改变一个变量。没有中间 fresh probe 时只报告 `recovered_after_action_sequence`。
 19. OOM 后降低 profile、新 endpoint、不同 prompt 或不同 source 是新验证对象，不覆盖原失败。
 20. Host maintenance、service restart、reset/reboot、driver/HBM/LYP 变更需独立授权；工具缺失不自动转换成硬件故障。
 
 ## 7. Cleanup
 
 21. 只停止 task-owned APIServer/EngineCore/workers/clients。TERM 前重新核对 identity；KILL 仅在 identity 仍匹配且授权时使用。
-22. 确认 task ports、handles 和 HBM delta 回到 sealed baseline/tolerance。共享 Host 不要求全机 HBM 为 0，不 kill 其他任务，不 prune。
-23. Complete when：task runtime resources 闭合，persistent validation container 按 contract 保留或停止，evidence 和失败 epochs 持久化。
+22. 确认 task ports、handles 和 HBM delta 回到 sealed baseline/tolerance，并保存 `after_cleanup` raw/normalized SMI evidence。共享 Host 不要求全机 HBM 为 0，不 kill 其他任务，不 prune。
+23. Complete when：task runtime resources 和 observation envelope 闭合，persistent validation container 按 contract 保留或停止，evidence 和失败 epochs 持久化。
 
 ## Checkpoints
 
@@ -81,7 +82,7 @@ approved_driver_container_profile
 | C2 Functional | real-weight assertions + health before/after 通过 |
 | C3 Benchmark Workload | declared workload 和测后 health 通过 |
 | C4 Stability Baseline | declared repeated attempts 与摘要通过 |
-| C5 Cleanup | task process/port/HBM delta 闭合 |
+| C5 Cleanup | task process/port/HBM delta 与 `after_cleanup` observation 闭合 |
 
 ## 结论边界
 

@@ -164,7 +164,8 @@
    - 如果后续要在容器内执行本地模型 serving smoke，缺少 `/mnt/jfs` 或 `/dev/dlc*` 应报告为环境 blocker。
    - 驱动安装、驱动重载、软重置、`cltech-init`/`dlc-init`、LYP repair 或物理机 reboot 都属于宿主机/设备操作；未获明确授权时只报告建议，不执行。
    - 如果用户授权检查 LYP，仅记录 `DLC_VISIBLE_DEVICES`、目标卡组、检测命令、日志路径和通过/失败，不把 LYP 通过解释为新模型 Real DLC Hardware acceptance。
-   - 如果请求安装或构建 `chipltech_smi_lib`，先确认 `/usr/local` 修改授权和系统依赖变更授权；默认只做源码 discovery 和版本记录，不自动安装。
+    - 如果请求安装或构建 `chipltech_smi_lib`，先确认 `/usr/local` 修改授权和系统依赖变更授权；默认只做源码 discovery 和版本记录，不自动安装。
+    - 如果后续实际执行 Real DLC Hardware serving/C1b，使用 `dlc-hardware-observability` 封存官方 `cltech_smi` identity 和四阶段 SMI Observation Envelope；本阶段只做静态/bootstrap 时记录 `not_applicable`，不新增 device execution。observer 缺失只报告 `blocked_missing_observability`，不推断硬件失败。
 
 10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。固定重建顺序为 `dlc-thunk -> LLVM -> DLCsim -> DLCSynapse -> DLC_CL -> DLC_Custom_Kernel Repository -> PyTorch -> vLLM-DLC -> vLLM`；LLVM 变化必须重建 DLCsim 和全部下游。
     - 对 task-owned builder source 的所有主 repo 和 build-time submodule，输出 `safe.directory` 路径清单；不要配置宽泛的 `safe.directory '*'`。
@@ -177,7 +178,8 @@
    - 最终 shell 变量映射。
    - clone/download 清单、采用的批准 ref 和 CMake SHA-256 校验结果。
    - CMake 路径、版本、是否满足 `>3.27.0`、安装/跳过原因和校验结果。
-   - 容器挂载、设备可见性和宿主机/LYP 操作授权状态。
+    - 容器挂载、设备可见性和宿主机/LYP 操作授权状态。
+    - SMI observer identity/status；未执行 Real DLC Hardware 时为 `not_applicable` 及依据。
    - 如果失败：当前 SKILL.md 或本模板触发的停止条件、失败命令、第一批关键报错和安全回退点。
 ```
 

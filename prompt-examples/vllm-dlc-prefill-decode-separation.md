@@ -77,6 +77,7 @@ Artifact root：<ABSOLUTE_ARTIFACT_PATH>
 - <KNOWLEDGE_BASE_ROOT>/vllm-dlc/prefill-decode-separation.md
 - <KNOWLEDGE_BASE_ROOT>/vllm-dlc/model-adaptation-and-main-to-main-decisions.md
 - <KNOWLEDGE_BASE_ROOT>/runtime-debugging/performance-profiling.md
+- <KNOWLEDGE_BASE_ROOT>/runtime-debugging/chipltech-smi-observability.md
 - <KNOWLEDGE_BASE_ROOT>/testing/arsenal-ci-and-blackbox-testing.md
 - <SKILLS_ROOT>/skills/engineering/pd-separation/SKILL.md 及其 conditional references
 - 实际 checkout 中的 pd_launcher、proxy、connector、transport 源码和各自 `--help`
@@ -84,7 +85,7 @@ Artifact root：<ABSOLUTE_ARTIFACT_PATH>
 执行要求：
 1. 先确认当前 session 可读取已安装的 `pd-separation` skill，或可读取 `<SKILLS_ROOT>/skills/engineering/pd-separation/SKILL.md` 及 references；两者均不可用时返回 `blocked_missing_contract`。冻结 deployment、cleanup 和 Site Recovery Contract，固定 source/package/model identity、两侧 role profile、connector、transport、endpoint/port matrix、actual readiness routes、deterministic comparison contract 和 evidence 字段。无既有 workload 且不执行 Host maintenance 时，Site Recovery Contract 仍填写 `not_applicable` 及观测依据；任何 required input 缺失都返回 `blocked_missing_contract`。
 2. 先建立或消费同一模型、tokenization、prompt 和 decoding parameters 的 monolithic serving baseline。环境修复路由到 `dlc-env-setup`；模型级 Attention/MLA/MoE/quantization/MTP/KV-layout/TP/DCP 问题路由到 `model-adaptation`。
-3. 只读检查 device/process/memory、device-set overlap、group-scoped LYP/link/operator smoke、model path、physical/local visible-device mapping、TP 和所有 API/side-channel/store/TransferEngine ports。保留 pass criteria 和 raw output。
+3. 通过 `dlc-hardware-observability` 只读检查 device/process/memory、device-set overlap、group-scoped LYP/link/operator smoke、model path、physical/local visible-device mapping、TP 和所有 API/side-channel/store/TransferEngine ports；为两个 role PGID 保存四阶段 raw/normalized SMI evidence。保留 pass criteria 和 raw output；observer 缺失返回 `blocked_missing_observability`，不声明硬件失败。
 4. 默认选择 TCP；仅在明确同机且 group-scoped LYP 已验证时使用 `lyp_full`。仅当 exact checkout/parser/connector 包含 protocol、native extension identity 已固定时使用 `dlccl_direct`。旧 `lyp` 只用于 diagnostics；不得把 `rdma_direct` 当 workaround。
 5. 加载两个模型前执行 Transport Qualification Gate：按目标进程和设备可见性让双端并发初始化，传输非空 payload，要求 send/recv completion 和内容校验。TCP 日志若仍安装 RDMA，不得宣称 TCP-only 通过。失败返回 `blocked_transport_unqualified`。
 6. 在 import vLLM 和 worker spawn 前设置设备、protocol、side-channel 和 store。普通 TCP 按 Prefill -> Decode；`lyp_full` 在 Prefill store listener 出现后立即启动 Decode，不等待 Prefill HTTP ready；两个 role probe 通过后启动 Proxy。readiness 以 actual routes/capability 为准，Proxy 不存在 `/health` 时使用 listener + real request。
@@ -109,5 +110,6 @@ Artifact root：<ABSOLUTE_ARTIFACT_PATH>
 - [Prefill/Decode Separation](../vllm-dlc/prefill-decode-separation.md)
 - [Model Adaptation 与 Main-to-Main 决策](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
 - [性能分析](../runtime-debugging/performance-profiling.md)
+- [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md)
 - [Arsenal CI 与黑盒测试](../testing/arsenal-ci-and-blackbox-testing.md)
 - 外部 workflow：`skills.git` 中的 `skills/engineering/pd-separation/SKILL.md`，需预先安装到 Kilo 或通过 `<SKILLS_ROOT>` 提供可读路径。

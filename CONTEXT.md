@@ -144,6 +144,8 @@
 
 **Site Recovery Contract**：Host maintenance 前固定的现场恢复 contract，包含既有 workload 的 process/container、设备、HBM/频率、端口、模型、完整启动命令、健康探针和最小功能请求。维护完成后必须逐项恢复并验证。
 
+**SMI Observation Envelope**：由官方 `cltech_smi` raw output、工具/source identity、physical/logical device mapping，以及 `before_launch`、`after_ready`、`during_request`、`after_cleanup` 四阶段 normalized observation 组成的 query-only 运行证据。它用于定位设备、HBM、进程和 cleanup 边界，不替代 C1b、模型正确性或维护授权。
+
 **DLC Runtime Capability Boundary**：host 侧 custom kernel launch 支持与 CUDA 式 device 侧持久运行时控制之间的能力分界。
 
 **Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
@@ -183,6 +185,7 @@
 - **DLC Attention Backend** 可能使用 **Merged KV Cache**，CUDA 路径使用 **Separate KV Cache**。
 - **Prefill/Decode Separation** 要求 **Prefill Worker** 与 **Decode Worker** 的 model、tokenizer、cache layout、connector 和 request correlation identity 满足同一个 **KV Cache Transfer Contract**。
 - **Transport Qualification Gate** 在加载双 role 模型前验证实际 data plane；**Site Recovery Contract** 约束会改变 Host 状态的 LYP/driver/firmware/reboot 操作及其收尾。
+- **SMI Observation Envelope** 为模型验证、镜像交付、PD 分离、环境修复和 runtime debug 提供统一的 query-only device/process/HBM evidence seam。
 
 ## 核心链路
 

@@ -85,7 +85,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 ### Runtime / Debug 入口
 
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
-- [runtime-debugging/chipltech-smi-observability.md](runtime-debugging/chipltech-smi-observability.md) — `cltech_smi` 设备观测、debug 上传和 operational evidence 边界。
+- [runtime-debugging/chipltech-smi-observability.md](runtime-debugging/chipltech-smi-observability.md) — `chipltech_smi_lib` / `cltech_smi` 四阶段 SMI Observation Envelope、设备/HBM/进程 debug、上传和 operational evidence 边界。
 - [runtime-debugging/dlc-workstation-env-rebuild.md](runtime-debugging/dlc-workstation-env-rebuild.md) — DLC 工作站环境重建总流程，覆盖 repo discovery、branch 安全规则、构建顺序、PyTorch wheel 重建、`vllm` / `vllm-dlc` 安装与最终 smoke。
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
 - [debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md) — PyTorch 2.5.0 wheel 与本地 `vllm` / `vllm-dlc` editable install 的 build preflight 清单。

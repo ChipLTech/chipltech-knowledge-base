@@ -19,15 +19,16 @@
 - chipltech-knowledge-base/CONTEXT.md
 - chipltech-knowledge-base/vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md
 - chipltech-knowledge-base/prompt-examples/host-daily-image-to-model-validation.md
+- chipltech-knowledge-base/runtime-debugging/chipltech-smi-observability.md
 - 当前可用 dlc-env-setup、model-adaptation 和 modelzoo-image-validation skills/scripts
 
 执行：
 1. 验证 config、weights、tokenizer/processor applicability、digest 和模型能力。
-2. 选择 immutable ordinary daily base，创建 task-owned validation environment，记录 image/container/source/package/import/device/HBM baseline。
+2. 选择 immutable ordinary daily base，创建 task-owned validation environment，记录 image/container/source/package/import/device/HBM baseline；实际执行 Real DLC Hardware 时复用 Host Runbook 的四阶段 SMI Observation Envelope。
 3. 依次完成 C1a、fresh-process C1b、真实模型功能和声明 benchmark；失败立即停止提升，保留 failure epoch。
 4. 功能至少验证 health、alias、两个正交 deterministic assertions、raw responses、semantic correctness 和 health-after。
 5. Benchmark 先 warm-up，再按写入 contract 的 workload 执行；单次成功称 benchmark_workload_pass，不称稳定 baseline。
-6. 停止 task-owned processes，确认 port 与 task HBM delta 回到 baseline，输出 artifact paths、状态 matrix、失败边界和 remaining risks。
+6. 停止 task-owned processes，确认 port、task HBM delta 和 `after_cleanup` observation 回到 baseline，输出 artifact paths、状态 matrix、失败边界和 remaining risks。
 
 不要安装全局 skills，不修改 ModelZoo，不下载替代模型，不使用模型专用 image 作为 daily base，不执行未授权 Host/device 维护。
 ```
