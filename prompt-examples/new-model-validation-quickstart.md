@@ -1,19 +1,29 @@
+---
+prompt_schema: new-model-validation-quickstart/v2
+required_user_inputs:
+  - model_name
+  - absolute_local_model_path
+default_mode: qualification_only
+discovery_policy: local_query_only_then_contract_proposal
+---
+
 # 新模型验证 Quickstart
 
 ## 用途
 
-只填写模型名称和本地目录，默认执行 `qualification_only`：从 ordinary daily base 完成 C1a、C1b、真实模型功能和声明的 benchmark。Image delivery 必须显式选择并授权。
+只填写模型名称和本地绝对目录。agent 自动发现其余环境、source、image、设备、profile、assertions、benchmark、端口和 artifact 信息，并默认推进 `qualification_only`。Image delivery 由专用入口提出并在所需授权闭合后执行。
 
 本入口不安装全局 skills、不 clone 仓库、不下载模型或依赖；现有 skill 可直接读取使用。缺失依赖或源码时只读发现并返回最小 blocker。
 
 ## 可直接复制 Prompt
 
 ```md
-请直接执行下面模型的 runtime-first 验证，不要只写计划。
+请启动下面模型的 runtime-first 验证并持续执行到 terminal state，不要要求我预填可自动发现的环境或 Contract 字段。
 
 模型名称：<MODEL_NAME>
 模型目录：<ABSOLUTE_LOCAL_MODEL_PATH>
-模式：qualification_only
+
+除上面两行外，其他字段全部自动发现或基于证据提出保守值。先完成 query-only discovery、resolved manifest、Runtime Qualification Contract 和 authorization status；优先复用已验证环境、空闲设备、可用本地 source/image、既有过程资产与有效 standing authorization。只有下一步确实需要且当前 scope 未授权时，才请求一次最小授权；不得让我手工填写 source SHA、镜像、设备、TP、端口、profile、benchmark 或 artifact root。
 
 先自动发现并回显 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 与已安装 skill 路径，然后读取：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
@@ -35,10 +45,4 @@
 不要安装全局 skills，不修改 ModelZoo，不下载替代模型，不使用模型专用 image 作为 daily base，不执行未授权 Host/device 维护。
 ```
 
-需要同时交付 image 时，将模式改为：
-
-```text
-qualification_and_image_delivery
-```
-
-并使用 [ModelZoo 模型到 DLC/TYD Images Prompt](modelzoo-model-to-dlc-tyd-images.md) 声明 target，以及 build/install、device execution、tar export、registry push 和 TYD full-stack rebuild 的逐项授权。该 prompt 会先交付 DLC，再以其 immutable Image ID 作为 TYD full-stack rebuild 的基线。
+需要同时交付 image 时，直接使用 [ModelZoo 模型到 DLC/TYD Images Prompt](modelzoo-model-to-dlc-tyd-images.md)，仍然只填写同样的模型名称和绝对目录。该入口自动提出 delivery intent/target，并只在下一动作需要时请求最小 qualification execution、build/install、device execution、tar export、registry push 或 TYD full-stack rebuild 授权。

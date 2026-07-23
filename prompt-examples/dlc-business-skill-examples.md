@@ -11,7 +11,7 @@
 **▶ 可复制 prompt：每次任务开始前先加这句，强制 AI 读知识库**
 
 ```
-先读取 /work/chipltech-knowledge-base/CONTEXT.md 和 /work/chipltech-knowledge-base/README.md，再开始处理任务。
+先自动发现并读取当前 chipltech-knowledge-base 的 CONTEXT.md 和 README.md；多个候选身份不明确时停止，不要假定 `/work`。
 ```
 
 难复现、间歇性或一眼无法解释的 bug/failure/性能回归使用 `/diagnosing-bugs`：先建立 tight feedback loop，实际运行一条 red-capable、deterministic、agent-runnable 的命令并观察到用户描述的 failure；在此之前不提出 hypotheses。该 skill 负责定位、回归测试和最小修复；若只是边界明确的小问题，可直接用 `/tdd`。`/code-review <fixed-point>` 当前只审查已经提交到 `HEAD` 的 diff，不用于未提交工作树；已有明确 spec/ticket 的实现可交给 `/implement`，但使用前要注意其上游流程仍要求提交前调用 `/code-review`，与当前 fixed-point 审查模式存在限制。
@@ -20,47 +20,44 @@
 
 ## 套餐一：新模型首次接入 DLC Platform
 
-**适用场景**：拿到一个新模型，不知道能不能在 DLC Platform 上跑起来。需要从环境检查、模型加载到首图跑通，逐步验证。
+**适用场景**：拿到一个新模型，不知道能不能在 DLC Platform 上跑起来。需要从环境检查、模型加载到与模型 modality 匹配的最小推理跑通，逐步验证。
 
 **▶ 可复制 prompt（替换 `<>` 占位符后发给 AI）：**
 
 ```
-我要把一个新模型在 DLC Platform 上跑通，请按下面的顺序分步验证，每一步通过后再进下一步。
+我要把一个新模型在 DLC Platform 上跑通。请路由到 `new-model-validation-quickstart` 的 runtime-first workflow，每一步通过后再进下一步，并持续到 terminal state。
 
-【模型路径】<模型 checkpoint 路径>
-【模型类型】<例如 Glm4vForConditionalGeneration 或其他 Transformers class>
-【测试图片】<图片路径，如果有>
-【推理方式】<单图短 decode / 文本推理 / 批量评测>
-【预期 dtype】<bfloat16 / float32>
+【模型名称】<MODEL_NAME>
+【模型绝对路径】<ABSOLUTE_LOCAL_MODEL_PATH>
+
+模型 class、modality、tokenizer/processor、测试输入 applicability、dtype、inference smoke、环境、设备、profile 和 artifact 路径全部从本地资产与当前环境自动发现或提出。多模态模型缺少可用本地测试资产时才返回最小 assertion-input blocker，不把测试图片设为所有模型的必填字段。
 
 请你：
-1. 读取：
-   - /work/chipltech-knowledge-base/CONTEXT.md
-   - /work/chipltech-knowledge-base/debugging-workflows/common-debug-commands.md
+1. 自动发现并读取当前知识库的 `CONTEXT.md`、`prompt-examples/new-model-validation-quickstart.md` 和 `debugging-workflows/common-debug-commands.md`。
 2. 按以下顺序执行，每一步输出结果：
 
 #### 第一步：环境检查
 - 检查 Python、PyTorch、Transformers 版本。
-- 检查 `torch.dlc` 是否可用：尝试 `torch.arange(4).to("dlc") + 1`。
+- 先完成 package/import query-only 检查；只有 device execution scope 已授权并固定空闲设备后，才尝试 `torch.arange(4).to("dlc") + 1`。
 - 检查模型类是否可导入。
 - 如果任何一步失败，先解决环境问题，不要跳到模型加载。
 
 #### 第二步：模型加载到 DLC Platform
-- 加载模型（bf16 或 fp32），记录参数量和 device 分布。
-- 执行 `model.to("dlc")`，记录耗时。
-- 如果 30 秒未返回，检查残留进程：`lsof /dev/dlc*`，必要时做软复位。
+- 消费 Host Runbook 生成的合格 `environment_handoff/v1` 后再加载模型，自动选择有依据的 dtype，并记录参数量和 device 分布。
+- 只有 device-backed validation 已获授权时执行 `model.to("dlc")` 并记录耗时。
+- 如果 30 秒未返回，只做 query-only process/device observation 并保存第一失败边界。禁止终止非任务进程；task-owned KILL 也必须满足 Contract 的独立 `task_owned_kill` 条件。软复位、LYP repair 或 reboot 需要独立 Host-maintenance authorization 和 Site Recovery Contract，不能作为默认动作。
 - 记录第一层参数 device 和 dtype，确认模型确实放在了 DLC Platform 上。
 
-#### 第三步：首图冒烟推理
-- 构造最小输入：1 张图 + 短 prompt + max_tokens=1。
-- 先跑 CPU 参考，确认模型本身不出错。
-- 再跑 PyTorch DLC Backend 路径，确认能完成 prefill 和至少 1 个 decode step。
+#### 第三步：modality-aware 冒烟推理
+- 从 config/processor 推导 text、image、audio、video 或组合输入，构造最小 deterministic assertion；只有模型确实需要外部媒体时才选择本地适用测试资产。
+- 先跑同一输入和参数的 CPU Reference，确认模型本身不出错。
+- 再跑 PyTorch DLC Backend 路径，确认能完成对应 prefill/encoding 和至少 1 个 decode/inference step。
 - 如果卡住，记录第一个阻塞位置（哪个 module / 哪个 op），输出算子问题信息包。
 
 交付物：
 - 环境检查结果。
 - 模型加载结果（参数量、device、loader 耗时）。
-- 首图冒烟结果（是否跑通、第一个阻塞点、完整的失败信息和 trace）。
+- modality-aware 冒烟结果（输入身份、是否跑通、第一个阻塞点、完整失败信息和 trace）。
 ```
 
 **关键点**：先 CPU Reference 跑通，再验证 PyTorch DLC Backend 路径。卡住不要反复重试，第一时间记录阻塞位置和完整错误信息。
@@ -324,7 +321,7 @@
 - 检查设备可用：ls /dev/dlc*
 - 检查残留进程：lsof /dev/dlc*
 - 如果有残留，记录下来，但不要随意 kill。
-- 必要时做软复位：dlcpd_clnt -s
+- 不自动软复位。只有精确物理设备、影响范围、Site Recovery Contract 和 Host-maintenance authorization 均闭合时，才可执行批准的 reset action；否则只报告建议。
 
 #### 第二步：确认是不是 DLC Runtime 异步错误
 - 用 DLC_SYN_BLOCKING=1 重新运行。

@@ -1,5 +1,8 @@
 ---
-prompt_schema: vllm-dlc-three-stage-prompt/v1
+prompt_schema: vllm-dlc-three-stage-prompt/v2
+required_user_inputs:
+  - model_name
+  - absolute_local_model_path
 stage_0_skill_identity: model-adaptation-pre-handoff-analysis
 stage_1_skill_identity: dlc-env-setup-and-host-c1b
 stage_2_skill_identity: model-adaptation-device-backed
@@ -9,13 +12,14 @@ recommended_order:
   - dlc-env-setup-and-host-c1b
   - model-adaptation-device-backed
 claim_boundary: operational_or_not_verified_only
+discovery_policy: local_query_only_then_contract_proposal
 ---
 
 # 每日空镜像到新模型 vLLM-DLC 适配 Prompt
 
 ## 用途
 
-用于在一个空的每日镜像里，先为一个明确新模型生成只读 deployment profile，再把 DLC Ecosystem 初始化为匹配该 profile 的健康工作站，最后执行需要设备证据的 vLLM-DLC / DLC Platform 适配分析。
+用于在一个空的每日镜像里，只凭模型名称和本地绝对目录完成 profile derivation、DLC Ecosystem 初始化与 device-backed adaptation。环境模式、source/ref、CMake、mount/profile、设备和交接字段均由 agent 自动发现或提出。
 
 结论：可以这样做，而且推荐这样做。
 
@@ -31,7 +35,7 @@ claim_boundary: operational_or_not_verified_only
 - 环境阶段负责初始化/修复与按 profile 执行 C1a/C1b，不做模型 acceptance。
 - device-backed adaptation 不负责重建 DLC Ecosystem，且必须消费合格 handoff。
 - C1a/C1b 通过只说明环境与 bounded DLC Runtime execution；不证明新模型已经 Real DLC Hardware accepted、Verified vLLM Alignment、DLC Runtime dispatch 或 request-correlated Chunked Prefill。
-- 任一阶段缺少模型资产、revision、deployment profile、硬件条件或 artifact destination 时，应先报告 blocker，不要继续假装完成。
+- 只有模型名称或绝对路径缺失/无效时立即报告 input blocker；revision、deployment profile、硬件条件和 artifact destination 必须先自动发现或提出，无法闭合时再报告对应 blocker。
 - `/mnt/jfs/models` 是团队模型文件服务器挂载根目录，模型路径优先从这里选择并记录完整绝对路径。
 - 所有 artifact destination 必须在 `vllm-dlc` 源码树外。
 - 阶段 1 输出是阶段 2 的输入证据，不是模型通过结论。阶段 2 只消费明确的 handoff，不得从口头“环境已好”推导任何运行状态。
@@ -58,7 +62,12 @@ explicitly unverified scope
 ## 可复制 Prompt
 
 ```md
-请按三个阶段处理：先使用 `model-adaptation` 完成只读 pre-handoff analysis，再使用 `dlc-env-setup` 和 Host Daily Image Runbook 完成 C1a/C1b/handoff，最后执行需要 device-backed evidence 的 `model-adaptation`。
+请按三个阶段处理并持续到 terminal state。不要要求我预填可从当前 Host、container、source、package、model config、历史过程资产或实际 `--help` 自动发现的字段。
+
+模型名称：<MODEL_NAME>
+模型目录：<ABSOLUTE_LOCAL_MODEL_PATH>
+
+除这两行外，全部自动发现或提出：知识库/skill roots、daily image、repo map、ref identities、rebuild 起点、CMake、mount/profile、设备、deployment profile、artifact destination、handoff 和 serving assertions。优先保持当前 checkout 和复用健康本地环境；任何 qualification execution、task-owned KILL、fetch/ref switch/install/build/`/usr/local`/privileged profile/device execution/Host maintenance 只在成为继续条件时消费已验证 standing authorization 或请求最小增量。
 
 先发现并回显 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 与当前安装的 skill 路径；不要假定 `/work`。然后读取并遵循：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
@@ -82,20 +91,13 @@ explicitly unverified scope
 
 阶段 1：环境初始化和 C1a/C1b，使用 `dlc-env-setup` 与 Host Daily Image Runbook
 
-【模式】<全量重建 / 从 LLVM 开始 / 从 DLC_Custom_Kernel 开始 / 只重建 PyTorch wheel / 只重装 wheel / 修 vllm>
-【搜索根目录】<例如 /work,$HOME；不确定则写“请自动发现”>
-【版本策略】<保持当前 checkout / CI默认最新 / 固定ref / 混合；空每日镜像缺仓库且授权 bootstrap 时默认推荐 CI默认最新>
-【需要切换的批准 ref】<保持当前 checkout 时写“无”；CI默认最新可写“使用 Arsenal CI 默认分支最新 head”；固定ref/混合时逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA>
-【是否包含 vllm / vllm-dlc】是
-【是否允许修改 /usr/local】<是/否>
-【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；若已满足则不要重装
-【容器/宿主机约束】<是否挂载 /mnt/jfs、/dev、/sys、/lib/modules、/var/log；是否允许驱动/LYP/软重置操作>
+自动生成 Stage 1 proposal：repo map、当前 checkout policy、最小 rebuild/repair 起点、CMake candidate、required container profile 和所需授权。默认保持当前 checkout；`CI默认最新` 只可作为 proposal，不能自动 fetch 或切换。只请求当前环境与目标 profile 的精确 diff。
 
 阶段 1 必须交付：
 - 最终 repo map。
 - 每个仓库的 Git root、remote、branch/tag、HEAD、status。
 - 起始阶段和依赖健康证据。
-- PyTorch 2.5.0 wheel 路径与 reinstall 结果。
+- PyTorch 2.5.0 wheel/package identity 与 validation result；已有环境健康时 reinstall 记录 `not_required`，不得为了交付字段而重装。
 - 已发现的 `dlc-env-setup/scripts/pytorch-preflight.sh` 结果。
 - 已发现的 `dlc-env-setup/scripts/vllm-preflight.sh` 结果。
 - 已发现的 `dlc-env-setup/scripts/runtime-smoke.sh /tmp` 结果。
@@ -105,7 +107,7 @@ explicitly unverified scope
 阶段 1 停止条件：
 - repo root、remote、branch/tag、HEAD 不明确或不符合批准 ref。
 - 工作树有未提交改动且切换 ref 会覆盖它们。
-- 版本策略缺失；请求 bootstrap 但未明确使用 `CI默认最新`、`固定ref` 或 `混合`。
+- 自动发现后 source identity 仍不唯一；默认 `preserve_current_checkout` 无法满足 profile，且所需 fetch/ref change 未获授权。
 - 必需 build entrypoint 缺失。
 - `/usr/local` 修改未授权但当前阶段需要安装到 `/usr/local`。
 - PyTorch、NumPy bridge、DLC Platform、请求范围内的 `vllm` / `vllm-dlc` import 或 runtime smoke 不健康。
@@ -117,39 +119,10 @@ explicitly unverified scope
 
 阶段 2：device-backed 新模型适配分析，使用 `model-adaptation`
 
-模型文件来源：
-- 团队模型文件服务器根目录: `/mnt/jfs/models`
-- 目标模型目录: <例如 /mnt/jfs/models/Qwen3.5-27B>
-- 如果目标模型不在 `/mnt/jfs/models` 下，先报告原因、来源和完整路径，不要猜测或下载替代模型。
-
-模型身份：
-- model ID: <MODEL_ID>
-- approved model revision: <MODEL_REVISION>
-- tokenizer revision: <TOKENIZER_REVISION>
-- processor revision（nullable）: <PROCESSOR_REVISION_OR_NULL>
-
-仓库身份：
-- target upstream full SHA: <TARGET_VLLM_FULL_SHA>
-- candidate vllm-dlc full SHA: <CANDIDATE_VLLM_DLC_FULL_SHA>
-
-deployment profile：
-- TP / PP: <TP> / <PP>
-- dtype / quantization: <DTYPE> / <QUANTIZATION>
-- context limit / batching limit: <CONTEXT_LIMIT> / <BATCHING_LIMIT>
-- Chunked Prefill selection: <CHUNKED_PREFILL_SELECTION>
-- served model name: <SERVED_MODEL_NAME>
-- real-weight requirement: <REAL_WEIGHT_REQUIREMENT>
-
-资源与交接：
-- model path/assets and approval: <MODEL_ASSETS>
-- hardware requirement / available device count: <HARDWARE_REQUIREMENT> / <AVAILABLE_DEVICE_COUNT>
-- manifest/dependency input identity: <MANIFEST_DEPENDENCY_IDENTITY>
-- artifact destination outside vllm-dlc: <ARTIFACT_DESTINATION>
-- 阶段 1 环境初始化报告路径: <DLC_ENV_SETUP_REPORT_PATH>
-- 阶段 1 environment_handoff/v1 路径: <ENVIRONMENT_HANDOFF_PATH>
+由 agent 输出 resolved Stage 2 record：本地模型 digest/revision-or-null、source full SHAs、deployment profile、hardware availability、manifest/dependency identity、外部 artifact destination、Stage 1 report 和 `environment_handoff/v1` 路径。输入路径不在 `/mnt/jfs/models` 时只记录实际来源，不替换模型或下载替代品。
 
 阶段 2 要求：
-- 先列出缺失输入并停止；资产缺失用 `blocked_missing_asset`，硬件不足用 `blocked_missing_hardware`。
+- 只有模型名/绝对路径无效才视为初始缺失；其他字段先 discovery。资产缺失用 `blocked_missing_asset`，硬件不足用 `blocked_missing_hardware`，授权缺失用 `blocked_missing_authorization`。
 - 只做新模型兼容性分析和报告，不直接修改 `vllm-dlc`。
 - 不继承 Ticket 06 v12 operational evidence 给这个新 target。
 - 未针对该新模型执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
@@ -174,7 +147,7 @@ deployment profile：
 4. 多卡、量化、MoE、vision/multimodal 或长上下文场景需额外记录：
    - `DLC_VISIBLE_DEVICES`、TP/PP/EP、dtype、quantization、`max_model_len`、`max_num_batched_tokens`、prefix caching、expert parallel、processor/tokenizer revision。
    - 量化配置中的 `quant_method`、`bits`、`group_size`、`zero_point` 与实际 kernel 路由是否一致；`compressed-tensors`、W8A16、AWQ/AWQ-Marlin 不得只按目录名判断兼容。
-    - 如果卡在 DP/TP 初始化、shared memory broadcast 或疑似算子 hang，只记录日志和现象；先关联 SMI Observation Envelope、server PID/PGID、端口和 runtime log。`peek_stuck.sh`、软重置、LYP repair、kill 进程或 reboot 需要明确授权。
+    - 如果卡在 DP/TP 初始化、shared memory broadcast 或疑似算子 hang，只记录日志和现象；先关联 SMI Observation Envelope、server PID/PGID、端口和 runtime log。`peek_stuck.sh`、软重置、LYP repair 或 reboot 需要对应授权；task-owned KILL 必须满足 sealed identity、graceful timeout、impact record 和独立 `task_owned_kill`，禁止终止非任务进程。
 5. 不要把短 prompt smoke 通过解释为长上下文、Chunked Prefill runtime、DLC Runtime dispatch 或 Real DLC Hardware acceptance 已验证。
 ```
 

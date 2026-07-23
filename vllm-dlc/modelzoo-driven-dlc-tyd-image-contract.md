@@ -42,15 +42,16 @@ Gate 规则：
 
 ## 输入与授权
 
-最小输入：
+最小用户输入：
 
 ```text
 model_name
 absolute_local_model_path
-mode: qualification_only | qualification_and_image_delivery
 ```
 
-可选输入：
+`mode` 不是用户必填字段。默认派生为 `qualification_only`；使用镜像交付入口时可由入口将 intent 提案为 `qualification_and_image_delivery`，但 intent、target、runtime PASS 或既有 artifact 都不构成 mutation authorization。
+
+自动派生字段或可选用户约束：
 
 ```text
 framework_selector
@@ -60,7 +61,9 @@ requested_targets: dlc | tyd | both
 artifact_root
 ```
 
-授权按动作分类，不从“自动执行”推导：image pull、network dependency access、clone/fetch、package install、build、device execution、privileged Host integration、tar export、registry push、Host maintenance。`privileged Host integration` 覆盖 `--privileged`、Host PID namespace，以及 `/dev`、`/sys`、`/run`、`/var/log`、`/lib/modules` 等扩大 Host attack surface 的 mount/profile；它不能从 device execution 或 build 授权推导。缺少继续所需授权时返回 `blocked_missing_authorization`，并列出最小授权和精确 profile diff。
+上述可选字段以及 source/package identity、ordinary daily base、device scope、deployment profile、functional assertions、benchmark workload、port matrix 和 output paths 应先通过本地 query-only discovery 自动闭合或生成 contract-bound proposal。只有 discovery 后仍无法唯一解释且不能安全选择时，才返回对应 structured blocker，不得要求用户在初始 prompt 中手工填写整份 Contract。
+
+授权按动作分类，不从“自动执行”推导：image pull、network dependency access、clone/fetch、package install、build、`qualification_execution`、`task_owned_kill`、device execution、privileged Host integration、tar export、registry push、Host maintenance。`qualification_execution` 只覆盖已批准 artifact root 内的 task-owned 目录/evidence/cache 写入、task-owned container/process 创建、本地端口绑定和这些精确资源的 graceful TERM/stop；不覆盖 KILL、非任务资源、device execution、特权 profile、Host maintenance 或 external publication。`task_owned_kill` 只允许在 PID/PGID/container identity 仍与 sealed task record 完全匹配、graceful stop 已超时且影响范围已记录时，对该精确 task-owned process group 执行 KILL；永不覆盖非任务进程。`privileged Host integration` 覆盖 `--privileged`、Host PID namespace，以及 `/dev`、`/sys`、`/run`、`/var/log`、`/lib/modules` 等扩大 Host attack surface 的 mount/profile；它不能从 device execution、qualification execution 或 build 授权推导。缺少继续所需授权时返回 `blocked_missing_authorization`，并列出最小授权和精确 profile diff。
 
 ## 五类记录
 
