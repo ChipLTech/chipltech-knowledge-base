@@ -1,11 +1,13 @@
 ---
-prompt_schema: vllm-dlc-two-stage-prompt/v1
-stage_1_skill_identity: dlc-env-setup
-stage_2_skill_identity: model-adaptation
+prompt_schema: vllm-dlc-three-stage-prompt/v1
+stage_0_skill_identity: model-adaptation-pre-handoff-analysis
+stage_1_skill_identity: dlc-env-setup-and-host-c1b
+stage_2_skill_identity: model-adaptation-device-backed
 shared_contract: vllm-dlc-contract/v1
 recommended_order:
-  - dlc-env-setup
-  - model-adaptation
+  - model-adaptation-pre-handoff-analysis
+  - dlc-env-setup-and-host-c1b
+  - model-adaptation-device-backed
 claim_boundary: operational_or_not_verified_only
 ---
 
@@ -13,44 +15,72 @@ claim_boundary: operational_or_not_verified_only
 
 ## 用途
 
-用于在一个空的每日镜像里，先把 DLC Ecosystem 初始化成健康工作站，再对一个明确新模型进行 vLLM-DLC / DLC Platform 适配分析。
+用于在一个空的每日镜像里，先为一个明确新模型生成只读 deployment profile，再把 DLC Ecosystem 初始化为匹配该 profile 的健康工作站，最后执行需要设备证据的 vLLM-DLC / DLC Platform 适配分析。
 
 结论：可以这样做，而且推荐这样做。
 
 ```text
-先 dlc-env-setup，把空每日镜像变成健康 DLC Ecosystem 工作站
-再 model-adaptation，对新模型做 vLLM-DLC / DLC Platform 适配分析
+先 model-adaptation 的只读 pre-handoff analysis，导出 deployment profile
+再 dlc-env-setup + Host Runbook，按该 profile 完成 C1a/C1b 和 handoff
+最后 model-adaptation，执行需要 device-backed evidence 的适配分析
 ```
 
 ## 边界
 
-- 第一阶段是环境初始化/修复，不是模型适配。
-- 第二阶段是模型兼容性分析，不负责重建 DLC Ecosystem。
-- 第一阶段通过只说明环境健康；不证明新模型已经 Real DLC Hardware accepted、Verified vLLM Alignment、DLC Runtime dispatch 或 request-correlated Chunked Prefill。
-- 第二阶段如果缺少模型资产、revision、deployment profile、硬件条件或 artifact destination，应先报告 blocker，不要继续假装完成。
+- pre-handoff analysis 是只读模型兼容性分析，只生成 capability matrix 和 deployment profile，不加载模型或执行设备操作。
+- 环境阶段负责初始化/修复与按 profile 执行 C1a/C1b，不做模型 acceptance。
+- device-backed adaptation 不负责重建 DLC Ecosystem，且必须消费合格 handoff。
+- C1a/C1b 通过只说明环境与 bounded DLC Runtime execution；不证明新模型已经 Real DLC Hardware accepted、Verified vLLM Alignment、DLC Runtime dispatch 或 request-correlated Chunked Prefill。
+- 任一阶段缺少模型资产、revision、deployment profile、硬件条件或 artifact destination 时，应先报告 blocker，不要继续假装完成。
 - `/mnt/jfs/models` 是团队模型文件服务器挂载根目录，模型路径优先从这里选择并记录完整绝对路径。
 - 所有 artifact destination 必须在 `vllm-dlc` 源码树外。
+- 阶段 1 输出是阶段 2 的输入证据，不是模型通过结论。阶段 2 只消费明确的 handoff，不得从口头“环境已好”推导任何运行状态。
+
+## 阶段交接 Contract
+
+阶段 1 只有在创建 task-owned daily-image environment 且完成 C1a/C1b 时，才由 Host Daily Image Runbook 按 [模型运行资格与镜像交付 Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) 写 `environment_handoff/v1`。它索引既有 evidence，不新建 PASS 状态。纯 bootstrap、静态检查或未执行 C1b 的阶段 1 只交付 bootstrap report，不能产生 environment handoff。
+
+```text
+daily_base_image_id
+task_container_identity
+driver/runtime/profile fingerprint
+source/package/plugin/extension identities
+C1a result and artifact path
+C1b results by logical device and collective scope
+SMI observer status and artifact paths
+cleanup baseline
+unresolved blockers
+explicitly unverified scope
+```
+
+阶段 2 可在 handoff 前执行只读 capability matrix 和 pre-handoff deployment profile derivation，且必须将 profile 绑定到后续 runtime qualification contract。任何 device-backed adaptation、model load、serving、benchmark 或 image delivery 仅在 handoff 的 identity 与当前 contract 相符、每个 required C1a/C1b/collective result 都明确 pass 且无 blocker 时开始。`not_executed` 或 `not_applicable` 不能放行需要设备执行的模型适配。
 
 ## 可复制 Prompt
 
 ```md
-请按两阶段处理：先使用 `dlc-env-setup`，再在通过条件满足后使用 `model-adaptation`。
+请按三个阶段处理：先使用 `model-adaptation` 完成只读 pre-handoff analysis，再使用 `dlc-env-setup` 和 Host Daily Image Runbook 完成 C1a/C1b/handoff，最后执行需要 device-backed evidence 的 `model-adaptation`。
 
-必须先读取并遵循：
-- /work/chipltech-knowledge-base/CONTEXT.md
-- /work/chipltech-knowledge-base/prompt-examples/dlc-env-setup-skill-usage.md
-- /work/chipltech-knowledge-base/prompt-examples/vllm-dlc-model-adaptation.md
-- /work/chipltech-knowledge-base/runtime-debugging/chipltech-smi-observability.md
-- /work/skills/skills/engineering/dlc-env-setup/SKILL.md
-- /work/skills/skills/engineering/model-adaptation/SKILL.md
+先发现并回显 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 与当前安装的 skill 路径；不要假定 `/work`。然后读取并遵循：
+- <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
+- <KNOWLEDGE_BASE_ROOT>/vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md
+- <KNOWLEDGE_BASE_ROOT>/prompt-examples/host-daily-image-to-model-validation.md
+- <KNOWLEDGE_BASE_ROOT>/prompt-examples/dlc-env-setup-skill-usage.md
+- <KNOWLEDGE_BASE_ROOT>/prompt-examples/vllm-dlc-model-adaptation.md
+- <KNOWLEDGE_BASE_ROOT>/runtime-debugging/chipltech-smi-observability.md
+- 当前安装的 dlc-env-setup/SKILL.md 与 model-adaptation/SKILL.md
 
 总体目标：
-1. 先把这个空每日镜像初始化成健康 DLC Ecosystem 工作站。
-2. 环境健康后，再对一个明确新模型做 vLLM-DLC / DLC Platform 适配分析。
-3. 不把环境初始化结果提升成新模型 acceptance、Verified vLLM Alignment 或 Real DLC Hardware 权威证据。
-4. 新模型验证按阶梯推进：先短 prompt serving smoke，再逐步扩展到长 prompt / one-shot 敏感场景。
+1. 先完成只读 capability matrix 和与 runtime qualification contract 绑定的 pre-handoff deployment profile。
+2. 使用该 profile 初始化并验证 DLC Ecosystem 工作站。
+3. handoff 合格后，再对该明确新模型做 device-backed vLLM-DLC / DLC Platform 适配分析。
+4. 不把环境初始化结果提升成新模型 acceptance、Verified vLLM Alignment 或 Real DLC Hardware 权威证据。
+5. 新模型验证按阶梯推进：先短 prompt serving smoke，再逐步扩展到长 prompt / one-shot 敏感场景。
 
-阶段 1：环境初始化，使用 `dlc-env-setup`
+阶段 0：Runtime Qualification Contract 与只读 pre-handoff analysis，使用 `model-adaptation`
+
+先按 Contract 写 Runtime Qualification Contract；再在执行任何 C1b 前，基于模型资产、revision、目标 source identity、硬件要求和 artifact destination 输出 capability matrix 与 pre-handoff deployment profile。profile 至少绑定 requested logical-device mapping、TP/PP/EP、dtype/quantization、context/batching limit、collective communication requirement 和 runtime qualification contract identity。此阶段不执行 model load、serving、benchmark、image delivery 或任何 device-backed adaptation。
+
+阶段 1：环境初始化和 C1a/C1b，使用 `dlc-env-setup` 与 Host Daily Image Runbook
 
 【模式】<全量重建 / 从 LLVM 开始 / 从 DLC_Custom_Kernel 开始 / 只重建 PyTorch wheel / 只重装 wheel / 修 vllm>
 【搜索根目录】<例如 /work,$HOME；不确定则写“请自动发现”>
@@ -66,9 +96,9 @@ claim_boundary: operational_or_not_verified_only
 - 每个仓库的 Git root、remote、branch/tag、HEAD、status。
 - 起始阶段和依赖健康证据。
 - PyTorch 2.5.0 wheel 路径与 reinstall 结果。
-- `/work/skills/skills/engineering/dlc-env-setup/scripts/pytorch-preflight.sh` 结果。
-- `/work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh` 结果。
-- `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh /tmp` 结果。
+- 已发现的 `dlc-env-setup/scripts/pytorch-preflight.sh` 结果。
+- 已发现的 `dlc-env-setup/scripts/vllm-preflight.sh` 结果。
+- 已发现的 `dlc-env-setup/scripts/runtime-smoke.sh /tmp` 结果。
 - `vllm` / `vllm-dlc` import 与 package metadata 验证结果。
 - 实际执行 Real DLC Hardware 时，`dlc-hardware-observability` 的 observer identity、四阶段 raw/normalized evidence 和 cleanup closure；仅环境静态检查时记录 `not_applicable`。
 
@@ -83,9 +113,9 @@ claim_boundary: operational_or_not_verified_only
 - 后续 serving smoke 需要的 `/mnt/jfs` 或 `/dev/dlc*` 在当前容器不可见。
 - 驱动重载、软重置、`cltech-init`/`dlc-init`、LYP repair 或物理机 reboot 未获明确授权。
 
-只有阶段 1 明确通过后，才能进入阶段 2。
+只有阶段 1 已按阶段 0 profile 完成 C1a/C1b/required collective 并生成合格 `environment_handoff/v1` 后，才能进入阶段 2。
 
-阶段 2：新模型适配分析，使用 `model-adaptation`
+阶段 2：device-backed 新模型适配分析，使用 `model-adaptation`
 
 模型文件来源：
 - 团队模型文件服务器根目录: `/mnt/jfs/models`
@@ -116,6 +146,7 @@ deployment profile：
 - manifest/dependency input identity: <MANIFEST_DEPENDENCY_IDENTITY>
 - artifact destination outside vllm-dlc: <ARTIFACT_DESTINATION>
 - 阶段 1 环境初始化报告路径: <DLC_ENV_SETUP_REPORT_PATH>
+- 阶段 1 environment_handoff/v1 路径: <ENVIRONMENT_HANDOFF_PATH>
 
 阶段 2 要求：
 - 先列出缺失输入并停止；资产缺失用 `blocked_missing_asset`，硬件不足用 `blocked_missing_hardware`。
@@ -123,6 +154,8 @@ deployment profile：
 - 不继承 Ticket 06 v12 operational evidence 给这个新 target。
 - 未针对该新模型执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
 - 输出写到声明的外部 artifact destination。
+- handoff 前仅可完成只读 capability matrix 和 pre-handoff deployment profile derivation，并将其绑定到后续 runtime qualification contract；不得执行 model load、serving、benchmark 或 image delivery。
+- 在任何 device-backed adaptation 前校验 Contract 定义的 `environment_handoff/v1`：缺失、字段身份不一致、任一 required C1a/C1b/collective 未明确 pass 或有未解决 blocker 时停止并报告最小恢复输入；不得重跑或猜测阶段 1 的结果。
 
 阶段 2 serving smoke 阶梯：
 1. 先做短 prompt serving smoke。

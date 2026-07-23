@@ -14,16 +14,17 @@ B. 本地模型资产解析
 C. 可选 ModelZoo reference 解析
 D. Ordinary Daily Base 资格
 E. Runtime Qualification Contract
-F. Task-owned Daily-image Environment Initialization
-G. C1a Package/Import
-H. C1b DLC Runtime Execution
-I. Real-weight Functional Qualification
-J. Declared Benchmark Workload
-K. Sealed Delivery Record
-L. DLC Build -> Exact-image Validation -> Export
-M. TYD Derivation from Qualified DLC Image -> Full-stack Rebuild/Packaging -> Static/Exact-image Validation -> Export
-N. Cleanup Closure
-O. DLC/TYD 独立 final status
+F. Pre-handoff Capability/Profile Derivation
+G. Task-owned Daily-image Environment Initialization
+H. C1a Package/Import
+I. C1b DLC Runtime Execution
+J. Real-weight Functional Qualification
+K. Declared Benchmark Workload
+L. Sealed Delivery Record
+M. DLC Build -> Exact-image Validation -> Export
+N. TYD Derivation from Qualified DLC Image -> Full-stack Rebuild/Packaging -> Static/Exact-image Validation -> Export
+O. Cleanup Closure
+P. DLC/TYD 独立 final status
 ```
 
 Gate 规则：
@@ -34,6 +35,7 @@ Gate 规则：
 - Benchmark workload 失败：不构建正式 image。
 - 在 J 前构建的 image 只能是 `prequalification_only`。
 - 模型加载、功能验证和 benchmark 只能在 task-owned daily-image environment 完成 DLC Ecosystem 初始化且 C1a/C1b 通过后执行。
+- Pre-handoff Capability/Profile Derivation 只能读取已批准的模型、source、deployment 与硬件输入；它必须绑定 Runtime Qualification Contract，且不得执行 model load、serving、benchmark、image delivery 或 device-backed adaptation。C1b 和 profile-scoped collective probe 只能在该 profile 已生成后执行。
 - TYD 是 qualified DLC image 的下游派生 target，只有 DLC delivery 已固定 immutable Image ID 后才可开始 TYD。
 - DLC 与 TYD target 独立报告 final status；TYD build、validation 或 export 失败不得回溯修改已完成 DLC delivery status。
 - Cleanup 未闭合时，受影响 target 为 `blocked_cleanup_incomplete`。
@@ -60,7 +62,7 @@ artifact_root
 
 授权按动作分类，不从“自动执行”推导：image pull、network dependency access、clone/fetch、package install、build、device execution、privileged Host integration、tar export、registry push、Host maintenance。`privileged Host integration` 覆盖 `--privileged`、Host PID namespace，以及 `/dev`、`/sys`、`/run`、`/var/log`、`/lib/modules` 等扩大 Host attack surface 的 mount/profile；它不能从 device execution 或 build 授权推导。缺少继续所需授权时返回 `blocked_missing_authorization`，并列出最小授权和精确 profile diff。
 
-## 四类记录
+## 五类记录
 
 ### 1. Resolved Model Manifest
 
@@ -84,6 +86,21 @@ artifact_root
 ### 4. Sealed Delivery Record
 
 绑定前三类记录的 digest、DLC/TYD fixed tags、build context、export scope、exact-image validation level、tar identity 和 cleanup closure。`sealed` 表示本 workflow 内 content-addressed 且关闭修改，不表示外部签名、可信时间或独立认证。
+
+### 5. Environment Handoff
+
+`environment_handoff/v1` 是 Task-owned Daily-image Environment Initialization 的轻量索引，不创建新的状态、PASS 或 claim。Host Daily Image Runbook 是唯一 producer；它在 Runtime Action Record 中引用并写入 artifact root。`dlc-env-setup` 只作为 C1a/C1b delegated probe executor。`model-adaptation` 可在 handoff 前只读生成 capability matrix 和 pre-handoff deployment profile；所有 device-backed adaptation、model load、serving、benchmark 和 image-delivery workflow 只消费 handoff，不得重建或猜测其结果。
+
+它必须绑定同一 `runtime qualification contract` 和 `runtime action record`，至少包含：
+
+- `daily_base_image_id`、`task_container_identity`、driver/runtime/container profile fingerprint 和 requested logical-device mapping。
+- active source/submodule refs、package/import paths、DLC Platform/plugin/extension identities 及其对应 artifact paths。
+- `c1a_package_import_pass` artifact path。
+- 每个 requested logical device 的 `c1b_runtime_execution_pass` artifact path；deployment profile 使用 collective communication 时，还必须有对应 DLCCL correctness artifact path。
+- SMI observer terminal status、四阶段 artifact paths 或 Contract 允许的 `not_applicable` 依据。
+- cleanup baseline、unresolved blockers、explicitly unverified scope，以及本索引自身 artifact path。
+
+Consumer 必须验证所有 identity 与当前 runtime qualification contract 相等且 `unresolved blockers` 为空。只有当前下游动作所需的 C1a/C1b/collective evidence 明确为 pass，才可继续；`not_executed`、`not_applicable`、blocked、failed 或缺失不能用于 model load、functional、benchmark 或 image delivery。`not_applicable` 只可用于 Contract 明确允许的 static/read-only SMI observation，不可替代 required C1b。
 
 ## 本地模型资产
 
@@ -146,8 +163,9 @@ qualified ordinary daily base 不是已验证的模型环境。必须从该 Imag
 - source closure 需要验证指定 commit object、detached checkout、递归 submodule status 和实际 build entrypoint。submodule status 显示 commit 不足以证明 worktree 完整；必须确认所需 `CMakeLists.txt`、`setup.py`、Makefile 或脚本实际存在。
 - CMake gate 验证 interactive shell 与实际 Python/setuptools build subprocess 的 `cmake` 来源和版本；`ctest`、`cpack` 仅在本次调用时记录实际来源和版本。仅 export `PATH` 不足以证明 build subprocess 使用了批准的 CMake。
 - 仅在获得对应授权后执行 clone/fetch、package install 或 build；安装脚本必须先读取，不能因名称包含 preflight 而假定只读。
-- 在 fresh process 完成 C1a package/import 和 C1b layered DLC Runtime execution；C1b 必须覆盖 enumeration、allocation、H2D、nontrivial device operation、synchronize、D2H 和 correctness。
+- 在 model-adaptation 已给出与 runtime qualification contract 绑定的 pre-handoff deployment profile 后，在 fresh process 完成 C1a package/import 和 C1b layered DLC Runtime execution；C1b 必须覆盖 enumeration、allocation、H2D、nontrivial device operation、synchronize、D2H 和 correctness，并覆盖 profile 所需的 logical-device 与 DLCCL collective scope。
 - 通过 Host Daily Image Runbook 复用 `dlc-hardware-observability`，保存 `before_launch`、`after_ready`、`during_request`、`after_cleanup`。SMI evidence 与 C1b/model acceptance 分开；observer failure 为 `blocked_missing_observability`，不是 device failure。
+- Host Daily Image Runbook 在 C1a/C1b 结果已写入 Runtime Action Record 后生成 `environment_handoff/v1`；它只索引本次 evidence，供 model-adaptation、functional/benchmark 和 delivery 阶段校验消费。
 
 不得复用共享、已变更、已有模型服务、模型专用、golden 或 candidate container 的 package/import/source 状态作为本次模型资格证据。初始化或 C1a/C1b 未闭合时不得加载模型。启动 server 前必须读取当前 CLI `--help`，使用显式 absolute `--model` 路径和离线 Hub guard，避免位置参数漂移或默认远端模型回退。
 

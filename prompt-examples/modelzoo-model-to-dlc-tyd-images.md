@@ -1,5 +1,5 @@
 ---
-prompt_schema: modelzoo-model-to-dlc-tyd-images/v2
+prompt_schema: modelzoo-model-to-dlc-tyd-images/v3
 minimum_input: model_name_and_model_path
 default_mode: qualification_and_image_delivery
 ---
@@ -10,7 +10,19 @@ default_mode: qualification_and_image_delivery
 
 这是薄入口。它收集模型、target 和授权，具体状态机统一由 [模型运行资格与镜像交付 Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) 定义，Host 操作统一由 [Host Daily Image Runbook](host-daily-image-to-model-validation.md) 定义。DLC 先完成交付；TYD 从该 DLC image 的 immutable Image ID 派生并独立报告状态。
 
-ModelZoo 是可选只读 reference。先从 ordinary daily base 创建新的 task-owned container，按 Host Daily Image Runbook 初始化 DLC Ecosystem 并完成 C1a/C1b；该已验证环境才可用于模型功能和性能验证，之后才构建正式 image。
+ModelZoo 是可选只读 reference。本入口不重写 C1a/C1b probe、源码重建命令、SMI adapter 或 benchmark runner；它只传递输入、授权、target、artifact root 和完成条件给对应 owner。
+
+## Owner 与交接
+
+| 阶段 | Owner | 本入口必须消费的结果 |
+|---|---|---|
+| 本地资产与 ModelZoo reference | `modelzoo-image-validation` | resolved model manifest 或精确 blocker |
+| daily base、task container、C1a/C1b、functional、benchmark、cleanup | Host Daily Image Runbook | runtime qualification contract、runtime action record、`environment_handoff/v1`、C0-C5 terminal states |
+| 环境/源码/toolchain 与可执行 C1a/C1b probes | `dlc-env-setup` delegated by Host Daily Image Runbook | source/package/device evidence 或 blocker |
+| 模型 capability、兼容性与 deployment profile | `model-adaptation` pre-handoff analysis | contract-bound pre-handoff deployment profile 或 blocker |
+| target status、claim 和镜像交付 | Contract | sealed delivery record、DLC/TYD independent final status |
+
+交接只使用 Contract 定义的 `environment_handoff/v1`，不另造 PASS 语义。Host Daily Image Runbook 是其唯一 producer；consumer 必须按 Contract 验证 identity 和 required C1a/C1b/collective PASS，不能将 terminal、`not_executed` 或 `not_applicable` 当作模型加载前提。
 
 ## 最少填写
 
@@ -41,28 +53,24 @@ Benchmark workload：<可空；自动提出保守 workload 并写入 contract>
 - registry push：<yes | no>
 - create_tyd_full_stack_rebuild：<yes | no>
 
-开始前完整读取：
+开始前先发现并回显实际的 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 和已安装 skill 路径；不要假定 `/work`、`/home/workspace` 或某个历史 checkout。然后完整读取：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
 - <KNOWLEDGE_BASE_ROOT>/vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md
 - <KNOWLEDGE_BASE_ROOT>/prompt-examples/host-daily-image-to-model-validation.md
-- <KNOWLEDGE_BASE_ROOT>/prompt-examples/dlc-env-setup-environment-bootstrap.md
 - <KNOWLEDGE_BASE_ROOT>/runtime-debugging/chipltech-smi-observability.md
-- 当前安装的 modelzoo-image-validation、dlc-env-setup、model-adaptation SKILL.md 和实际脚本/--help
+- 当前安装的 modelzoo-image-validation、dlc-env-setup、model-adaptation SKILL.md，以及本次实际调用的脚本/`--help`
+- 仅在缺少 task-owned source 或合格 CMake 且已授权 bootstrap 时读取 <KNOWLEDGE_BASE_ROOT>/prompt-examples/dlc-env-setup-environment-bootstrap.md
 
 执行要求：
-1. 先验证本地模型资产；ModelZoo 缺失、不完整、歧义或 malformed 只记录 reference status，除非本次明确要求它为必需来源。
-2. 从 immutable ordinary daily base 创建新的 task-owned persistent container，禁止复用共享或已变更 container，也不得使用 Jiutian 或其他模型专用/golden/candidate image 继承当前结论。
-3. 严格按 Host Daily Image Runbook 在该容器中初始化 DLC Ecosystem：创建独立 src/build/wheels/artifacts/logs 和可写 cache，模型只读挂载；在加载模型前闭合 driver API、container C1b-compatible mount/privilege profile、source refs/dirty state、递归 submodule worktree entrypoints、offline wheel/dependency/extension provenance、Python/pip/CMake/compiler、DLC Platform/plugin/extension identity，以及 query-only SMI Observation Envelope。任何 clone/fetch、package install 或 build 均需对应授权；observer 缺失返回 `blocked_missing_observability`，不归因为硬件失败。
-4. 仅在所需授权和已批准 remote/ref 仍有效时，按 Contract 的 task-owned recovery 规则处理已知中断；不得把非 container 的 C1b failure 归因为 container profile，不得触碰共享资源。每次 recovery 都新建 failure epoch 且只改变一个变量。
-5. 写 resolved model manifest、runtime qualification contract 和 runtime action record；先在 fresh process 完成 C1a 和 C1b。只有该 daily-image environment 的 C1a/C1b 通过，才允许加载模型并按 real-weight functional -> declared benchmark 顺序执行。启动前读取实际 server --help，使用显式 absolute --model、HF_HUB_OFFLINE=1、TRANSFORMERS_OFFLINE=1，并保存未回退远端模型的 server log evidence。
-6. Functional 至少保存两个正交 deterministic assertions 的 raw request/response，并区分 HTTP、request completion、non-empty、semantic correctness 和 health-after。
-7. Benchmark 保存 --help、profile diff、warm-up、formal attempts、raw client/server logs、structured result、`during_request` observation 和 health-after。明确区分 benchmark_workload_pass 与 benchmark_stability_baseline_pass。
-8. DLC runtime gates 通过后，写 sealed delivery record，并构建、exact-image 验证和导出 DLC image；提前构建的 image 标记 prequalification_only。
-9. DLC 使用 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status。模型权重不进入 image。
-10. target 包含 tyd 时，必须以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。完整遵循 Contract 的 TYD Build Closure And Recovery；长编译前确认实际 CMake >3.27.0、LLVM -> DLCsim -> 全下游顺序和所需授权，再以 DLC_TPU_VERSION=2 重编 TYD stack。
-11. TYD 使用独立 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
-12. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 intentionally_not_executed_on_dlc_gen1。
-13. 只清理 task-owned resources，保留正式交付物和失败 epochs。按 Host Runbook 保存 `after_cleanup` 并与 baseline 对比；最终输出 DLC/TYD 独立 matrix、claim boundaries、artifact paths、cleanup/observation evidence 和 remaining risks。
+1. 调用 `modelzoo-image-validation` 验证本地模型资产并生成 resolved model manifest。ModelZoo 缺失、不完整、歧义或 malformed 只记录 reference status，除非本次明确要求它为必需来源。
+2. 在 Runtime Qualification Contract 已写入后，先委托 `model-adaptation` 执行只读 pre-handoff analysis，生成 contract-bound capability matrix 和 deployment profile；此阶段不得 model load、serving、benchmark、image delivery 或 device-backed adaptation。
+3. 再委托 Host Daily Image Runbook 创建 immutable ordinary daily base 上的 task-owned persistent container 并完成 C0；使用 `dlc-env-setup` 按该 profile 闭合 source/toolchain/package/import 与 fresh-process C1a/C1b/required collective，并生成 Contract 定义的 `environment_handoff/v1`。共享、已变更、模型专用、golden 或 candidate image/container 不能作为本次资格证据。handoff 后的 device-backed adaptation 必须消费该 handoff。保留其 evidence，不复制 probe 或重建命令。任何必需 observer 缺失返回 `blocked_missing_observability`，不归因为硬件失败。
+4. 消费 `environment_handoff/v1` 与 runtime qualification contract 后，才允许按 Host Runbook 执行 real-weight functional -> declared benchmark。server 必须使用实际 `--help`、absolute `--model` 和离线 Hub guard；functional 与 benchmark 的状态、证据和升级规则以 Contract 为准。
+5. 所有中断按 Contract 的 task-owned recovery 规则处理：保留第一失败边界，每次 recovery 新建 failure epoch 且只改变一个变量。不得把非 container 的 C1b failure 归因为 profile mismatch，不得触碰共享资源。
+6. 只有 runtime gates 已闭合，才写 sealed delivery record 并构建、exact-image 验证和导出 DLC image；提前构建的 image 必须标记 `prequalification_only`。DLC 必须记录 fixed tag、Image ID、tar、SHA-256、attestation、validation report 和 final status，且模型权重不进入 image。
+7. target 包含 tyd 时，只能以当前模型已交付 DLC image 的 immutable Image ID 为 baseline。按 Contract 的 TYD Build Closure And Recovery 在所需授权下以 `DLC_TPU_VERSION=2` 完整重编；TYD 必须独立记录 fixed tag、Image ID、tar、SHA-256、attestation、static/exact-image validation 和 final status。TYD 被 blocked 或 failed 不得改变已完成 DLC 的 final status。
+8. DLC Chip Host 上不得执行 TYD device operation、C1b、DLCCL、model load、serving 或 benchmark；统一记录 `intentionally_not_executed_on_dlc_gen1`。
+9. 只清理 task-owned resources，保留正式交付物和失败 epochs。按 Host Runbook 保存 `after_cleanup` 并与 baseline 对比；最终输出 DLC/TYD independent matrix、claim boundaries、record/artifact paths、cleanup/observation evidence、unverified scope 和 remaining risks。
 
 自动发现不授权 network download、clone/fetch、package install、Host maintenance、registry push、reset/reboot 或抢占设备。任一成为继续条件时输出 structured blocker 和最小恢复输入。
 ```

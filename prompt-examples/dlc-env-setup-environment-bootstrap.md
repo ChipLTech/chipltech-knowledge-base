@@ -1,13 +1,13 @@
 # 用 `dlc-env-setup` skill 初始化 DLC Ecosystem 工作站源码与基础依赖
 
-专门面向新机器、新容器和缺仓库环境的初始化 prompt 模板。稳定版 `dlc-env-setup` skill 在必需仓库缺失时会立即停止；本模板是在用户明确授权 clone 或下载后才执行的 bootstrap 扩展，负责补齐源码树与可用 CMake 版本，再把控制权交还给当前 skill。
+专门面向新机器、新容器和缺仓库环境的初始化 prompt 模板。稳定版 `dlc-env-setup` skill 在必需仓库缺失时会立即停止；本模板是在用户明确授权 clone 或下载后才执行的 bootstrap 扩展，负责补齐源码树与可用 CMake 版本，再把控制权交还给当前 skill。`/work` 是部署示例，不是固定路径；每次执行必须先发现实际知识库与 skill root。
 
 **阅读说明**：
 - `▶ 可复制 prompt` 后的代码块可直接发给 AI，使用前替换 `<>` 占位符。
 - 本模板只负责受控初始化和最小验证，不负责 LLVM、PyTorch 或 DLC_Custom_Kernel Repository 的长构建。
 - CMake 要求是已安装版本严格大于 `3.27.0`；不要因为不是 `3.27.0` 就重装。只有缺失或版本不满足时，才按授权准备新版 CMake。
 - Arsenal CI 的常规初始化语义是把仓库同步到配置的 CI 默认分支最新 head；本模板允许采用“CI 默认最新”策略，但必须显式声明，且不能在非一次性工作区里执行 CI 脚本那种 `git reset --hard` / `git clean -fdx` 破坏性清理。
-- 执行权威来自当前 `/work/skills/skills/engineering/dlc-env-setup/SKILL.md` 及其 `scripts/`；本模板仅增加稳定 skill 明确不做的缺失仓库与 CMake bootstrap。
+- 执行权威来自当前发现的 `dlc-env-setup/SKILL.md` 及其 `scripts/`；本模板仅增加稳定 skill 明确不做的缺失仓库与 CMake bootstrap。
 
 ---
 
@@ -25,13 +25,13 @@
 ```md
 请使用当前 `dlc-env-setup` skill，只做 DLC Ecosystem 工作站 bootstrap，不要开始 LLVM、PyTorch 或 DLC_Custom_Kernel Repository 的长构建。
 
-先读取并遵循：
-- /work/chipltech-knowledge-base/CONTEXT.md
-- /work/skills/skills/engineering/dlc-env-setup/SKILL.md
-- /work/skills/skills/engineering/dlc-env-setup/scripts/pytorch-preflight.sh
-- /work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh
-- /work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh
-- /work/chipltech-knowledge-base/runtime-debugging/dlc-workstation-env-rebuild.md
+先发现并回显 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>`、当前安装的 `dlc-env-setup` skill 与其 scripts 路径。多个候选、remote/source identity 不明确或路径不可读时停止。然后读取并遵循：
+- <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
+- 当前安装的 dlc-env-setup/SKILL.md
+- 当前安装的 dlc-env-setup/scripts/pytorch-preflight.sh
+- 当前安装的 dlc-env-setup/scripts/vllm-preflight.sh
+- 当前安装的 dlc-env-setup/scripts/runtime-smoke.sh
+- <KNOWLEDGE_BASE_ROOT>/runtime-debugging/dlc-workstation-env-rebuild.md
 
 说明：当前稳定 skill 对缺失的必需仓库要求立即停止。下面的 clone/download 流程是我明确授权的 bootstrap 扩展；未获得对应授权时，仍按当前 SKILL.md 停止。
 
@@ -180,19 +180,20 @@
    - CMake 路径、版本、是否满足 `>3.27.0`、安装/跳过原因和校验结果。
     - 容器挂载、设备可见性和宿主机/LYP 操作授权状态。
     - SMI observer identity/status；未执行 Real DLC Hardware 时为 `not_applicable` 及依据。
-   - 如果失败：当前 SKILL.md 或本模板触发的停止条件、失败命令、第一批关键报错和安全回退点。
+    - bootstrap report：本次发现的 source/toolchain/container identity、C1a/C1b/SMI 的 `not_executed` 或 terminal state、artifact root、cleanup baseline、未解决 blocker 和明确未执行 scope。该报告不属于 `environment_handoff/v1`，不把 bootstrap 升级为环境或模型 PASS。
+    - 如果失败：当前 SKILL.md 或本模板触发的停止条件、失败命令、第一批关键报错和安全回退点。
 ```
 
 ## 什么时候停
 
-以当前 `/work/skills/skills/engineering/dlc-env-setup/SKILL.md` 的 `Stop Immediately When` 为准，并增加以下 bootstrap 条件：未授权 clone/download、缺少批准版本策略、仓库身份检查不通过、现有仓库有未提交改动但需要切换/更新、CI 默认分支映射不明确、CMake 版本不满足且无授权安装路径、下载校验值缺失或不匹配、系统 package manager 或修改权限不明确、宿主机/设备操作未授权。
+以当前发现的 `dlc-env-setup/SKILL.md` 的 `Stop Immediately When` 为准，并增加以下 bootstrap 条件：未授权 clone/download、缺少批准版本策略、仓库身份检查不通过、现有仓库有未提交改动但需要切换/更新、CI 默认分支映射不明确、CMake 版本不满足且无授权安装路径、下载校验值缺失或不匹配、系统 package manager 或修改权限不明确、宿主机/设备操作未授权。
 
 ## 相关资料
 
-- `/work/skills/skills/engineering/dlc-env-setup/SKILL.md`（以当前团队主线为准）
-- `/work/skills/skills/engineering/dlc-env-setup/scripts/pytorch-preflight.sh`
-- `/work/skills/skills/engineering/dlc-env-setup/scripts/vllm-preflight.sh`
-- `/work/skills/skills/engineering/dlc-env-setup/scripts/runtime-smoke.sh`
+- 当前发现的 `dlc-env-setup/SKILL.md`（以当前团队主线为准）
+- 当前发现的 `dlc-env-setup/scripts/pytorch-preflight.sh`
+- 当前发现的 `dlc-env-setup/scripts/vllm-preflight.sh`
+- 当前发现的 `dlc-env-setup/scripts/runtime-smoke.sh`
 - [../testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 - [../runtime-debugging/chipltech-smi-observability.md](../runtime-debugging/chipltech-smi-observability.md)
 - [dlc-env-setup-skill-usage.md](dlc-env-setup-skill-usage.md)
