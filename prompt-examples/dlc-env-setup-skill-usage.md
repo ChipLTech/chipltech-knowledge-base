@@ -12,9 +12,9 @@
 ## 使用前提
 
 - 以当前已发现的 `dlc-env-setup/SKILL.md` 与同目录脚本为准；不要固定旧 commit。若怀疑本地 skill 未更新，在发现的 `<SKILLS_ROOT>` 执行 `git status --short --branch` 并确认已同步到团队当前主线。
-- 全局安装：在发现的 `<SKILLS_ROOT>` 运行 `./scripts/link-kilo-skills.sh --with-commands`。
-- 项目本地安装：运行 `./scripts/link-kilo-skills.sh --project /path/to/project --with-commands`，链接写入项目的 `.kilo/skills` 和 `.kilo/command`。
-- linker 会清理其明确列出的 retired skill symlink 和生成式 command alias；真实文件/目录不会被删除。若旧 alias 不是该脚本可识别的 symlink 或生成文件，应先报告并由用户决定，不要手工盲删。
+- 当前 Harness 已能发现 `dlc-env-setup` 时直接加载，不重复安装。Hermes 使用 `skills.external_dirs` 指向稳定 Skill 分类目录；Kilo 可使用 `<SKILLS_ROOT>/scripts/link-kilo-skills.sh --with-commands`。
+- 当前 Harness 无法发现 Skill 时，先报告 Harness、配置根和候选 Skill 路径，再按该 Harness 的官方外部 Skill 机制接入；不要把 Kilo 的 `.kilo/` 安装方式套到 Hermes 或其他 Harness。
+- 安装或链接动作必须保持源仓库为 Single Source of Truth，不得复制出无人维护的第二份 Skill。
 
 ## 和 Model Adaptation 的推荐串联方式
 

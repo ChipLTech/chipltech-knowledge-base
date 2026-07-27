@@ -84,4 +84,4 @@ hardware_evidence: not_verified
 - [性能分析](../runtime-debugging/performance-profiling.md)
 - [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md)
 - [Arsenal CI 与黑盒测试](../testing/arsenal-ci-and-blackbox-testing.md)
-- 外部 workflow：`skills.git` 中的 `skills/engineering/pd-separation/SKILL.md`，需预先安装到 Kilo 或通过 `<SKILLS_ROOT>` 提供可读路径。
+- 外部 workflow：`skills.git` 中的 `skills/engineering/pd-separation/SKILL.md`，需通过当前 Harness 的 Skill 发现机制加载，或通过 `<SKILLS_ROOT>` 提供可读路径。Hermes 使用 `skills.external_dirs`；Kilo 使用其项目级或全局 Skill 目录。

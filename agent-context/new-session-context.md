@@ -2,16 +2,16 @@
 
 ## 适用场景
 
-启动新的 DLC 相关 agent session（Kilo、Claude 或任何 AI agent），需要快速恢复 DLC 项目背景。
+启动新的 Chipltech-Family Accelerator 相关 agent session（Hermes、Kilo、Claude 或其他 AI agent），需要快速恢复 DLC Ecosystem 项目背景。
 
 ## 快速启动 Prompt
 
 ```
-你正在处理 DLC-Family Accelerator 相关任务。请先读取以下知识库文件：
+你正在处理 Chipltech-Family Accelerator 相关任务。请先发现并回显实际的 <KNOWLEDGE_BASE_ROOT> 和 <SKILLS_ROOT>，不要假定固定部署目录。然后读取：
 
-1. /work/chipltech-knowledge-base/CONTEXT.md — 术语表、组件关系
-2. /work/chipltech-knowledge-base/README.md — 仓库导航
-3. /work/chipltech-knowledge-base/foundation/dlc-ecosystem-overview.md — DLC Ecosystem 概述
+1. <KNOWLEDGE_BASE_ROOT>/CONTEXT.md — 术语表、组件关系
+2. <KNOWLEDGE_BASE_ROOT>/README.md — 仓库导航
+3. <KNOWLEDGE_BASE_ROOT>/foundation/dlc-ecosystem-overview.md — DLC Ecosystem 概述
 
 然后根据任务类型，读取对应专题文档：
 
@@ -25,7 +25,7 @@
 - 案例参考: case-studies/
 
 关键约束：
-- 不使用 TPU 通称，使用 DLC-Family Accelerator
+- 不使用 TPU、国产 TPU 或 DLC-Family Accelerator，使用 Chipltech-Family Accelerator
 - 不在知识库中用模型名建立一级或二级目录
 - CPU fallback 是定位手段，不是生产修复
 - DLC_CHECK_RESULT lambda name ≠ launch kernel name
@@ -58,8 +58,8 @@
 3. 最终交付 code-only repro（无需外部文件）
 
 ### 测试
-- PyTorch 原生测试：`/work/pytorch/test/dlc_ops/test_dlc_ops.py`
-- pytorch_test：`/work/DLC_Custom_Kernel/pytorch_test/run.py`
+- PyTorch 原生测试：`<PYTORCH_ROOT>/test/dlc_ops/test_dlc_ops.py`
+- pytorch_test：`<DLC_CUSTOM_KERNEL_ROOT>/pytorch_test/run.py`
 
 ## 已知避免事项
 

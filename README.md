@@ -64,6 +64,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
 - [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) 用于固定 Prefill/Decode 拓扑、KV Cache Transfer Contract、分层验证和 evidence 边界。
+- [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills。
 
 ## 快速入口
 
@@ -103,7 +104,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) — Model Adaptation 可复用 prompt。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) — Main-to-Main Upgrade 可复用 prompt。
 
-如需让 agent 自动执行 repo discovery、阶段化重建和 smoke，可配合 `/work/skills/skills/engineering/dlc-env-setup/` 中的 `dlc-env-setup` skill 使用。
+如需让 agent 自动执行 repo discovery、阶段化重建和 smoke，可配合当前 Harness 已发现的 `dlc-env-setup` Skill，或 `<SKILLS_ROOT>/skills/engineering/dlc-env-setup/` 中的源包使用。
 
 ## Agent 使用方式
 

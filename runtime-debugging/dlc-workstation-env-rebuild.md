@@ -150,7 +150,7 @@ PyTorch 阶段的关键不只是“build 结束”，还包括 build 前 preflig
 
 ## 可选自动化入口
 
-如果希望 agent 自动执行 repo discovery、branch 安全检查、分阶段重建和最终 smoke，可使用 `/work/skills/skills/engineering/dlc-env-setup/` 中的 `dlc-env-setup` skill。
+如果希望 agent 自动执行 repo discovery、branch 安全检查、分阶段重建和最终 smoke，可使用当前 Harness 已发现的 `dlc-env-setup` Skill，或 `<SKILLS_ROOT>/skills/engineering/dlc-env-setup/` 中的源包。
 
 - skill 负责执行编排、脚本入口和停止条件。
 - 本文负责解释为什么这样排顺序、哪些边界必须守住、失败时应回退到哪一层。
