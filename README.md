@@ -85,6 +85,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 ### Runtime / Debug 入口
 
+- [runtime-debugging/dlc-runtime-api-reference.md](runtime-debugging/dlc-runtime-api-reference.md) — 基于固定镜像、源码 commit 和动态库 ABI 的 DLC Runtime、DLCSynapse Core、KernelDesc 版本化接口参考，包含生命周期、同步语义、DLC Runtime 完整函数族、支持矩阵、Success stub、ABI 缺失和已知缺陷。
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
 - [runtime-debugging/chipltech-smi-observability.md](runtime-debugging/chipltech-smi-observability.md) — `chipltech_smi_lib` / `cltech_smi` 四阶段 SMI Observation Envelope、设备/HBM/进程 debug、上传和 operational evidence 边界。
 - [runtime-debugging/dlc-workstation-env-rebuild.md](runtime-debugging/dlc-workstation-env-rebuild.md) — DLC 工作站环境重建总流程，覆盖 repo discovery、branch 安全规则、构建顺序、PyTorch wheel 重建、`vllm` / `vllm-dlc` 安装与最终 smoke。

@@ -14,6 +14,7 @@ Runtime 排障的核心原则：
 4. 调试后必须清理高开销环境变量。
 5. Package 可导入、设备可见、allocation 或 H2D 成功都不等于 DLC Runtime execution 健康。
 6. 每个恢复动作后必须用 fresh process 重跑最小失败 case；命令 exit 0 只证明动作被接受。
+7. DLC Runtime 部分 compatibility API 会在未执行操作或未写输出时返回 success；支持状态必须查阅 [DLC Runtime 与 DLCSynapse Core 版本化接口参考](dlc-runtime-api-reference.md)，不能只看返回码。
 
 ## 组件区分
 
@@ -210,6 +211,7 @@ LYP 初始化或 repair 可以恢复多卡通信，但它不是模型 acceptance
 
 ## 相关资料
 
+- [DLC Runtime 与 DLCSynapse Core 版本化接口参考](dlc-runtime-api-reference.md) — 固定镜像、源码和 ABI 下的接口、生命周期、支持状态和已知缺陷
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
 - [runtime-debugging/environment-setup-and-update.md](environment-setup-and-update.md)
 - [runtime-debugging/chipltech-smi-observability.md](chipltech-smi-observability.md)

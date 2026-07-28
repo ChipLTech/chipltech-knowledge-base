@@ -10,6 +10,8 @@
 
 DLCSynapse 测试文件的核心结构包括三个步骤：准备输入/输出 Tensor → 初始化 kernel 并 launch → 比较输出与 reference。
 
+本指南说明 syntest 使用流程，不是接口契约。`syn*`、`dlc*`、`KernelDesc` 的签名、对象生命周期、同步语义和当前支持状态见 [DLC Runtime 与 DLCSynapse Core 版本化接口参考](../runtime-debugging/dlc-runtime-api-reference.md)。尤其不要把接口声明存在或返回 success 直接视为功能已实现。
+
 ## 前置准备
 
 ```bash
@@ -88,6 +90,7 @@ peek -h       # 查看所有查看选项（寄存器、imem、smem、vmem、指�
 
 ## 相关资料
 
+- [DLC Runtime 与 DLCSynapse Core 版本化接口参考](../runtime-debugging/dlc-runtime-api-reference.md)
 - [CONTEXT.md](../CONTEXT.md) — DLCSynapse、DLC Runtime、DLCsim 定义
 - [runtime-debugging/runtime-troubleshooting.md](../runtime-debugging/runtime-troubleshooting.md)
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
