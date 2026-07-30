@@ -65,6 +65,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
 - [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) 用于固定 Prefill/Decode 拓扑、KV Cache Transfer Contract、分层验证和 evidence 边界。
 - [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills。
+- [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) 用于 serving 部分执行后发生异步 launch failure、worker abort、EngineCore dead 或 HTTP 500 的生命周期切片、Graph/MTP 单变量定位和逐 rank kernel 证据采集。
 
 ## 快速入口
 
@@ -92,6 +93,8 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
 - [debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md) — PyTorch 2.5.0 wheel 与本地 `vllm` / `vllm-dlc` editable install 的 build preflight 清单。
 - [debugging-workflows/post-install-runtime-smoke.md](debugging-workflows/post-install-runtime-smoke.md) — 安装后的最小 runtime smoke 和失败回退路径。
+- [case-studies/vllm-async-speculative-decode-launch-failure.md](case-studies/vllm-async-speculative-decode-launch-failure.md) — 从部分 token 后 HTTP 500 收敛到 async MTP 4-token Graph 执行窗口，并区分原 decode failure 与诊断配置引入的新 stall。
+- [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) — 可直接复用的异步 launch failure 定位 prompt。
 
 ### vLLM-DLC workflow
 

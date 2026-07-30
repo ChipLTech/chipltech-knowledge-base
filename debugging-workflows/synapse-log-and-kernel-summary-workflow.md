@@ -42,6 +42,18 @@ export DLC_VISIBLE_DEVICES=3
 
 ## 标准流程
 
+### 步骤 0：封存 run identity 和最终进程环境
+
+每次运行使用独立绝对日志目录，并保存：
+
+- image digest、package/source identity 和完整启动命令。
+- 预期环境变量。
+- APIServer、EngineCore、worker 的 PID、PGID、rank 和设备映射。
+- 每个最终 worker 的 `/proc/<pid>/environ`。
+- 启动前的进程、端口、HBM 和 device-handle baseline。
+
+launcher、容器入口和 multiprocessing 可能过滤或重建环境。只有最终执行 worker 的环境可以证明 `DLC_SYN_BLOCKING`、`DLC_SYN_DEBUG`、日志目录和业务 Runtime 开关实际生效。
+
 ### 步骤 1：运行模型或最小复现
 
 以 RSThinker 为例：
@@ -104,6 +116,10 @@ python3 tool.py /work/tmpx/syn_1123318.ansi
 2. **把 `*_kernels.txt` 当 truth source**：它是摘要，最终还是要回看 `syn_*.ansi`。
 3. **调试结束不清理环境变量**：高 verbose 对后续运行开销很大。
 4. **没记录本次 log 路径**：导致后面 replay 或 dispatch 验证无法复盘。
+5. **只保存 launcher 环境**：最终 worker 可能没有收到 blocking/debug/log-dir 变量。
+6. **blocking 后出现更早 stall 仍继续归因**：如果新 run 没有到达原失败阶段，它是新的观察边界，不是已经定位的首个失败 kernel。
+7. **多 rank 共用不可区分的日志**：必须保存 PID/rank/device 到 `syn_*.ansi` 的映射，否则不能把 worker rank 映射为物理设备故障。
+8. **把最后一行 kernel 摘要直接当失败 kernel**：异步模式下只能作为候选；首个失败 kernel 需要 blocking 返回、同步边界或其他明确 completion evidence。
 
 ## 相关资料
 

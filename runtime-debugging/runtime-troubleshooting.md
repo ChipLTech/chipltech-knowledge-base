@@ -64,6 +64,65 @@ peek_multi.sh -s status
 - 报错处通常不是失败 kernel 的位置，真实失败在更早位置。
 - 用 `DLC_SYN_BLOCKING=1` 启用同步模式定位第一个失败 kernel。
 
+#### Serving 生命周期切片
+
+vLLM 等 serving 场景先按生命周期标出最后成功边界，不要从 HTTP 500 或最后一段 cleanup stack 反推根因：
+
+```text
+package/import
+-> distributed init
+-> checkpoint load / weight placement
+-> KV cache
+-> Graph capture
+-> API ready
+-> request admission
+-> prefill
+-> decode
+-> worker exit
+-> Engine dead / HTTP 500
+```
+
+每个阶段同时记录“通过证据”和“第一失败证据”。如果 API 已 ready、请求已完成 prefill 并返回部分 token，模型资产、初始服务监听和 prefill 就不是最早失败边界。流式连接先返回 HTTP 200 只表示连接建立，不代表请求完整通过。
+
+`RuntimeError: cancelled`、Engine-dead、resource tracker、semaphore/shared-memory leak 等错误如果出现在 worker fatal 之后，应记录为传播结果，而不是第一根因。
+
+#### Scheduler 与 Graph 边界
+
+Speculative decode、async scheduling 或 Graph 参与时，保存 fatal step 的：
+
+- computed/output/scheduled token count。
+- speculative token count 和 placeholder。
+- batch、sequence、position、slot mapping 和 accepted-token metadata。
+- 实际 Graph capture/replay size，不只保存用户传入的 capture-size 列表。
+- eager/Graph dispatch 判定。
+
+placeholder 必须结合当前安装源码解释。负值可能是 scheduler 协议中的合法占位，不能仅凭数值断言非法 token 已进入 embedding。Graph capture 成功也只证明静态 capture 完成，不证明真实请求的动态 token、position、slot mapping 和 buffer state 可以正确 replay。
+
+优先对照顺序：
+
+```text
+Graph vs eager
+-> async scheduling on vs off
+-> speculative token count N vs 1 vs disabled
+-> IndexCache / Sparse MLA on vs off
+-> quantized MoE / Attention / device or collective path
+```
+
+每轮只改变一个声明变量。新 epoch 如果在初始化或权重加载阶段失败、没有到达原 decode failure，只能登记为新的失败边界，不能用于证实或证伪原 decode 根因。
+
+#### 诊断开关的观察者效应
+
+Blocking、debug、verbose、Graph cache、copy 和 submission 环境变量会改变执行时序、进程启动或内存行为。启用后必须：
+
+1. 保存预期环境。
+2. 读取最终 APIServer、EngineCore 和每个 worker 的 `/proc/<pid>/environ`，保存实际环境。
+3. 确认服务仍到达原失败阶段。
+4. 将请求前的新 hang/stall 单独归档。
+
+外层 shell、`docker exec -e` 或 launcher 中设置变量，不证明 multiprocessing 后的最终 worker 收到变量。若 blocking 使服务停在初始化，先恢复原可启动 profile，并使用 eager 单变量对照或更小的算子 replay；不要把新的初始化 stall 写成已经前移的原 kernel failure。
+
+完整逐 rank launch 采集见 [Synapse log 与 kernel 摘要工作流](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md)。真实 serving 案例见 [vLLM async speculative decode launch failure](../case-studies/vllm-async-speculative-decode-launch-failure.md)。
+
 ### 设备占用/残留进程
 
 ```bash
@@ -215,6 +274,8 @@ LYP 初始化或 repair 可以恢复多卡通信，但它不是模型 acceptance
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
 - [runtime-debugging/environment-setup-and-update.md](environment-setup-and-update.md)
 - [runtime-debugging/chipltech-smi-observability.md](chipltech-smi-observability.md)
+- [debugging-workflows/synapse-log-and-kernel-summary-workflow.md](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md)
+- [case-studies/vllm-async-speculative-decode-launch-failure.md](../case-studies/vllm-async-speculative-decode-launch-failure.md)
 - [CONTEXT.md](../CONTEXT.md) — DLCSynapse、DLC Runtime 等术语定义
 
 ## 来源
