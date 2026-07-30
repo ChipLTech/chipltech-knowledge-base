@@ -20,6 +20,7 @@
 - 测试: testing/pytorch-test-framework-guide.md, testing/dlc-kernel-test-framework-guide.md
 - 精度定位: precision-debugging/precision-debugging-overview.md
 - vLLM: vllm-dlc/custom-op-integration-and-testing.md
+- 批量模型验证: `case-studies/modelzoo-batch-validation-all-difficulties.md` → `vllm-dlc/modelzoo-startup-params-spec.md` → `prompt-examples/hermes-modelzoo-batch-validation.md`
 - 调试: debugging-workflows/common-debug-commands.md
 - runtime: runtime-debugging/runtime-troubleshooting.md
 - 性能定位: runtime-debugging/performance-profiling.md
@@ -42,6 +43,7 @@
 | 算子精度定位 | `precision-debugging/precision-debugging-overview.md` → `model-site-dump-to-repro.md` |
 | 编写测试 | `testing/pytorch-test-framework-guide.md` / `testing/dlc-kernel-test-framework-guide.md` |
 | vLLM 集成 | `vllm-dlc/custom-op-integration-and-testing.md` |
+| 模型功能验证 | `vllm-dlc/modelzoo-startup-params-spec.md` → `case-studies/modelzoo-batch-validation-all-difficulties.md` |
 | 环境配置 | `runtime-debugging/environment-setup-and-update.md` |
 | 常见报错 | `runtime-debugging/common-error-log.md` |
 | 调试命令 | `debugging-workflows/common-debug-commands.md` |
@@ -53,6 +55,16 @@
 1. 找到 kernel 的 `DLC_CHECK_RESULT(lambda, ...)` lambda name
 2. 修改 `/usr/local/chipltech/synapse/include/enabled_kernels.hpp` 中对应常量
 3. `cd /work/pytorch && USE_CUDA=0 DEBUG=1 MAX_JOBS=32 python3 setup.py develop`
+
+### ModelZoo 批量模型验证
+1. 使用 runner: `python3 /home/xuansun/modelconfig/run-one-model.py <model_name> <model_path>`
+2. 镜像按需降级: Tier 1 (daily vLLM) → 15min 超时 → Tier 2 (chiju_env:0729 O2)
+3. 每模型必读 ModelZoo README 提取启动参数
+4. 排除 `VLLM_USE_DLC_COL_MAJOR_MATMUL` (当前版本不兼容)
+5. 容器: `modelzoo-batch-base` (Tier 1), `qwen32b_env` (Tier 2)
+6. 参考: `case-studies/modelzoo-batch-validation-all-difficulties.md` (16 个已知困难)
+7. 参考: `vllm-dlc/modelzoo-startup-params-spec.md` (启动参数规范)
+8. 参考: `prompt-examples/hermes-modelzoo-batch-validation.md` (Hermes 批量验证 prompt)
 
 ### 精度定位原则
 1. CPU 是主要 oracle

@@ -109,3 +109,21 @@ shared_contract: vllm-dlc-contract/v1
 - [Main-to-Main Upgrade reusable prompt](../prompt-examples/vllm-dlc-main-to-main-upgrade.md)
 - [precision-debugging/token-divergence-and-moe-contract-debugging.md](../precision-debugging/token-divergence-and-moe-contract-debugging.md)
 - [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
+- [case-studies/qwen3-32b-dlc-block256-diagnosis.md](../case-studies/qwen3-32b-dlc-block256-diagnosis.md)
+
+## Qwen3-32B Block-256 Campaign 经验 (2026-07-28)
+
+### 经验 / Experience
+
+Qwen3-32B (64 layers, BF16, TP4, block-256) 在 DLC Platform 上出现稳定但错误的算术输出 (`2+2=` → `5`)。通过 ordered seam diagnostic (H001 → H008) 和 Qwen3-1.7B cross-model comparison，确认一个独立问题并形成一个待验证假设：
+
+1. **DLCCL o_proj all-reduce 数值偏差** (max_abs_diff 0.015625) — code-only repro 已存在
+2. **待验证的 64 层 BF16 累积误差假设** — 每层 diff ≤ 0.002，可能在 64 层叠加后改变 final logits top-1；当前 cross-model comparison 仅提供支持性证据
+
+1.7B (28 layers) 在相同环境下算术正确，排除 DLC Platform 全局故障。
+
+Full diagnosis: [case-studies/qwen3-32b-dlc-block256-diagnosis.md](../case-studies/qwen3-32b-dlc-block256-diagnosis.md)
+
+### 建议 / Recommendation
+
+对新模型的 ordered seam diagnostic 建议按下述优先级执行: loaded-weight integrity → fused ops (synthetic) → RMSNorm → rank-local GEMMs → TP collectives (one-at-a-time) → CPU collective diagnostic probe → real forward Model-Site Dump → cross-model comparison。Cross-model comparison 是快速区分平台全局故障与模型规模相关问题的高效手段。

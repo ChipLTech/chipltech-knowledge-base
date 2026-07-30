@@ -69,6 +69,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills。
 - [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) 用于 serving 部分执行后发生异步 launch failure、worker abort、EngineCore dead 或 HTTP 500 的生命周期切片、Graph/MTP 单变量定位和逐 rank kernel 证据采集。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) 用于固定 vLLM serving workload，从端到端、模型 layer、framework wrapper 和 DLC Platform 执行层逐级定位性能热点，并区分插桩证据与无插桩 benchmark。
+- [prompt-examples/hermes-modelzoo-batch-validation.md](prompt-examples/hermes-modelzoo-batch-validation.md) 用于 Hermes 执行单模型 DLC 功能验证，含三种调用方式和失败回退策略。
 
 ## 快速入口
 
