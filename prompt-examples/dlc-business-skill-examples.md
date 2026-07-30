@@ -2,6 +2,8 @@
 
 面向 DLC Platform 日常工程任务的 prompt 模板。每条都能直接复制、填空即用，不需要先理解 skill 的原理。
 
+第一次使用、不想填写完整字段时，先看 [DLC Platform 业务套餐傻瓜版调用说明](dlc-business-skill-examples-quickstart.md)。傻瓜版为本页每个套餐提供“目标 + evidence 路径 + 知识库入口”的最短调用示例；本页继续作为详细套餐和执行规则的 single source of truth。
+
 **阅读说明**：
 - `▶ 可复制 prompt` 标记后面的代码块是发给 AI 的指令，替换 `<>` 里的占位符即可使用。
 - 套餐标题下的"适用场景""关键点"是给人看的说明，不用复制发给 AI。
