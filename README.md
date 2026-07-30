@@ -66,6 +66,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) 用于固定 Prefill/Decode 拓扑、KV Cache Transfer Contract、分层验证和 evidence 边界。
 - [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills。
 - [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) 用于 serving 部分执行后发生异步 launch failure、worker abort、EngineCore dead 或 HTTP 500 的生命周期切片、Graph/MTP 单变量定位和逐 rank kernel 证据采集。
+- [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) 用于固定 vLLM serving workload，从端到端、模型 layer、framework wrapper 和 DLC Platform 执行层逐级定位性能热点，并区分插桩证据与无插桩 benchmark。
 
 ## 快速入口
 
@@ -88,6 +89,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 - [runtime-debugging/dlc-runtime-api-reference.md](runtime-debugging/dlc-runtime-api-reference.md) — 基于固定镜像、源码 commit 和动态库 ABI 的 DLC Runtime、DLCSynapse Core、KernelDesc 版本化接口参考，包含生命周期、同步语义、DLC Runtime 完整函数族、支持矩阵、Success stub、ABI 缺失和已知缺陷。
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
+- [runtime-debugging/performance-profiling.md](runtime-debugging/performance-profiling.md) — Chipltech-Family Accelerator 性能 profiling、分层热点定位、异步计时边界和性能 Claim Boundary。
 - [runtime-debugging/chipltech-smi-observability.md](runtime-debugging/chipltech-smi-observability.md) — `chipltech_smi_lib` / `cltech_smi` 四阶段 SMI Observation Envelope、设备/HBM/进程 debug、上传和 operational evidence 边界。
 - [runtime-debugging/dlc-workstation-env-rebuild.md](runtime-debugging/dlc-workstation-env-rebuild.md) — DLC 工作站环境重建总流程，覆盖 repo discovery、branch 安全规则、构建顺序、PyTorch wheel 重建、`vllm` / `vllm-dlc` 安装与最终 smoke。
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
@@ -95,6 +97,8 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [debugging-workflows/post-install-runtime-smoke.md](debugging-workflows/post-install-runtime-smoke.md) — 安装后的最小 runtime smoke 和失败回退路径。
 - [case-studies/vllm-async-speculative-decode-launch-failure.md](case-studies/vllm-async-speculative-decode-launch-failure.md) — 从部分 token 后 HTTP 500 收敛到 async MTP 4-token Graph 执行窗口，并区分原 decode failure 与诊断配置引入的新 stall。
 - [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) — 可直接复用的异步 launch failure 定位 prompt。
+- [case-studies/vllm-attention-duplicate-kv-cache-update.md](case-studies/vllm-attention-duplicate-kv-cache-update.md) — 从 full-attention layer 收敛到跨层重复 KV cache update 的历史性能案例，并明确 source identity 与正式 benchmark 缺口。
+- [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) — 可直接复用的 vLLM 性能热点分层定位 prompt。
 
 ### vLLM-DLC workflow
 

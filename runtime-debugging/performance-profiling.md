@@ -1,4 +1,4 @@
-# DLC-Family Accelerator 性能 Profiling
+# Chipltech-Family Accelerator 性能 Profiling
 
 ## 适用场景
 
@@ -44,6 +44,126 @@ Perfetto 分析层          →  UI timeline、Trace Processor、版本对比
 3. **运行模型或 benchmark**：生成统一 Perfetto trace。
 4. **在 Perfetto UI 中查看**：观察调用栈、queue 等待、kernel 空泡、同步点、数据搬运、硬件 counter。
 5. **通过 Trace Processor 离线分析**：统计热点算子、慢请求路径、counter 峰值区间。
+
+## 分层热点定位方法
+
+Profile 工具给出时间线，热点定位还需要一套从端到端向下收敛的决策流程。不要从某个 DLC Custom Kernel 名称开始猜根因。
+
+### 1. 固定 workload 与无插桩 baseline
+
+先封存：
+
+- image、source、package、模型资产和 dirty state identity。
+- Real DLC Hardware、物理/逻辑设备映射、TP/PP/EP、dtype、quantization。
+- server/client 完整命令和最终 worker 环境。
+- prompt/input/output token policy、batch、并发、request rate/count、sampling 和 seed。
+- warm-up、formal attempts、timeout、server epoch 和 correctness/liveness assertion。
+- TTFT、TPOT、ITL、request latency、token/request throughput 中实际可测的指标及测量工具。
+
+普通非流式请求通常只能直接给出总请求时间，不能据此生成 TTFT、TPOT 或 ITL。需要这些指标时使用带时间戳的 streaming client、vLLM benchmark client、server metrics 或其他可审计测量入口。
+
+### 2. 从端到端逐层缩小
+
+```text
+request / scheduler
+-> model forward
+-> block / layer
+-> stage（Attention、MLP、MoE、cache、communication 等）
+-> framework wrapper / unified operation
+-> DLC Attention Backend、PyTorch DLC Backend 或 vLLM DLC Custom Op
+-> DLC Runtime / DLCSynapse launch、copy、queue、sync
+-> DLC Custom Kernel
+```
+
+这不是所有调用都会完整经过的固定直线。host metadata、layout conversion、Python/framework scheduling 和 collective wait 可能在 DLC Custom Kernel 之外形成热点。每轮只深入当前已确认最慢的边界。
+
+### 3. 闭合异步计时区间
+
+host wall-clock timer 不自动等于设备执行时间。诊断时可使用明确的 device synchronization 或 profile event 闭合区间，但必须记录：
+
+- 同步位置和计时区间。
+- inclusive 或 exclusive time。
+- parent/child 是否使用相同同步策略。
+- layer、rank、prefill/decode、shape 和时间单位。
+- warm-up 与 steady-state 样本。
+
+强制同步、blocking、debug print 和 verbose trace 会改变调度与 overlap。它们产生的是 **instrumented localization evidence**，不能直接称为生产性能 baseline。
+
+### 4. 对齐相邻抽象层
+
+同时比较 parent total、children sum 和未解释 residual：
+
+```text
+residual = parent inclusive time - covered child intervals
+```
+
+稳定 residual 说明相邻边界的工作集合或等待归属不一致。候选解释包括：
+
+- 同一语义操作重复执行。
+- wrapper 的预处理、后处理或 output materialization。
+- layout conversion、copy、quantize/dequantize。
+- 前一个异步操作在当前同步点等待。
+- queue、collective 或 host scheduling wait。
+- parent/child 计时区间定义不一致。
+
+residual 与某个子操作耗时接近只是强线索；在调用次数和来源确认前，不得直接写成重复执行根因。
+
+### 5. 用调用身份、次数和 shape 完成归因
+
+对候选热点至少保存：
+
+- request、phase、layer/module、parent call、TP rank 和设备。
+- 调用次数、累计耗时、平均耗时和分布。
+- input/output shape、dtype、stride/layout。
+- framework op、DLC Custom Op 和 DLC Custom Kernel 的准确身份。
+- 是否包含同步、copy、materialization 或 collective wait。
+
+同名 DLC Custom Kernel 可服务多个 layer、shape 和模型路径。kernel name 或聚合耗时排名只能提供候选，不能单独证明模型热点归属。
+
+### 6. 审计跨层执行所有权
+
+相邻 wrapper/backend 对以下工作必须有唯一且与实际实现一致的 owner：
+
+- KV cache update。
+- output allocation/materialization。
+- layout conversion。
+- quantize/dequantize。
+- collective。
+- normalization/fusion。
+- recurrent/state update。
+
+声明的 capability/flag 与实际调用行为不一致时，一个正常 DLC Custom Kernel 也可能因重复执行成为端到端热点。修复目标是恢复执行 contract，而不是默认修改某个固定 flag。
+
+### 7. 修复后的三重验证
+
+每个性能修复必须同时验证：
+
+1. **Correctness**：输出 token、cache/state 和适用语义断言保持正确。
+2. **Call contract**：调用次数、parent/child ownership 和 runtime state 符合预期。
+3. **Performance**：移除临时同步、print、wrapper 和 debug 配置后，用原封存 workload 重跑端到端指标。
+
+## 性能证据与 Claim Boundary
+
+| 证据 | 可以证明 | 不能自动证明 |
+|---|---|---|
+| Instrumented localization | 慢边界、调用顺序、次数和候选 residual | 生产 TTFT/TPOT/throughput 收益 |
+| Perfetto / DLCSynapse trace | timeline、queue、copy、sync、kernel 关联 | 单变量因果关系 |
+| Microbenchmark | 固定输入下算子/kernel 成本 | 模型端到端收益 |
+| Uninstrumented benchmark | exact workload 下端到端性能 | 其他模型、长度、并发或稳定性 |
+| Repeated stability benchmark | 声明 workload 下的分布和离散度 | 未执行 profile 或其他硬件配置 |
+
+诊断 profile 与正式 benchmark profile 必须作为独立 epoch，保存精确 profile diff。单次请求或单次 profile 可以定位线索；稳定性能、回归或 baseline claim 需要声明并完成重复 attempts 和离散度报告。
+
+## 常见误判
+
+1. 从 kernel 名或聚合排名直接猜模型根因。
+2. 将 inclusive parent/child 时间直接相加。
+3. 用 host timer 测异步执行却不记录 completion 边界。
+4. 看到稳定 residual 就直接断言重复执行。
+5. 把强制同步和 debug print 下的数字称为生产 latency。
+6. 只看单层平均耗时，不乘以请求中的调用次数和层数。
+7. 只验证局部 latency，不验证 correctness、throughput 和端到端指标。
+8. 用一个短请求声明稳定性能收益。
 
 ## 可观测能力
 
@@ -100,9 +220,13 @@ vLLM worker
 - [runtime-debugging/runtime-troubleshooting.md](../runtime-debugging/runtime-troubleshooting.md)
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
 - [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
+- [debugging-workflows/synapse-log-and-kernel-summary-workflow.md](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md)
+- [case-studies/vllm-attention-duplicate-kv-cache-update.md](../case-studies/vllm-attention-duplicate-kv-cache-update.md)
+- [prompt-examples/vllm-performance-hotspot-localization.md](../prompt-examples/vllm-performance-hotspot-localization.md)
 
 ## 来源
 
 - `/work/plan/newraw/TPU Profile 工具简介.docx`（已转换为 Markdown）
 - `/work/test/同事文档/DLC FlashAttention _ BLASST 在 vLLM Llama3.1-8B 64k Chunked Prefill 场景中的可行性评估.md`
 - `/work/arsenal/vllm_benchmark_serving_script/`
+- `/work/err/performance-hotspot-localization-case.md`

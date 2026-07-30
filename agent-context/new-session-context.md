@@ -22,6 +22,7 @@
 - vLLM: vllm-dlc/custom-op-integration-and-testing.md
 - 调试: debugging-workflows/common-debug-commands.md
 - runtime: runtime-debugging/runtime-troubleshooting.md
+- 性能定位: runtime-debugging/performance-profiling.md
 - 案例参考: case-studies/
 
 关键约束：
@@ -44,6 +45,7 @@
 | 环境配置 | `runtime-debugging/environment-setup-and-update.md` |
 | 常见报错 | `runtime-debugging/common-error-log.md` |
 | 调试命令 | `debugging-workflows/common-debug-commands.md` |
+| 性能热点或回归 | `runtime-debugging/performance-profiling.md` → `case-studies/` 中最近的性能案例 |
 
 ## 关键路径速记
 
