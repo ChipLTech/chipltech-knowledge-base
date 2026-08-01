@@ -21,7 +21,7 @@
 2. 先建立可重复的无插桩 baseline，记录 correctness、server liveness 和实际可测指标。普通非流式请求不能凭空给出 TTFT、TPOT 或 ITL；需要时使用可审计 benchmark/streaming/metrics 入口。
 3. 另建 diagnostic profile，保存它与 baseline 的精确 diff。强制 device synchronization、blocking、debug print、verbose trace 和临时 wrapper 只用于定位，不作为正式性能结果。
 4. 从 request/scheduler -> model forward -> block/layer -> stage -> framework wrapper -> DLC Attention Backend/PyTorch DLC Backend/vLLM DLC Custom Op -> DLC Runtime/DLCSynapse -> DLC Custom Kernel 逐层缩小。每轮只深入当前已确认最慢的边界。
-5. 每个 timer 标记 inclusive/exclusive、parent、request、layer/module、TP rank、prefill/decode、shape、dtype、stride/layout、同步位置和时间单位。
+5. 每个 timer 标记 inclusive/exclusive、parent、request、layer/module、TP rank、prefill/decode、shape、dtype、stride/layout、同步位置和时间单位。对 layout/view/alias/materialization 候选，在可观测时同时记录 source/destination contiguity、storage identity、storage offset 和 logical view relationship。
 6. 比较 parent total、covered child intervals 和 residual。稳定 residual 先列出重复执行、预/后处理、layout conversion、copy、异步等待、queue/collective wait 和计时定义差异等候选，不提前归因。
 7. 对疑似热点统计调用来源、调用次数、累计/平均耗时和输入身份。kernel 名或聚合排名只能提供线索。
 8. 审计 KV cache update、output materialization、layout conversion、quantize/dequantize、collective 和 state update 的跨层执行所有权。声明必须与实际调用行为一致。
@@ -45,4 +45,5 @@
 
 - [性能 Profiling](../runtime-debugging/performance-profiling.md)
 - [vLLM Attention 重复 KV Cache Update 案例](../case-studies/vllm-attention-duplicate-kv-cache-update.md)
+- [vLLM Hybrid KV Cache 非连续输出适配案例](../case-studies/vllm-hybrid-kv-cache-strided-output.md)
 - [Arsenal benchmark 与黑盒测试](../testing/arsenal-ci-and-blackbox-testing.md)

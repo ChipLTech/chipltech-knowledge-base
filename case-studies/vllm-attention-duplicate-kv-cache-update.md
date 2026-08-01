@@ -122,6 +122,8 @@ forward_includes_kv_cache_update=True
 
 历史证据支持的根因是：framework wrapper 与 DLC Attention Backend 对 KV cache update 的执行所有权声明和实际行为不一致，导致重复调用。`reshape_and_cache` 自身是否需要 kernel 优化没有被该案例证明。
 
+若调用次数已经正确，但单次 `reshape_and_cache` 内仍出现 layout conversion 或 slice writeback，应转到 [vLLM Hybrid KV Cache 非连续输出适配热点](vllm-hybrid-kv-cache-strided-output.md)，检查 source/destination descriptor、shared storage、logical view 和 output adaptation。两个案例是不同根因边界，不能互相替代。
+
 通用结论是审计执行所有权，而不是复制一个固定 flag：
 
 ```text

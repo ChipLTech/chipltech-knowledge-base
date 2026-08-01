@@ -75,6 +75,12 @@
 | dlc-knowledge-base-prd-20260626.md | 本仓库的需求文档 | skip | — | — | — | 已作为 PRD 使用 |
 | rsthinker_post_conv_embeddings_drift说明.md | `case-studies/rsthinker-visual-attention-boundary.md` | pending | 否 | 否 | 否 | RSThinker post_conv/embeddings drift 详细分析 |
 
+## 来源：/work/inn
+
+| 来源文件 | 目标路径 | 状态 | 含图片 | 需脱敏 | 需人工转换 | 摘要 | 备注 |
+|---------|---------|------|--------|--------|-----------|------|------|
+| non-contiguous-kv-cache-reshape-and-cache.md | `case-studies/vllm-hybrid-kv-cache-strided-output.md` + `runtime-debugging/performance-profiling.md` | done | 否 | 否 | 否 | Hybrid Attention/Mamba shared raw storage、non-contiguous KV cache view 与 `reshape_and_cache` output adaptation 性能边界 | exact source/image/trace identity 缺失；候选 strided-output kernel 保持 proposed/not_verified |
+
 ## 来源：/tmp（精选有长期价值的 handoff/prompt）
 
 | 来源文件 | 目标路径 | 状态 | 含图片 | 需脱敏 | 需人工转换 | 摘要 | 备注 |

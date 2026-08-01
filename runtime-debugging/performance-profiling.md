@@ -115,6 +115,7 @@ residual 与某个子操作耗时接近只是强线索；在调用次数和来�
 - request、phase、layer/module、parent call、TP rank 和设备。
 - 调用次数、累计耗时、平均耗时和分布。
 - input/output shape、dtype、stride/layout。
+- 对 layout、view、alias 或 materialization 候选，在可观测时同时保存 source/destination contiguity、storage identity、storage offset 和 logical view relationship。相同 storage pointer 不等于相同 logical Tensor。
 - framework op、DLC Custom Op 和 DLC Custom Kernel 的准确身份。
 - 是否包含同步、copy、materialization 或 collective wait。
 
@@ -222,6 +223,7 @@ vLLM worker
 - [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 - [debugging-workflows/synapse-log-and-kernel-summary-workflow.md](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md)
 - [case-studies/vllm-attention-duplicate-kv-cache-update.md](../case-studies/vllm-attention-duplicate-kv-cache-update.md)
+- [case-studies/vllm-hybrid-kv-cache-strided-output.md](../case-studies/vllm-hybrid-kv-cache-strided-output.md)
 - [prompt-examples/vllm-performance-hotspot-localization.md](../prompt-examples/vllm-performance-hotspot-localization.md)
 
 ## 来源

@@ -102,6 +102,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [case-studies/vllm-async-speculative-decode-launch-failure.md](case-studies/vllm-async-speculative-decode-launch-failure.md) — 从部分 token 后 HTTP 500 收敛到 async MTP 4-token Graph 执行窗口，并区分原 decode failure 与诊断配置引入的新 stall。
 - [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) — 可直接复用的异步 launch failure 定位 prompt。
 - [case-studies/vllm-attention-duplicate-kv-cache-update.md](case-studies/vllm-attention-duplicate-kv-cache-update.md) — 从 full-attention layer 收敛到跨层重复 KV cache update 的历史性能案例，并明确 source identity 与正式 benchmark 缺口。
+- [case-studies/vllm-hybrid-kv-cache-strided-output.md](case-studies/vllm-hybrid-kv-cache-strided-output.md) — 从单次 `reshape_and_cache` 内的 copy/slice 事件收敛到 hybrid Attention/Mamba non-contiguous destination view 与 output adaptation，并区分历史观察、机制推断和候选 strided-output 设计。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) — 可直接复用的 vLLM 性能热点分层定位 prompt。
 
 ### vLLM-DLC workflow
