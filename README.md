@@ -54,6 +54,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - `prompt-examples/` 用来存放团队成员在日常工作中总结出的可直接复制使用的 prompt 模板，不放临时实验记录，不放一次性的聊天草稿。
 - 如果后续同事又产出了新的高频好用 prompt，也统一放到 `chipltech-knowledge-base/prompt-examples/` 目录下维护。
 - 这类文档的目标是“拿来即用”，所以优先保持结构清晰、占位符明确、少背景解释。
+- [prompt-examples/all-supported-capabilities-quickstart.md](prompt-examples/all-supported-capabilities-quickstart.md) 是全部 Prompt 示例的统一傻瓜式入口：按“我要做什么”查看当前已支持能力，复制最短调用，再由 Hermes 读取正式 Prompt、Contract 和 owning Skill。
 - [prompt-examples/dlc-business-skill-examples-quickstart.md](prompt-examples/dlc-business-skill-examples-quickstart.md) 是业务套餐傻瓜版入口：只需说明目标和 evidence 路径，由大模型读取详细套餐并自动补全可发现信息。
 - [prompt-examples/dlc-business-skill-examples.md](prompt-examples/dlc-business-skill-examples.md) 是九个业务套餐的详细流程和执行规则。
 - `prompt-examples/dlc-env-setup-skill-usage.md` 用于直接调用 `dlc-env-setup` skill 做环境重建或修复。

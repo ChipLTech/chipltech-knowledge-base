@@ -51,6 +51,7 @@ Hermes 应先读取 `CONTEXT.md` 和 `README.md`，再按问题域检索专题�
 
 以下业务 Prompt 仍是任务 Contract，不复制进 Hermes 配置：
 
+- [全部已支持能力傻瓜式调用总览](all-supported-capabilities-quickstart.md)
 - [新模型验证 Quickstart](new-model-validation-quickstart.md)
 - [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md)
 - [vLLM-DLC Model Adaptation](vllm-dlc-model-adaptation.md)

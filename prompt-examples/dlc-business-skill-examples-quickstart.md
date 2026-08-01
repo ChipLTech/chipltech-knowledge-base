@@ -1,5 +1,7 @@
 # DLC Platform 业务套餐傻瓜版调用说明
 
+> 本页只覆盖九个日常业务套餐。要查看 `prompt-examples/` 当前全部已支持能力，包括环境 bootstrap、Main-to-Main、PD Separation、性能定位、Git/SSH 和 Hermes 修复，请先看 [Chipltech 工程已支持能力傻瓜式调用总览](all-supported-capabilities-quickstart.md)。
+
 ## 这份文档怎么用
 
 这份文档给第一次使用 Harness、Kilo、Claude Code 或其他 AI agent 的同事使用。你不需要先理解 skill、contract、evidence state，也不需要把正式套餐里的每个字段全部填写完。
