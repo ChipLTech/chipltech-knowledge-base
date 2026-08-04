@@ -52,6 +52,39 @@ shared_contract: vllm-dlc-contract/v1
 - **事实 / Fact**：如果当前 DLC 软件栈缺少目标量化/MoE fused kernel，Python 层绕路或修改模型 config 不构成长期适配完成；应报告为 kernel capability gap 或 `not_verified`，并说明需要 DLC Custom Op / DLC_Custom_Kernel Repository 支持。
 - **建议 / Recommendation**：需要 serving 稳定性或性能补充证据时，可引用 Arsenal 的 vLLM benchmark 和黑盒 HTTP 测试入口；这些结果应作为 serving 层 evidence 记录，不得提升为 Verified vLLM Alignment 或 Real DLC Hardware acceptance。
 
+## 跨仓变更归属与 ABI 配对
+
+一次模型适配或 Main-to-Main 调查可以覆盖多个仓库，但调查范围、修改范围和 PR 数量是三个不同集合。没有 patch 的仓库也应保留调查结论；“本轮不修改”可以是版本配对分析后的设计结果，不是遗漏。
+
+| 变更面 | 首要 owner | 稳定判断规则 |
+|---|---|---|
+| 通用模型 API、日志或跨后端框架行为 | vLLM | 对所有后端成立的修复优先进入 upstream framework，不放入 DLC 专用 patch |
+| DLC worker 生命周期、DLC model patch、plugin registration | vLLM-DLC | 只承载 DLC Platform integration，不重复 upstream 或 fused layer 已拥有的 collective |
+| public operator schema、PyTorch DLC dispatch、host wrapper、KernelDesc packing | PyTorch DLC Backend 或当前实际 extension owner | 先按 source/packaging identity 确认 owner，不用历史目录布局猜测 |
+| DLC Custom Kernel 实现、entry ABI、variant 和 kernel metadata | DLC_Custom_Kernel Repository | 静态审计确认 source gap 后记录缺失；只有要把它认定为当前 workload 的必要修复时才要求运行必要性 evidence |
+| compiler、DLCSynapse、DLC Runtime、DLCCL 或其他 native binary | 对应 native component | 代码存在但 build/runtime artifact 不配对时，分类为版本配对，不写成源码缺失 |
+
+每个变更面至少记录 repository full SHA、dirty state、source owner、consumer owner、change kind、patch/diff identity、build artifact identity、验证 owner 和未验证范围。PR 按仓库责任和单一主要目的拆分，不按交付 patch 文件数量机械拆分。
+
+### Public Schema、Descriptor 与 Kernel Entry
+
+Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry ABI 的正式定义见 [CONTEXT.md](../CONTEXT.md)。三层必须分别核验，并与 exact source、adapter 和 binary identity 绑定。
+
+- **事实 / Fact**：optional 参数值为 `None` 不自动证明底层 descriptor slot 消失；slot 是否存在由 host adapter 构造决定。
+- **经验 / Experience**：main public schema 已演进而冻结 DLC Custom Kernel 仍使用旧 entry ABI 时，直接按新 descriptor 发射可能发生位置错位，并在异步 completion 边界表现为与表面算子无关的 failure。
+- **建议 / Recommendation**：需要保持 caller source compatibility 时，保留 Public Operator Schema，在 host adapter 中按 exact DLC Custom Kernel Entry ABI 构造 descriptor；未由 exact DLC Custom Kernel revision 证明的 metadata、routing、scoring、quantization mode 或 group size 必须在 launch 前 fail closed。
+- **建议 / Recommendation**：capability matrix 绑定 exact source、adapter 和 kernel binary identity。`unsupported`、`not_verified` 与“硬件永久不支持”是不同结论。
+- **建议 / Recommendation**：对 descriptor slot 顺序、collective ownership 和 lifecycle barrier 等结构性不变量使用 source/AST regression；它们不替代 build、C1b、collective correctness、模型功能和 Real DLC Hardware evidence。
+
+### 主线缺失的双证据
+
+静态审计足以记录一个 surface 在 exact HEAD 中缺失。只有同时满足以下条件，才能进一步把该缺失认定为当前 workload 的必要失败边界或必要修复：
+
+1. 在 exact repository HEAD 和声明的搜索范围内有可审计的静态缺失证据。
+2. 在 exact artifact identity 上有运行证据证明该缺失是目标 workload 的必要失败边界。
+
+如果代码已经存在但 source、descriptor、DLC Custom Kernel、toolchain 或 native stack 不配对，应记录为 `artifact/ABI pairing`。如果旧 patch 没有原样进入 main，但当前实现已有替代路径或运行不再需要它，应记录为 `confirmed present`、`superseded` 或 `confirmed irrelevant`，不能把“旧 patch 不存在”写成当前 workload 的已证实缺口。
+
 ## Skill 所有权
 
 ### Model Adaptation
@@ -110,6 +143,7 @@ shared_contract: vllm-dlc-contract/v1
 - [precision-debugging/token-divergence-and-moe-contract-debugging.md](../precision-debugging/token-divergence-and-moe-contract-debugging.md)
 - [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 - [case-studies/qwen3-32b-dlc-block256-diagnosis.md](../case-studies/qwen3-32b-dlc-block256-diagnosis.md)
+- [case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md](../case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md)
 
 ## Qwen3-32B Block-256 Campaign 经验 (2026-07-28)
 

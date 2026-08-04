@@ -67,6 +67,15 @@ python3 -m pip install pybind11 grpcio-tools==1.78.0
 
 如果目标是最小修复 editable metadata，而不是重装整套依赖，可以只修 metadata 所需工具链，再用 `--no-build-isolation` 或 `--no-deps` 做最小 reinstall。
 
+开始安装前还应探测 packaging mode。历史任务中出现过两类高风险失败：build isolation 按 upstream metadata 尝试下载与 PyTorch DLC Backend 不匹配的 `torch`；关闭 isolation 后，setup 又访问当前 PyTorch DLC Backend 不提供的其他平台版本字段。此时复用旧 editable metadata 只能作为有界诊断或 package smoke，不能证明当前源码完成了可重现构建。
+
+建议固定并保存：
+
+- 实际 build subprocess 使用的 Python、setuptools、CMake 和 compiler identity。
+- 当前 PyTorch distribution、wheel SHA、import origin 和 native extension digest。
+- vLLM core 是 in-tree device build，还是 `empty` platform 加独立 vLLM-DLC plugin。
+- editable metadata、source full SHA、实际 import path 和 native binary digest 是否属于同一构建 epoch。
+
 ### 4. wheel 与本地路径前置检查
 
 在安装 `vllm-dlc` 前，确认它引用的 PyTorch wheel 路径确实存在于当前机器。不要把别人的本地 wheel 路径直接沿用到当前环境。
@@ -88,6 +97,8 @@ python3 -m pip install pybind11 grpcio-tools==1.78.0
 3. **忘记固定 `numpy==1.26.4`**：这会导致 PyTorch wheel 看似构建成功，但运行时 NumPy bridge 失败。
 4. **忽略旧的 CMakeCache**：如果 cache 里已经是 `USE_NUMPY:BOOL=OFF`，应先清理后再重建。
 5. **把机器特定 wheel 路径写进长期文档**：路径必须根据当前机器实际 repo map 确认。
+6. **让 build isolation 隐式替换 PyTorch**：依赖解析计划必须先审计；网络下载或替换当前 PyTorch 需要单独授权。
+7. **把复用 editable metadata 当作 fresh build**：metadata 可让 import/schema smoke 继续，但不能建立当前 source-to-binary provenance。
 
 ## 相关资料
 

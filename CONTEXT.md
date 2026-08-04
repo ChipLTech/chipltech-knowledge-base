@@ -70,6 +70,12 @@
 
 **KernelDesc**：host 侧参数打包对象，框架集成用它编码 tensor、output、scalar、format 和操作元数据，然后按名称发射 DLC Custom Kernel。
 
+**Public Operator Schema**：caller 可见的 DLC Custom Op 参数、返回值、mutation/alias 和 dispatch contract。它不等于 host 侧实际发送的 descriptor，也不证明底层 DLC Custom Kernel 支持 schema 可表达的全部组合。
+
+**KernelDesc Descriptor ABI**：KernelDesc host adapter 实际发送给 DLC Custom Kernel 的有序 tensor、output、scalar 和 metadata slots。optional public 参数为 `None` 不自动证明对应 descriptor slot 不存在。
+
+**DLC Custom Kernel Entry ABI**：exact DLC Custom Kernel binary 按顺序读取的 entry 参数 contract。它必须与 KernelDesc Descriptor ABI 和 binary identity 配对验证。
+
 **DLC Kernel Launch Protocol**：平台定义的 host 侧协议，打包 tensor/scalar 元数据并通过运行时发射命名 kernel，不暴露 CUDA 式 device kernel ABI。
 
 **DLCSynapse**：核心 DLC 框架组件，编译和/或执行 DLC Custom Kernel，将发射请求路由到 DLCsim 或 Real DLC Hardware。
@@ -176,6 +182,7 @@
 - **DLC Ecosystem** 包含 **DLC Platform**、**PyTorch DLC Backend**、**vLLM DLC Custom Op**、**DLC_Custom_Kernel Repository**、**DLCSynapse**、**DLC Runtime**、**DLCsim**、**dlc-thunk**、**DLCCL**、**DLC_CL** 和 **Real DLC Hardware**。
 - **PyTorch DLC Backend** 和 **vLLM DLC Custom Op** 都使用 **KernelDesc** 遵循 **DLC Kernel Launch Protocol**。
 - **KernelDesc** 打包 tensor、output、scalar、format 和操作元数据后按名称发射 **DLC Custom Kernel**。
+- **Public Operator Schema**、**KernelDesc Descriptor ABI** 和 **DLC Custom Kernel Entry ABI** 是三层独立 contract，共同约束 **DLC Kernel Launch Protocol**。
 - **DLCSynapse** 消费发射请求，将执行分发到 **DLCsim** 或 **Real DLC Hardware**。
 - **DLC_Custom_Kernel Repository** 包含源码、kernel 测试、注册元数据和实现 **DLC Custom Kernel** 的产物。
 - **Explicit DMA Dataflow** 从 **HBM** 搬运到 **VMEM**，经 **XYS**、**PGX** 或 **NWS** 计算后搬回 **HBM**。
