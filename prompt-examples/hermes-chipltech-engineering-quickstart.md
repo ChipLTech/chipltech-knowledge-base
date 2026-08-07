@@ -74,8 +74,22 @@ chipltech-engineering chat -q "Reply with exactly: CHIPLTECH_PROFILE_OK"
 
 - 默认模型为 `gpt-5.6-sol`。
 - 外部目录仅包含三个稳定分类根。
-- `chipltech-context` 和 DLC/vLLM Skills 可发现。
+- `chipltech-context`、DLC/vLLM Skills 和 Matt Pocock 1.2 通用 Skills 可发现。
 - 模型请求返回 `CHIPLTECH_PROFILE_OK`。
+
+1.2 通用 Skills 至少包括：
+
+```text
+codebase-design
+domain-modeling
+wizard
+grilling
+to-questionnaire
+wait-what
+writing-for-agents
+```
+
+它们只提供通用设计语言、访谈机制、人工流程和 Agent 文档能力。Chipltech 任务仍先由 `chipltech-context` 选择知识和 owning Skill；通用 Skill 的发现或加载不构成业务执行或 Runtime Evidence。
 
 ## 路由验收矩阵
 
@@ -95,6 +109,7 @@ chipltech-engineering chat -q "Reply with exactly: CHIPLTECH_PROFILE_OK"
 - 加载对应执行 Skill，但不在 routing-only 验收中执行它。
 - 返回 Claim Boundary，不把文档、HTTP、Ready 或非空输出当成执行 Evidence。
 - 当前工作目录不因知识检索切换到知识库。
+- `domain-modeling`、`grill-with-docs` 和 `wait-what` 使用当前业务仓库的 project context，不把知识库 `CONTEXT.md` 当成隐式写入目标。
 
 在 Skills 仓库运行 live acceptance runner：
 
@@ -111,4 +126,6 @@ chipltech-engineering chat -q "Reply with exactly: CHIPLTECH_PROFILE_OK"
 - 知识库文档、Prompt 和 Skill 不能证明当前执行成功。
 - Package/Import、C1b、SMI Observation、模型正确性、KV Transfer 和性能 Evidence 必须分别报告。
 - 知识回写必须经过独立授权和 Evidence 审核，不在 `chipltech-context` 只读流程中完成。
+- `wizard` 只能固化已授权的人工作业步骤，不能授予凭据、Host 修改或生产 cutover 权限，也不能证明步骤已经执行。
+- `codebase-design`、`grilling`、`to-questionnaire`、`wait-what` 和 `writing-for-agents` 不能替代 DLC owning Skill，也不能弱化 Claim Boundary。
 - 不把 HTTP 200、服务 Ready 或非空输出提升为模型正确性或 PD Separation 已验证。

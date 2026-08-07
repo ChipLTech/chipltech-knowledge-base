@@ -187,13 +187,14 @@ diagnose
 to-prd
 to-issues
 write-a-skill
+writing-great-skills
 review
 ```
 
 执行：
 
 ```bash
-for name in diagnose to-prd to-issues write-a-skill review; do
+for name in diagnose to-prd to-issues write-a-skill writing-great-skills review; do
   test ! -L "$KILO_CONFIG_ROOT/skills/$name"
   test ! -e "$KILO_CONFIG_ROOT/command/$name.md"
 done
@@ -203,7 +204,7 @@ done
 
 同理，链接脚本不会覆盖已有的普通 command 文件。如果 3.2 的 description 比较失败，先确认该文件是否由旧版链接脚本生成；只有确认是可再生 wrapper 后，才删除该文件并重新运行 `link-kilo-skills.sh --with-commands`。用户维护的 command 文件必须保留并单独迁移。
 
-### 3.4 验证当前 replacements 和六个新 stable skills
+### 3.4 验证当前 replacements 和 stable skills
 
 旧名称的当前 replacements：
 
@@ -212,10 +213,11 @@ done
 | `diagnose` | `diagnosing-bugs` |
 | `to-prd` | `to-spec` |
 | `to-issues` | `to-tickets` |
-| `write-a-skill` | `writing-great-skills` |
+| `write-a-skill` | `writing-for-agents` |
+| `writing-great-skills` | `writing-for-agents` |
 | `review` | `code-review` |
 
-当前稳定集合应暴露以下六个新 skills；`3f04504` 是它们进入默认集合的最低兼容基线：
+当前稳定集合应继续暴露以下基础 skills；`3f04504` 是它们进入默认集合的最低兼容基线：
 
 ```text
 ask-matt
@@ -226,10 +228,10 @@ wayfinder
 teach
 ```
 
-一次验证全部十一项：
+同时验证基础集合和 1.2 新增集合：
 
 ```bash
-for name in diagnosing-bugs to-spec to-tickets writing-great-skills code-review ask-matt implement research resolving-merge-conflicts wayfinder teach; do
+for name in diagnosing-bugs to-spec to-tickets writing-for-agents code-review ask-matt implement research resolving-merge-conflicts wayfinder teach codebase-design domain-modeling wizard grilling to-questionnaire wait-what; do
   test -L "$KILO_CONFIG_ROOT/skills/$name"
   test -f "$KILO_CONFIG_ROOT/skills/$name/SKILL.md"
   test -f "$KILO_CONFIG_ROOT/command/$name.md"
