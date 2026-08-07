@@ -81,9 +81,20 @@ cd DLC_CL
 
 ### PyTorch
 
+初始化 PyTorch submodule 时，必须优先复用已有可用镜像中的 `third_party`，不要默认联网重新下载全部第三方库：
+
+1. 确认来源镜像中的 PyTorch `third_party` 可用，并记录来源、目标 branch/HEAD。
+2. 将 `third_party` 完整复制到目标 PyTorch 源码树，保留目录结构和隐藏文件。
+3. 再执行 `git submodule sync --recursive` 和 `git submodule update --init --recursive`，按当前 checkout 校验并补齐。
+4. 只有镜像缓存不存在或无法满足当前 checkout，且任务允许网络下载时，才下载缺失内容。
+
+**强制优先级：已有镜像 `third_party` > 远端下载。已有第三方库可复用时，不得浪费时间重新下载。**
+
 ```bash
 # release_25 分支
 cd /work/pytorch
+git submodule sync --recursive
+git submodule update --init --recursive
 USE_CUDA=0 DEBUG=1 MAX_JOBS=32 python3 setup.py develop
 ```
 
@@ -133,6 +144,7 @@ VLLM_TARGET_DEVICE=dlc pip install -e .
 | NumPy 1.x/2.x 不兼容 | numpy 版本不对 | `pip install "numpy<2"` |
 | `libopenblas.so` 缺失 | 缺少 openblas | `apt install libopenblas-dev` |
 | `numpy/arrayobject.h not found` | numpy include path 未设置 | 添加到 CPLUS_INCLUDE_PATH |
+| PyTorch submodule 初始化耗时过长 | 未复用已有镜像中的 `third_party` | 先复制镜像缓存，再执行 recursive submodule update |
 
 ## 多组件版本确认清单
 

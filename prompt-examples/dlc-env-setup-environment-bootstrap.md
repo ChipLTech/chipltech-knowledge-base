@@ -96,7 +96,8 @@
      - 可选：`git@github.com:ChipLTech/DLC-Kernel-Driver.git`
      - 可选：`git@github.com:ChipLTech/cl_tools.git`
    - clone 后按版本策略切换：CI默认最新切到映射分支并同步最新 head；固定ref/混合切到批准 branch/tag/commit。
-   - 对 `pytorch` 仅在 root/remote/branch/HEAD 检查通过后执行 `git submodule sync --recursive` 和 `git submodule update --init --recursive`。
+   - 对 `pytorch`，仅在 root/remote/branch/HEAD 检查通过后初始化 submodule。必须先查找已有可用镜像中的 PyTorch `third_party`，记录来源镜像、源路径和目标 branch/HEAD，并将该目录完整复制到目标 PyTorch 源码树；随后执行 `git submodule sync --recursive` 和 `git submodule update --init --recursive`，用于按当前 checkout 校验和补齐。
+   - PyTorch 第三方依赖的强制优先级是“已有镜像 `third_party` > 远端下载”。不得在已有可复用第三方库时直接联网重新下载；只有镜像缓存不存在或无法满足当前 checkout，且【是否允许下载】为“是”时，才下载缺失内容，并记录原因和最终 submodule status。
    - 对有 submodule 的仓库（例如 DLCSynapse）先读取仓库说明；只有当前分支要求 submodule 时才执行 `git submodule update --init`，并记录结果。
    - clone 完成后重新 discovery，并再次记录 Git root、remote、branch、HEAD 和 status。
    - 未授权 clone、缺少批准策略、ref 不存在或 remote 不匹配时，按当前 SKILL.md 停止。

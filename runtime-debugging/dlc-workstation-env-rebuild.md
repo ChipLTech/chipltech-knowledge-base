@@ -12,6 +12,7 @@
 2. PyTorch 2.5.0 wheel 的可用性必须同时通过 build 成功和 post-install runtime smoke 验证，不能只看 `bdist_wheel` 是否结束。
 3. `vllm` 与 `vllm-dlc` 的 editable install 应建立在一个已经通过 smoke 的 PyTorch DLC Backend 之上，否则后面的 Python packaging 报错容易掩盖真正的底层问题。
 4. 自动化入口适合放在 skill；长期可复用的规则、顺序、停止条件和常见坑应留在知识库。
+5. PyTorch 第三方依赖应优先从已有可用镜像中的 PyTorch `third_party` 目录复制，随后执行 `git submodule update --init --recursive` 完成校验和补齐；不要默认从远端重新下载全部第三方库。
 
 ## 操作步骤
 
@@ -88,6 +89,19 @@ git branch -a --list '*目标分支*'
 
 PyTorch 阶段的关键不只是“build 结束”，还包括 build 前 preflight、build 后 wheel 重装、以及源码树外 runtime 验证。
 
+#### 5.1 先复用已有镜像中的第三方依赖
+
+初始化 PyTorch submodule 前，先查找已有且可用的 DLC Ecosystem 镜像。若镜像中已有匹配 PyTorch 源码布局的 `third_party`，应将该目录完整复制到目标 PyTorch 源码树，保留目录结构和隐藏文件，然后执行：
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
+这里的 `git submodule update --init --recursive` 用于按当前 checkout 补齐并校验 submodule，不应作为默认的全量下载入口。只有没有可用镜像缓存，或复制后的内容无法满足当前 checkout，且任务已允许网络下载时，才从远端获取缺失内容。复制前后应记录来源镜像、源 `third_party` 路径、目标 PyTorch branch/HEAD 和最终 submodule status，避免误用不匹配或不完整的缓存。
+
+**强制优先级：已有镜像 `third_party` > 远端下载。不要在已有可复用第三方库时浪费时间重新下载。**
+
 建议先做 preflight：
 
 - Python packaging 依赖对齐：`packaging`、`setuptools`、`setuptools-scm`、`wheel`、`ninja`、`jinja2`
@@ -147,6 +161,7 @@ PyTorch 阶段的关键不只是“build 结束”，还包括 build 前 preflig
 5. **wheel build 成功就认定环境成功**：真正的成功标准是 runtime smoke。
 6. **把 `vllm` 问题都当成 `vllm-dlc` 问题**：底层 PyTorch NumPy bridge 没修好时，上层问题通常只是连带症状。
 7. **把别人的 wheel 路径写进长期文档**：知识库只写规则，机器路径只作为一次性来源。
+8. **直接联网初始化 PyTorch 全部 submodule**：先从已有可用镜像复制 `third_party`，再运行 `git submodule update --init --recursive`；只有缓存不可用且网络下载已获允许时才下载缺失内容。
 
 ## 可选自动化入口
 
