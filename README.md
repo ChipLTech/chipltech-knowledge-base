@@ -91,6 +91,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 ### Runtime / Debug 入口
 
+- [debugging-workflows/technical-issue-summary.md](debugging-workflows/technical-issue-summary.md) — 将已闭合的复杂故障证据压缩成 Sprint、Issue、owner 确认或 handoff 说明，并保持首次异常边界、量化闭合和 Claim Boundary。
 - [runtime-debugging/dlc-runtime-api-reference.md](runtime-debugging/dlc-runtime-api-reference.md) — 基于固定镜像、源码 commit 和动态库 ABI 的 DLC Runtime、DLCSynapse Core、KernelDesc 版本化接口参考，包含生命周期、同步语义、DLC Runtime 完整函数族、支持矩阵、Success stub、ABI 缺失和已知缺陷。
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
 - [runtime-debugging/performance-profiling.md](runtime-debugging/performance-profiling.md) — Chipltech-Family Accelerator 性能 profiling、分层热点定位、异步计时边界和性能 Claim Boundary。
