@@ -54,7 +54,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - `prompt-examples/` 用来存放团队成员在日常工作中总结出的可直接复制使用的 prompt 模板，不放临时实验记录，不放一次性的聊天草稿。
 - 如果后续同事又产出了新的高频好用 prompt，也统一放到 `chipltech-knowledge-base/prompt-examples/` 目录下维护。
 - 这类文档的目标是“拿来即用”，所以优先保持结构清晰、占位符明确、少背景解释。
-- [prompt-examples/all-supported-capabilities-quickstart.md](prompt-examples/all-supported-capabilities-quickstart.md) 是全部 Prompt 示例的统一傻瓜式入口：按“我要做什么”查看当前已支持能力，复制最短调用，再由 Hermes 读取正式 Prompt、Contract 和 owning Skill。
+- [prompt-examples/all-supported-capabilities-quickstart.md](prompt-examples/all-supported-capabilities-quickstart.md) 是全部 Prompt 示例的统一傻瓜式入口：按“我要做什么”查看当前已支持能力，复制最短调用，再由当前 Kilo 或其他能够加载团队 Skills 的 Harness 读取正式 Prompt、Contract 和 owning Skill。Hermes 是可选执行器，不是其他能力的前置依赖。
 - [prompt-examples/dlc-business-skill-examples-quickstart.md](prompt-examples/dlc-business-skill-examples-quickstart.md) 是业务套餐傻瓜版入口：只需说明目标和 evidence 路径，由大模型读取详细套餐并自动补全可发现信息。
 - [prompt-examples/dlc-business-skill-examples.md](prompt-examples/dlc-business-skill-examples.md) 是九个业务套餐的详细流程和执行规则。
 - `prompt-examples/dlc-env-setup-skill-usage.md` 用于直接调用 `dlc-env-setup` skill 做环境重建或修复。
@@ -67,7 +67,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
 - [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) 用于固定 Prefill/Decode 拓扑、KV Cache Transfer Contract、分层验证和 evidence 边界。
-- [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills。
+- [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于可选地通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills；未使用 Hermes 时可跳过。
 - [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) 用于 serving 部分执行后发生异步 launch failure、worker abort、EngineCore dead 或 HTTP 500 的生命周期切片、Graph/MTP 单变量定位和逐 rank kernel 证据采集。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) 用于固定 vLLM serving workload，从端到端、模型 layer、framework wrapper 和 DLC Platform 执行层逐级定位性能热点，并区分插桩证据与无插桩 benchmark。
 - [prompt-examples/hermes-modelzoo-batch-validation.md](prompt-examples/hermes-modelzoo-batch-validation.md) 用于 Hermes 执行单模型 DLC 功能验证，含三种调用方式和失败回退策略。

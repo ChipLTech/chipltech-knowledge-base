@@ -6,7 +6,7 @@
 
 1. **来源验证**：确认 `/work/skills` 位于团队当前主线；若做最低兼容验证，确认当前 commit 包含 `3f04504`。
 2. **安装与暴露验证**：确认全局或项目级 skill symlink 和 slash command wrapper 正确生成，并清理旧别名。
-3. **识别与工作流理解验证**：确认 Kilo 识别 `dlc-env-setup`，并依据当前 `SKILL.md` 说明工作流和停止条件。
+3. **识别与工作流理解验证**：确认 Kilo 或当前选定 Harness 识别 `dlc-env-setup`，并依据当前 `SKILL.md` 说明工作流和停止条件；Hermes 验收仅在明确选择 Hermes 时附加执行。
 4. **执行验证**：在真实 DLC Ecosystem 仓库和依赖齐全时，验证 rebuild、安装和源码树外 smoke 闭环。
 
 **阅读说明**：
@@ -23,7 +23,7 @@
 - 新容器刚准备安装 `skills` 和 `chipltech-knowledge-base`。
 - 需要确认 `dlc-env-setup` 不只是仓库文件，而是已被 Kilo 暴露和识别。
 - 需要验证安装脚本已从旧 skill 名称迁移到当前稳定集合，并保留对 `3f04504` 最低兼容基线的检查能力。
-- 需要验证知识库 prompt example 能驱动当前 skill 正确发现仓库、执行安全门并在条件不足时停止。
+- 需要验证知识库 prompt example 能通过 Kilo 或当前选定 Harness 驱动当前 skill 正确发现仓库、执行安全门并在条件不足时停止。
 
 ## 目标仓库与固定路径
 

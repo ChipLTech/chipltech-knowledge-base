@@ -9,8 +9,8 @@
 1. 在下方找到最接近的任务。
 2. 复制对应的“直接这样说”。
 3. 只替换 `<...>` 中你已经知道的内容；不知道的保留“请自动发现”。
-4. 把 Prompt 发给 Hermes。Hermes 是主执行器，会读取正式 Prompt、知识库和 owning Skill 后执行。
-5. Hermes 本身安装、配置、Provider、Memory、Skills 或路由损坏时，再由 Kilo Code Agent 作为教练和修复者介入，修复后交还 Hermes。
+4. 把 Prompt 发给当前能够加载团队 Skills 的 Agent/Harness。Kilo Code 可直接读取正式 Prompt、知识库和 owning Skill 后执行；也可以使用已安装的 `/skill-name` wrapper 显式调用。
+5. Hermes 是可选执行器，不是其他能力的前置依赖。只有明确选择 Hermes 时，才需要安装和验收 `chipltech-engineering` profile；Hermes 缺失或故障不得阻断 Kilo 或其他合格 Harness 直接调用 owning Skill。
 
 本页只提供薄入口和能力导航。正式执行规则以链接的详细 Prompt、Contract、Runbook、知识专题和当前 owning Skill 为准。本页不会复制维护第二套状态机。
 
@@ -57,11 +57,11 @@
 | 模型 distributed/MoE route 资格边界 | 模型/deployment identity、active route inventory | [Distributed Collective Qualification](../vllm-dlc/distributed-collective-qualification.md)（supporting reference，不是独立 capability entrypoint） | `model-adaptation` |
 | Prefill/Decode Separation 部署或诊断 | 模型名、绝对目录 | [Prefill/Decode Separation](vllm-dlc-prefill-decode-separation.md) | `pd-separation` |
 | 精确 upstream vLLM Main-to-Main Upgrade | 目标 full SHA、仓库/evidence | [Main-to-Main Upgrade](vllm-dlc-main-to-main-upgrade.md) | `main-to-main-upgrade` |
-| 固定 ModelZoo runner 做单模型验证 | 模型名、模型路径 | [Hermes ModelZoo 单模型验证](hermes-modelzoo-batch-validation.md) | 固定 runner；通用资格优先 `modelzoo-image-validation` |
+| 可选：固定 Hermes ModelZoo runner 做单模型验证 | 模型名、模型路径 | [Hermes ModelZoo 单模型验证](hermes-modelzoo-batch-validation.md) | 仅限匹配的固定环境；通用资格使用 `modelzoo-image-validation` |
 | 长任务换 Session 或交接同事 | 当前 Session/材料 | [业务套餐八](dlc-business-skill-examples-quickstart.md#套餐八长任务换-session-或交接同事) | `handoff` |
 | 把可复用经验写回知识库 | 报告、日志、测试或实验目录 | [业务套餐九](dlc-business-skill-examples-quickstart.md#套餐九把本次经验写回知识库) | 按问题域更新，必要时加载对应 Skill |
 | 为 Host/容器补齐 Git/SSH 私有仓库能力 | 源容器、目标、仓库 URL、授权 | [Git/SSH 安全赋能](bootstrap-git-from-configured-container.md) | 安全操作 Contract，无单一业务 Skill |
-| 验证 Hermes 知识库、Memory 和 Skills 接入 | Hermes 配置和两个仓库 | [Hermes Chipltech Engineering Quickstart](hermes-chipltech-engineering-quickstart.md) | Kilo 教练/修复者，Hermes 作为被验收主执行器 |
+| 可选：验证 Hermes 知识库、Memory 和 Skills 接入 | Hermes 配置和两个仓库 | [Hermes Chipltech Engineering Quickstart](hermes-chipltech-engineering-quickstart.md) | 可选 Hermes profile 验收；不阻断其他入口 |
 
 ## 1. 新模型只做运行资格验证
 
@@ -198,12 +198,12 @@
 ```markdown
 请参考 `prompt-examples/dlc-env-setup-fresh-container-validation.md` 验证当前新容器中的 `dlc-env-setup`。
 
-先只做 Skills 来源、安装暴露、Hermes/Kilo 识别和停止语义检查；不要构建、切换 branch 或修改系统环境。只有我明确批准完整执行层后，才运行真实 rebuild/install/runtime smoke。
+先只做 Skills 来源、安装暴露、当前 Kilo/Harness 识别和停止语义检查；如果本机选择使用 Hermes，再附加 Hermes profile 验收。不要构建、切换 branch 或修改系统环境。只有我明确批准完整执行层后，才运行真实 rebuild/install/runtime smoke。
 ```
 
 详细规则：[新容器中验证 `dlc-env-setup`](dlc-env-setup-fresh-container-validation.md)
 
-关键边界：识别回答、文件存在和轻量骨架不能替代真实 build/install/runtime smoke；Kilo 在此承担教练和修复者，验证通过后日常任务交还 Hermes。
+关键边界：识别回答、文件存在和轻量骨架不能替代真实 build/install/runtime smoke；Kilo 可直接作为日常执行器。Hermes 仅在已选择、已安装并通过独立 profile 验收时作为可选执行器。
 
 ## 9. 模型卡住或 Unsupported Operator
 
@@ -377,9 +377,9 @@
 
 关键边界：target 必须是 full SHA；候选 checkout、README 或历史记录不能称为 Verified vLLM Alignment；单模型适配应改用 `model-adaptation`。
 
-## 19. 固定 Hermes ModelZoo Runner 单模型验证
+## 19. 可选：固定 Hermes ModelZoo Runner 单模型验证
 
-什么时候用：明确处在文档指定的固定 ModelZoo 环境，使用已有 `run-one-model.py` 验证单个模型。
+什么时候用：明确选择 Hermes，并且处在文档指定的固定 ModelZoo 环境，使用已有 `run-one-model.py` 验证单个模型。其他环境跳过本节，直接使用 `modelzoo-image-validation`。
 
 直接这样说：
 
@@ -403,7 +403,7 @@
 直接这样说：
 
 ```markdown
-/handoff "请生成完整交接包：目标、事实基线、已完成实验、关键证据、当前最小失败边界、不要重复的路径、下一步单变量动作、完成判据、暂停条件、必读知识文档和建议 Skills。再生成一段可直接复制到新 Hermes Session 的中文 bootstrap Prompt。"
+/handoff "请生成完整交接包：目标、事实基线、已完成实验、关键证据、当前最小失败边界、不要重复的路径、下一步单变量动作、完成判据、暂停条件、必读知识文档和建议 Skills。再生成一段可直接复制到新 Agent Session 的中文 bootstrap Prompt；如果目标执行器已明确，再按 Kilo、Hermes 或其他 Harness 标注。"
 ```
 
 详细规则：[业务套餐八](dlc-business-skill-examples-quickstart.md#套餐八长任务换-session-或交接同事)
@@ -446,9 +446,9 @@
 
 关键边界：SSH private key 迁移需要凭据 owner 的明确授权；环境 bootstrap 需要 clone 不等于自动获得私钥复制授权。
 
-## 23. 验证或修复 Hermes 的 Chipltech 接入
+## 23. 可选：验证或修复 Hermes 的 Chipltech 接入
 
-什么时候用：Hermes 找不到知识库、Memory、Project 或 Skills，路由错误，默认模型/Provider 异常，或需要验证配置完整性。
+什么时候用：团队明确选择使用 Hermes，并且 Hermes 找不到知识库、Memory、Project 或 Skills，路由错误，默认模型/Provider 异常，或需要验证配置完整性。未使用 Hermes 时跳过本节，不影响其他能力。
 
 直接这样说：
 
@@ -457,16 +457,16 @@
 
 验证知识库 `/work/chipltech-knowledge-base`、Skills `/work/skills`、`chipltech-context`、稳定 external dirs、Project、Memory、默认模型和四场景路由验收。不得输出 API Key。
 
-这里由 Kilo Code Agent 作为 Hermes 的教练和修复者执行；修复完成后给出根因、修改、验证证据、残余风险和下一条 Hermes 可执行动作，并把日常执行权交还 Hermes。
+这里由 Kilo Code Agent 作为 Hermes 的教练和修复者执行；修复完成后给出根因、修改、验证证据、残余风险和下一条 Hermes 可执行动作。是否把后续任务交给 Hermes 由用户选择，Kilo 仍可直接执行。
 ```
 
 详细规则：[Hermes Chipltech Engineering Quickstart](hermes-chipltech-engineering-quickstart.md)
 
-关键边界：Hermes 是主执行器；Kilo 的修复证据只证明 Hermes 能力或执行链恢复，不证明具体业务任务、模型、DLC Runtime 或 Real DLC Hardware 已验收。
+关键边界：Hermes 是可选执行器；Kilo 的修复证据只证明 Hermes 能力或执行链恢复，不证明具体业务任务、模型、DLC Runtime 或 Real DLC Hardware 已验收。Hermes 不可用不代表 owning Skill 或 Kilo 调用链不可用。
 
 ## 使用前只记住六件事
 
-1. **默认把任务交给 Hermes**：Hermes 是主执行器；只有 Hermes 本身需要配置、诊断或修复时才升级给 Kilo Code Agent。
+1. **默认使用当前可用 Harness**：Kilo Code 可直接加载 owning Skill 并执行；Hermes 是可选执行器，只有明确选择 Hermes 时才要求它的 profile 验收通过。
 2. **只给最少必要输入**：通常是一句话目标加一个材料路径；模型类任务通常只需要模型名和绝对目录。
 3. **不知道的写“请自动发现”**：不要重复填写本机可只读发现的仓库、版本、设备、命令和日志。
 4. **自动发现不等于授权**：安装、构建、ref 切换、device execution、KILL、Host maintenance、镜像导出/推送仍需对应授权。

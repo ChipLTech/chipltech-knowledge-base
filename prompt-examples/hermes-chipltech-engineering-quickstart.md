@@ -4,6 +4,8 @@
 
 使用独立 Hermes profile 接入团队知识库、业务 Prompt 和稳定 Skills。知识库与 Skills 仓库继续作为 Single Source of Truth；Hermes 只负责检索、路由、执行和会话编排。
 
+Hermes 是可选执行器，不是 Chipltech 工程能力的统一前置依赖。未安装 `chipltech-engineering` 时，Kilo Code 或其他能够加载团队 Skills 的 Harness 可以直接使用 `chipltech-context` 和 owning Skill；本页验收失败只说明 Hermes profile 不可用，不代表其他调用链失败。
+
 ## 本机当前安装
 
 ```text
@@ -121,6 +123,7 @@ writing-for-agents
 
 ## 边界
 
+- 本页只验收可选 Hermes profile；它不决定 Kilo 或其他合格 Harness 是否可以调用 owning Skill。
 - Hermes profile 不是文件系统 sandbox；真实只读要求必须由权限或只读挂载保证。
 - Hermes Memory 和 Session History 不是验收记录。
 - 知识库文档、Prompt 和 Skill 不能证明当前执行成功。
