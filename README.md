@@ -2,6 +2,21 @@
 
 Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
+## 最短入口
+
+在 Kilo Code 或当前能够加载团队 Skills 的 Harness 中，直接发送：
+
+```text
+请使用 `chipltech-context` 路由并执行这个 Chipltech-Family Accelerator 工程任务。
+
+目标：<一句话描述>
+已有材料：<路径或“请自动发现”>
+```
+
+`chipltech-context` 会读取本仓库的 `CONTEXT.md`、`README.md` 和统一能力入口，选择正式 Prompt、业务 Contract 与 owning Skill。完全不知道该选哪个能力时，查看 [全部已支持能力 Quickstart](prompt-examples/all-supported-capabilities-quickstart.md)。
+
+Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置依赖；未选择 Hermes 时，直接使用当前 Kilo/Harness。
+
 ## 核心用途：AI 任务时的"项目大脑"
 
 用 Kilo / Claude Code 等 AI 工具做 DLC 相关任务时，直接让 AI 先读这个仓库的 `CONTEXT.md`，它就能拿到：
@@ -28,6 +43,9 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - **这是什么**：Chipltech-Family Accelerator 的工程知识底座，保存项目背景知识、术语体系、调试经验、精度定位报告、算子接入说明、测试框架指南、环境配置说明、真实问题复盘和 agent 上下文材料。
 - **这不是什么**：这不是 `skills.git`（agent 工作流和可执行方法论），也不是业务代码仓库（PyTorch DLC Backend、DLC_Custom_Kernel Repository、DLCSynapse 等）。
 - **与 skills.git 的关系**：`skills.git` 保存 agent skills、工作流和流程化能力；`chipltech-knowledge-base` 保存 DLC 项目背景知识。两者分工协作。
+- **知识库边界**：本仓库提供领域定义、已记录流程和历史 case evidence；仓库文字不能证明当前 Host、package、模型、DLC Runtime、transport 或 Real DLC Hardware 状态。
+- **Skills 边界**：Prompt/Contract 描述任务规则，owning Skill 负责可执行工作流、授权边界、停止语义和 Claim Boundary；Skill 被发现或加载只证明能力可用，不证明任务已经执行。
+- **Evidence 边界**：当前业务/代码 workspace 和 task-owned artifact 目录承载实际执行与 Evidence。结论应区分 `direct repository evidence`、`runtime observation`、`inference` 和 `missing evidence`。
 
 ## 适合谁读
 
@@ -54,23 +72,10 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - `prompt-examples/` 用来存放团队成员在日常工作中总结出的可直接复制使用的 prompt 模板，不放临时实验记录，不放一次性的聊天草稿。
 - 如果后续同事又产出了新的高频好用 prompt，也统一放到 `chipltech-knowledge-base/prompt-examples/` 目录下维护。
 - 这类文档的目标是“拿来即用”，所以优先保持结构清晰、占位符明确、少背景解释。
-- [prompt-examples/all-supported-capabilities-quickstart.md](prompt-examples/all-supported-capabilities-quickstart.md) 是全部 Prompt 示例的统一傻瓜式入口：按“我要做什么”查看当前已支持能力，复制最短调用，再由当前 Kilo 或其他能够加载团队 Skills 的 Harness 读取正式 Prompt、Contract 和 owning Skill。Hermes 是可选执行器，不是其他能力的前置依赖。
-- [prompt-examples/dlc-business-skill-examples-quickstart.md](prompt-examples/dlc-business-skill-examples-quickstart.md) 是业务套餐傻瓜版入口：只需说明目标和 evidence 路径，由大模型读取详细套餐并自动补全可发现信息。
-- [prompt-examples/dlc-business-skill-examples.md](prompt-examples/dlc-business-skill-examples.md) 是九个业务套餐的详细流程和执行规则。
-- `prompt-examples/dlc-env-setup-skill-usage.md` 用于直接调用 `dlc-env-setup` skill 做环境重建或修复。
-- `prompt-examples/dlc-env-setup-fresh-container-validation.md` 用于在全新容器中验证 `dlc-env-setup` 的 Kilo 暴露、调用方式和功能闭环。
-- [prompt-examples/bootstrap-git-from-configured-container.md](prompt-examples/bootstrap-git-from-configured-container.md) 用于从已验证容器安全提取 Git 配置和 SSH client key，为 Host 或其他容器补齐私有仓库 clone、fetch 与 push 能力。
-- [prompt-examples/host-daily-image-to-model-validation.md](prompt-examples/host-daily-image-to-model-validation.md) 用于从 Host 固定每日镜像、创建持久容器、补齐 Git/SSH 和 DLC Ecosystem 环境，再完成可恢复的分层模型功能验证。
-- [prompt-examples/new-model-validation-quickstart.md](prompt-examples/new-model-validation-quickstart.md) 是只需填写模型名称和目录的 runtime qualification 入口，不默认安装 skills 或构建 image。
-- [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) 是模型名称、本地目录和 target 的薄入口；先完成 ordinary daily-base 功能/性能 gate，再驱动独立 DLC Chip/TYD Chip image delivery。
-- [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) 用于每日空镜像先初始化 DLC Ecosystem，再对新模型做 vLLM-DLC / DLC Platform 适配分析的两阶段流程。
-- [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) 用于一个明确模型的 vLLM-DLC Model Adaptation stable skill 只读分析。
-- [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) 用于 exact upstream Main-to-Main Upgrade、恢复和全局影响分析。
-- [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) 用于固定 Prefill/Decode 拓扑、KV Cache Transfer Contract、分层验证和 evidence 边界。
-- [prompt-examples/hermes-chipltech-engineering-quickstart.md](prompt-examples/hermes-chipltech-engineering-quickstart.md) 用于可选地通过独立 Hermes profile 接入知识库、业务 Prompt 和稳定 Skills；未使用 Hermes 时可跳过。
-- [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) 用于 serving 部分执行后发生异步 launch failure、worker abort、EngineCore dead 或 HTTP 500 的生命周期切片、Graph/MTP 单变量定位和逐 rank kernel 证据采集。
-- [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) 用于固定 vLLM serving workload，从端到端、模型 layer、framework wrapper 和 DLC Platform 执行层逐级定位性能热点，并区分插桩证据与无插桩 benchmark。
-- [prompt-examples/hermes-modelzoo-batch-validation.md](prompt-examples/hermes-modelzoo-batch-validation.md) 用于 Hermes 执行单模型 DLC 功能验证，含三种调用方式和失败回退策略。
+- [全部已支持能力 Quickstart](prompt-examples/all-supported-capabilities-quickstart.md) 是统一能力入口：按目标复制最短调用，再由当前 Kilo 或其他合格 Harness 读取正式 Prompt、Contract 和 owning Skill。
+- [业务套餐 Quickstart](prompt-examples/dlc-business-skill-examples-quickstart.md) 提供常见 DLC Platform 任务的薄入口；详细执行规则见其链接的正式 Prompt 和 owning Skill。
+- [Hermes Chipltech Engineering Quickstart](prompt-examples/hermes-chipltech-engineering-quickstart.md) 仅用于明确选择 Hermes 时的可选 profile 接入与验收，不影响 Kilo 或其他合格 Harness 直接执行。
+- 其他 Prompt 不在 README 逐项维护，以统一能力入口为准。
 
 ## 快速入口
 
@@ -124,12 +129,13 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 ## Agent 使用方式
 
-在新 session 中处理 DLC 相关任务时，建议在 prompt 中固定要求：
+在新 session 中处理 Chipltech 工程任务时：
 
-1. 先读取 `chipltech-knowledge-base` 的 `CONTEXT.md` 和 `README.md`。
-2. 根据任务类型读取对应专题文档。
-3. 使用 `CONTEXT.md` 中的正式术语。
-4. 任务结束后，将可复用经验回写到对应专题或 case study。
+1. 先通过 `chipltech-context` 读取本仓库的 `CONTEXT.md` 和 `README.md`，采用正式术语与组件边界。
+2. 任务类型或 owner 不明确时，读取统一能力入口，选择链接的正式 Prompt、Contract 或 Runbook；不要只根据能力目录直接执行。
+3. 在当前 Harness 中实际加载最窄的 owning Skill，核对其 scope、授权要求、停止语义、完成条件和 Claim Boundary。
+4. 在实际业务/代码 workspace 中执行，并将 runtime Evidence 写入 task-owned artifact 目录；不要把知识库文字当成当前运行证据。
+5. 只有在任务 Evidence 和 Claim Boundary 已闭合、且用户明确授权知识库贡献时，才按问题域回写专题或 case study。
 
 ## 目录说明
 
@@ -154,7 +160,7 @@ chipltech-knowledge-base/
 
 ## 持续维护原则
 
-- **任务结束必须反哺知识库**：每个 session 产生的可复用经验应回写到对应专题或 case study。
+- **闭环经验应在授权后反哺知识库**：任务 Evidence 和 Claim Boundary 闭合后，通过单独授权的贡献流程，将可复用经验回写到对应专题或 case study。
 - **按问题域组织，不按模型组织**：模型名可以出现在文档标题、文件名或正文中，但不作为一级或二级目录边界。
 - **术语以 CONTEXT.md 为准**：所有文档引用统一术语，不重复定义。
 - **区分事实、经验和未验证假设**：避免把经验性判断当成硬性结论。
