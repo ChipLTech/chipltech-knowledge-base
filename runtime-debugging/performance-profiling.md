@@ -6,9 +6,21 @@
 - 定位 vLLM 推理中的调度、算子、数据搬运、硬件资源利用问题。
 - 做优化前后的性能对比。
 
-## 核心结论
+## 当前事实、目标架构与未验证范围
 
-DLC Profile 工具链以 Perfetto 为核心，在 runtime 内对 vLLM、PyTorch、runtime、driver 与 kernel 执行事件进行统一打点，并将硬件 counter 导出到 Perfetto counter track。用于将模型请求、框架调用、runtime 调度、kernel 执行和硬件 counter 放在同一条时间线上分析。
+当前静态源码和已有 artifact 可直接证明的是：DLCSynapse 能生成 Chrome Trace Event JSON，记录 complete event 的名称、逻辑 track、时间戳、持续时间和字符串参数。该格式可由 Perfetto 等 Chrome trace 工具读取，但这不等于当前产品已经闭合原生 Perfetto protobuf、request/rank/device 语义或硬件 counter。
+
+统一展示 vLLM、PyTorch、DLC Runtime、dlc-thunk、DLC Custom Kernel 和硬件 counter 是目标架构。未绑定 exact producer 与 artifact 的 request、phase、rank、device 和 counter scope 一律为 `not_verified`。
+
+Chrome trace 中的 `pid`/`tid` 在当前 producer 中可能编码 stream、thread 或 category track。validator 只称其为 trace track，不得据此推断 OS PID/TID、rank 或 device。
+
+### Trace Artifact Validator 最小合同
+
+- 只读消费实际存在的 trace，不调用模型或修改 trace。
+- 分开报告 JSON syntax、exact byte SHA-256 和各 localization scope。
+- `dlcProfilerStart/Stop` success 不是 trace 产生证据；必须有实际文件和匹配 digest。
+- 缺 request/rank/device producer 不破坏 trace syntax，只使相应 scope 为 `not_verified`。
+- diagnostic profile 不得升级为 formal benchmark。
 
 ## 工具定位
 
@@ -25,9 +37,9 @@ DLC Profile 不是单一算子的 microbenchmark 工具，而是**端到端性�
 - 同步等待
 - 互联 counter
 
-## 技术栈分层
+## 目标技术栈分层
 
-当前技术栈采用"框架 profile + runtime 内部打点 + driver/kernel trace + 硬件 counter track + Perfetto 可视化/离线分析"：
+目标技术栈采用"框架 profile + runtime 内部打点 + dlc-thunk/kernel trace + 硬件 counter track + Perfetto 可视化/离线分析"；当前 checkout 未证明每层均已接通：
 
 ```
 vLLM / PyTorch Profile  →  框架侧语义（request、batch、layer、operator）
@@ -41,9 +53,9 @@ Perfetto 分析层          →  UI timeline、Trace Processor、版本对比
 
 1. **选择 workload**：指定模型、输入输出长度、batch size、并发、精度、版本和硬件配置。
 2. **开启 profile 配置**：在 runtime 内启用各层打点。
-3. **运行模型或 benchmark**：生成统一 Perfetto trace。
-4. **在 Perfetto UI 中查看**：观察调用栈、queue 等待、kernel 空泡、同步点、数据搬运、硬件 counter。
-5. **通过 Trace Processor 离线分析**：统计热点算子、慢请求路径、counter 峰值区间。
+3. **运行模型或 benchmark**：仅在 owning workflow 与授权允许时采集；否则消费已有 trace artifact。
+4. **校验 trace**：先闭合 syntax、byte digest 与实际具备的 localization scope。
+5. **可视化或离线分析**：只解释已闭合的 trace-track/semantic scope；缺失 counter 保持 `not_verified`。
 
 ## 分层热点定位方法
 

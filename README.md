@@ -115,6 +115,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 - [vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) — 本地模型优先、ModelZoo 可选只读 reference、ordinary daily-base runtime qualification 和独立 DLC/TYD delivery 状态机。
 - [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) — 填写模型名称、本地目录和 target 的 runtime-first image delivery prompt。
 - [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](vllm-dlc/model-adaptation-and-main-to-main-decisions.md) — Model Adaptation 与 Main-to-Main Upgrade 的稳定决策、证据分类和当前只读边界。
+- [vllm-dlc/distributed-collective-qualification.md](vllm-dlc/distributed-collective-qualification.md) — supporting reference；区分 native DLC_CL、PyTorch ProcessGroup、vLLM communicator、模型 route 与 MoE/custom-kernel ABI，缺硬件不升级为通过。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) — 每日空镜像初始化后接新模型适配的两阶段 prompt。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) — Model Adaptation 可复用 prompt。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) — Main-to-Main Upgrade 可复用 prompt。
@@ -159,3 +160,14 @@ chipltech-knowledge-base/
 - **区分事实、经验和未验证假设**：避免把经验性判断当成硬性结论。
 - **敏感信息必须移除**：API key、密码、token、个人敏感信息不得写入。
 - **常用 prompt 示例要沉淀到 `prompt-examples/`**：如果某个 prompt 在实际工作中已经证明常用、好用、值得复用，就放到 `chipltech-knowledge-base/prompt-examples/`，不要只留在个人 plans 或聊天记录里。
+
+## 外部受限参考治理
+
+来源按以下等级管理：Chipltech-owned authoritative source、独立编写的 DLC-native specification、许可允许当前用途的 public/permissive external reference、external restricted reference，以及 unknown/unreviewed source。来源等级描述可用边界，不代表对内容质量或法律状态的推断。
+
+- External restricted reference 只可作为受控 review input，不得复制、翻译、机械改写或格式转换后写入知识文档、Prompt、模板、脚本、schema、Skill、agent instruction 或 bundled reference。
+- 知识库只保存独立编写的 DLC-native 结论和 specification。维护者应在 skills 仓库的 `config/restricted-reference-governance.json` 登记 source locator、revision 或 SHA-256、license metadata、允许和禁止用途、reviewer、review date 与 disposition。
+- 缺失或未解决的来源、许可、角色隔离或发布状态必须返回 `blocked_legal_boundary`；调查可以保留在内部 governance record 中，但不得继续形成受影响的实现或对外发布资产。
+- 内部 governance record 可以为审查而指明受限来源；对外发布内容不得包含受限表达或 bundled source material。外部固定性能收益不得转述，除非有独立 DLC evidence 和 publication approval。
+- 名称相似、一般工程词语，以及 `torch_npu`、`msprof`、`npugraph_ex`、`PA_NZ`、`AIC`、`AIV` 等命中只触发 review，不构成复制、侵权、许可或来源结论。判断优先使用 provenance、exact path/hash、license metadata、package role 和实际 distribution status。
+- 发布审查以实际 packaging/install manifest 为准。Governance ADR、source/license register、调查记录和 negative fixture 不是 execution asset；但一旦被实际安装或打包为 script、template、schema、Skill/agent instruction 或 bundled reference，就按该发布角色扫描。

@@ -54,6 +54,7 @@
 | DLC Runtime 报错、hang、worker 退出或进程残留 | 日志、命令、说明 | [业务套餐七](dlc-business-skill-examples-quickstart.md#套餐七dlc-runtime-报错hang-或进程残留) | `diagnosing-bugs` |
 | vLLM 部分 token 后异步 launch failure / HTTP 500 | 启动命令、固定请求、日志 | [异步 Launch Failure 定位](vllm-async-launch-failure-localization.md) | `diagnosing-bugs`，必要时 `model-adaptation` |
 | vLLM TTFT/TPOT/ITL/吞吐性能热点 | serve command、固定 workload、baseline | [性能热点分层定位](vllm-performance-hotspot-localization.md) | `diagnosing-bugs` |
+| 模型 distributed/MoE route 资格边界 | 模型/deployment identity、active route inventory | [Distributed Collective Qualification](../vllm-dlc/distributed-collective-qualification.md)（supporting reference，不是独立 capability entrypoint） | `model-adaptation` |
 | Prefill/Decode Separation 部署或诊断 | 模型名、绝对目录 | [Prefill/Decode Separation](vllm-dlc-prefill-decode-separation.md) | `pd-separation` |
 | 精确 upstream vLLM Main-to-Main Upgrade | 目标 full SHA、仓库/evidence | [Main-to-Main Upgrade](vllm-dlc-main-to-main-upgrade.md) | `main-to-main-upgrade` |
 | 固定 ModelZoo runner 做单模型验证 | 模型名、模型路径 | [Hermes ModelZoo 单模型验证](hermes-modelzoo-batch-validation.md) | 固定 runner；通用资格优先 `modelzoo-image-validation` |
