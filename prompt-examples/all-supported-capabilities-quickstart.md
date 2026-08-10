@@ -46,6 +46,7 @@
 | 重建或修复 DLC Ecosystem 工作站环境 | 模式、搜索根或现有材料 | [DLC Env Setup Skill 使用模板](dlc-env-setup-skill-usage.md) | `dlc-env-setup` |
 | 新容器缺仓库/CMake，需要先 bootstrap | 目标根、允许动作、版本策略 | [DLC Ecosystem 环境 Bootstrap](dlc-env-setup-environment-bootstrap.md) | `dlc-env-setup` 的显式授权扩展 |
 | 验证新容器是否正确安装和识别 `dlc-env-setup` | 容器/工作站 | [新容器 Skill 验收](dlc-env-setup-fresh-container-validation.md) | Kilo 集成验收，验证 `dlc-env-setup` |
+| 不改运行库，启动前发现 CRT/kernel/LLVM/Driver stack 不兼容 | immutable image、policy、目标设备 | [独立 Stack Preflight 与 Cold Completion](stack-preflight-and-cold-completion.md) | `dlc-env-setup`，委托 `dlc-hardware-observability` |
 | unsupported operator 或不知道第一失败点 | 日志/错误/运行材料 | [业务套餐二](dlc-business-skill-examples-quickstart.md#套餐二模型卡住或遇到-unsupported-operator) | `diagnosing-bugs` |
 | 输出、logits 或 token 不一致 | 日志/output/dump/compare | [业务套餐三](dlc-business-skill-examples-quickstart.md#套餐三输出或-token-不一致) | `diagnosing-bugs` |
 | Model-Site Dump 转 pytorch_test Framework 复现 | dump 或实验目录 | [业务套餐四](dlc-business-skill-examples-quickstart.md#套餐四把真实-dump-变成-pytorch_test-framework-复现) | `diagnosing-bugs` → `tdd` |

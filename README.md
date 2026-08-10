@@ -105,6 +105,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [debugging-workflows/common-debug-commands.md](debugging-workflows/common-debug-commands.md) — 常用调试命令速查。
 - [debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md](debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md) — PyTorch 2.5.0 wheel 与本地 `vllm` / `vllm-dlc` editable install 的 build preflight 清单。
 - [debugging-workflows/post-install-runtime-smoke.md](debugging-workflows/post-install-runtime-smoke.md) — 安装后的最小 runtime smoke 和失败回退路径。
+- [runtime-debugging/stack-preflight-and-cold-completion.md](runtime-debugging/stack-preflight-and-cold-completion.md) — 不修改运行库的 exact stack 静态身份门禁与 fresh-process cold first-compute 组合资格检查。
 - [case-studies/vllm-async-speculative-decode-launch-failure.md](case-studies/vllm-async-speculative-decode-launch-failure.md) — 从部分 token 后 HTTP 500 收敛到 async MTP 4-token Graph 执行窗口，并区分原 decode failure 与诊断配置引入的新 stall。
 - [prompt-examples/vllm-async-launch-failure-localization.md](prompt-examples/vllm-async-launch-failure-localization.md) — 可直接复用的异步 launch failure 定位 prompt。
 - [case-studies/vllm-attention-duplicate-kv-cache-update.md](case-studies/vllm-attention-duplicate-kv-cache-update.md) — 从 full-attention layer 收敛到跨层重复 KV cache update 的历史性能案例，并明确 source identity 与正式 benchmark 缺口。

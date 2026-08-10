@@ -10,8 +10,9 @@
 
 1. post-install smoke 必须在源码树外执行，否则 `import torch` 很容易被源码树污染。
 2. Package/import smoke 与 Real DLC Hardware execution smoke 是两个 checkpoint；前者通过不证明设备可以执行。
-3. Real DLC Hardware execution smoke 必须在 fresh process 中分层覆盖设备枚举、allocation、H2D、device operation、synchronize、D2H 和 correctness，并设置明确 timeout。
-4. 如果 smoke 失败或 hang，按最早失败层级记录边界，不要直接继续 patch 上层仓库或加载模型。
+3. 模型或exact-image启动前，先按[独立 Stack Preflight 与 Cold Completion Gate](../runtime-debugging/stack-preflight-and-cold-completion.md)验证immutable image、Driver/Runtime API、CRT、DLC Custom Kernel和LLVM exact identity；只有`approved_profile`才进入设备执行。
+4. Real DLC Hardware execution smoke 必须在 fresh process 中分层覆盖设备枚举、allocation、H2D、device operation、synchronize、D2H 和 correctness，并设置明确 timeout。
+5. 如果 smoke 失败或 hang，按最早失败层级记录边界，不要直接继续 patch 上层仓库或加载模型。
 
 ## 操作步骤
 
@@ -72,7 +73,7 @@ Plugin import 或 metadata 失败必须使 package checkpoint 失败，不能只
 
 ### 4. 运行 Fresh-Process Layered Execution Smoke
 
-仅在需要 Real DLC Hardware 执行或模型 serving 时运行。先用 `DLC_VISIBLE_DEVICES` 固定物理设备映射，再在 fresh process 中执行以下分层 probe，并用外层 `timeout` 限制总时长：
+仅在需要 Real DLC Hardware 执行或模型 serving 时运行。先取得static stack preflight的`approved_profile`结果，再用 `DLC_VISIBLE_DEVICES` 固定物理设备映射，在 fresh process 中执行以下分层 probe，并用外层 `timeout` 限制总时长。Static approval不替代本probe；revoked或unknown profile不得进入本步骤：
 
 ```python
 import torch

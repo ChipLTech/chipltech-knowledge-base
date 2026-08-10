@@ -15,6 +15,7 @@ Runtime 排障的核心原则：
 5. Package 可导入、设备可见、allocation 或 H2D 成功都不等于 DLC Runtime execution 健康。
 6. 每个恢复动作后必须用 fresh process 重跑最小失败 case；命令 exit 0 只证明动作被接受。
 7. DLC Runtime 部分 compatibility API 会在未执行操作或未写输出时返回 success；支持状态必须查阅 [DLC Runtime 与 DLCSynapse Core 版本化接口参考](dlc-runtime-api-reference.md)，不能只看返回码。
+8. 不修改运行库的启动前自发现使用[独立 Stack Preflight 与 Cold Completion Gate](stack-preflight-and-cold-completion.md)：先拒绝revoked/unknown exact stack，再运行fresh-process first-compute；两层结果不可互相替代。
 
 ## 组件区分
 

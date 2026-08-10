@@ -157,6 +157,10 @@
 **Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
 禁止使用：`alignment` 指未经强制回归验证的推测组合。
 
+**Static Stack Compatible**：exact immutable image 与 Host stack 的只读身份匹配通过的状态，绑定 Driver/Runtime API、四文件 CRT、DLC Custom Kernel library 和 LLVM 完整身份到一个显式批准或撤销的 policy profile。它只证明 artifact 身份，不代表 Real DLC Hardware execution。
+**Cold First-Compute Completion Ready**：在 fresh process 中完成 allocation、H2D、真实 device operation、synchronize、D2H 和 exact correctness 后得到的有界基础执行状态。它发现静态 policy 尚未认识的兼容性问题，但不能外推模型功能或 benchmark 稳定性。
+**Stack Preflight**：不修改运行库的独立启动前资格检查，由 Static Stack Compatible 与 Cold First-Compute Completion Ready 两个不可互相替代的 checkpoint 组成；任一失败即阻止模型加载或镜像发布。
+
 ## 高效术语速查表
 
 | 禁用叫法 | 应使用 |
