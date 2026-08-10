@@ -162,6 +162,8 @@ git submodule update --init --recursive
 6. **把 `vllm` 问题都当成 `vllm-dlc` 问题**：底层 PyTorch NumPy bridge 没修好时，上层问题通常只是连带症状。
 7. **把别人的 wheel 路径写进长期文档**：知识库只写规则，机器路径只作为一次性来源。
 8. **直接联网初始化 PyTorch 全部 submodule**：先从已有可用镜像复制 `third_party`，再运行 `git submodule update --init --recursive`；只有缓存不可用且网络下载已获允许时才下载缺失内容。
+9. **只核对 Git HEAD 就认定 toolchain identity**：LLVM source 已是最新不代表 clang binary 由该 source 构建；必须读取实际 compiler binary 自报 SHA 或其他可审计 binary identity，与 source HEAD 核对后再判断是否需要 clean rebuild。
+10. **更新运行仓库前不确认实际 editable source**：同一容器/机器可能有多套 checkout，editable metadata 版本不随源码更新；用 `direct_url.json`、`module.__file__` 和进程命令确认实际 import 的源码路径。
 
 ## 可选自动化入口
 
@@ -176,6 +178,7 @@ git submodule update --init --recursive
 - [post-install-runtime-smoke.md](../debugging-workflows/post-install-runtime-smoke.md)
 - [runtime-troubleshooting.md](runtime-troubleshooting.md)
 - [environment-setup-and-update.md](environment-setup-and-update.md)
+- [case-studies/host-api22-fullstack-main-to-main-update.md](../case-studies/host-api22-fullstack-main-to-main-update.md)
 - [common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
 - [CONTEXT.md](../CONTEXT.md)
 

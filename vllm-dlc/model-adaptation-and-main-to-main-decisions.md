@@ -144,6 +144,7 @@ Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry A
 - [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 - [case-studies/qwen3-32b-dlc-block256-diagnosis.md](../case-studies/qwen3-32b-dlc-block256-diagnosis.md)
 - [case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md](../case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md)
+- [case-studies/host-api22-fullstack-main-to-main-update.md](../case-studies/host-api22-fullstack-main-to-main-update.md)
 
 ## Qwen3-32B Block-256 Campaign 经验 (2026-07-28)
 

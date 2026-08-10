@@ -10,6 +10,8 @@
 
 DLC Ecosystem 仓库存在严格的版本依赖链，更新顺序和编译方式必须一致，否则会出现 import 失败、undefined symbol、peek 异常等版本不匹配错误。
 
+更新不是“按记忆执行几条命令”。在更新运行中的仓库前，先确认实际 import 的 editable source，再核对 binary identity，再决定编译顺序；否则容易产生“源码已更新但运行仍用旧 checkout”或“source 已新但 binary 仍旧”的假象。
+
 ## 构建依赖链
 
 ```
@@ -33,6 +35,8 @@ git clone /path/to/llvm
 cd llvm
 ./build.sh
 ```
+
+**只检查 Git HEAD 不足以证明 toolchain identity。** LLVM source 已是最新 main 不代表实际 clang 由该 source 构建。必须读取实际 compiler binary 自报 SHA（例如 `clang` 报告的构建来源 SHA）或其他可审计 binary identity，并确认其与 source HEAD 一致。否则会出现 source 中已存在某 option、但 binary 仍报 `Unknown command line argument` 的不配对问题。clean rebuild 后重新核对 binary 自报 SHA。
 
 ### dlc-thunk
 
@@ -113,6 +117,27 @@ cd /work/vllm
 VLLM_TARGET_DEVICE=dlc pip install -e .
 ```
 
+## 更新前确认实际 editable source
+
+同一台机器或容器内可能同时存在多套 checkout（例如 `/work/*` 与 `/work/minimax-src/*`）。更新运行中的仓库前，先通过以下方式确认实际 import 的 editable source，避免更新错误仓库后产生“源码已更新但运行仍用旧 checkout”的假象：
+
+- 检查安装元数据（如 `direct_url.json`）。
+- 检查 `module.__file__` 指向的源码路径。
+- 检查实际进程/服务命令使用的路径。
+
+editable package 的 metadata version 字符串来自安装时生成，**不随源码 checkout 更新而变**。判定运行源码时应同时记录 editable `direct_url.json` 和 source Git SHA，不能只看 package version 字符串。
+
+## 容器内无 SSH identity 时的 fetch 中转
+
+容器内 remote 需要 SSH 但容器没有可用 identity 时，直接 fetch 会报 `Permission denied (publickey)`。若宿主机具备已批准的私有仓库读取能力，可用宿主机只读 mirror + Git bundle 中转，避免复制或输出私钥：
+
+1. 宿主机验证 `git ls-remote`。
+2. 宿主机创建 bare mirror。
+3. 从 mirror 生成只包含目标 refs 的 Git bundle。
+4. 容器仓库从挂载的 bundle fetch。
+
+该方法不把 SSH 私钥复制进容器，也不在日志或命令参数中暴露凭据。
+
 ## 版本验证
 
 ```bash
@@ -145,6 +170,9 @@ VLLM_TARGET_DEVICE=dlc pip install -e .
 | `libopenblas.so` 缺失 | 缺少 openblas | `apt install libopenblas-dev` |
 | `numpy/arrayobject.h not found` | numpy include path 未设置 | 添加到 CPLUS_INCLUDE_PATH |
 | PyTorch submodule 初始化耗时过长 | 未复用已有镜像中的 `third_party` | 先复制镜像缓存，再执行 recursive submodule update |
+| source 已含某 option 但编译报 Unknown argument | Git HEAD 新但实际 binary 仍由旧 SHA 构建 | clean rebuild LLVM，并核对 clang 自报 SHA 与 source HEAD |
+| 更新后运行仍用旧 checkout | 容器存在多套 checkout，editable metadata 版本不随源码变 | 用 `direct_url.json` / `module.__file__` / 进程命令确认实际 editable source |
+| 容器内 fetch 报 Permission denied | 容器无 SSH identity | 宿主机只读 mirror + Git bundle 中转 |
 
 ## 多组件版本确认清单
 
@@ -162,6 +190,8 @@ VLLM_TARGET_DEVICE=dlc pip install -e .
 
 - [debugging-workflows/common-debug-commands.md](../debugging-workflows/common-debug-commands.md)
 - [runtime-debugging/runtime-troubleshooting.md](runtime-troubleshooting.md)
+- [runtime-debugging/dlc-workstation-env-rebuild.md](dlc-workstation-env-rebuild.md)
+- [case-studies/host-api22-fullstack-main-to-main-update.md](../case-studies/host-api22-fullstack-main-to-main-update.md)
 
 ## 来源
 
