@@ -44,6 +44,7 @@
 | 模型资格通过后交付 DLC/TYD Images | 模型名、绝对目录 | [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md) | `modelzoo-image-validation` |
 | 按 Host Daily Image Runbook 做完整环境和模型验证 | 模型名、绝对目录 | [Host Daily Image 到模型验证](host-daily-image-to-model-validation.md) | Runbook 编排多个 Skills |
 | 重建或修复 DLC Ecosystem 工作站环境 | 模式、搜索根或现有材料 | [DLC Env Setup Skill 使用模板](dlc-env-setup-skill-usage.md) | `dlc-env-setup` |
+| 把生产 PyTorch DLC Backend 迁移为 PrivateUse1 插件 | 三方源码根、迁移范围、授权 | [PyTorch DLC Backend 插件化迁移](pytorch-dlc-plugin-migration-prompts.md) | `pytorch-dlc-plugin-migration` |
 | 新容器缺仓库/CMake，需要先 bootstrap | 目标根、允许动作、版本策略 | [DLC Ecosystem 环境 Bootstrap](dlc-env-setup-environment-bootstrap.md) | `dlc-env-setup` 的显式授权扩展 |
 | 验证新容器是否正确安装和识别 `dlc-env-setup` | 容器/工作站 | [新容器 Skill 验收](dlc-env-setup-fresh-container-validation.md) | Kilo 集成验收，验证 `dlc-env-setup` |
 | 不改运行库，启动前发现 CRT/kernel/LLVM/Driver stack 不兼容 | immutable image、policy、目标设备 | [独立 Stack Preflight 与 Cold Completion](stack-preflight-and-cold-completion.md) | `dlc-env-setup`，委托 `dlc-hardware-observability` |

@@ -11,6 +11,8 @@
 - 已经独立完成资格验证的 `lyp_full` 或 exact-checkout `dlccl_direct`；
 - 普通功能验证，以及只采集指定请求的 Prefill/Decode profiling。
 
+本文保存稳定的运行合同、证据阶梯、profiling isolation 和故障止损经验。实际命令必须由 `pd-separation` Skill 根据 exact checkout 的 source、各组件 `--help` 和实际 routes 生成；本文中的命令形状不是已验证 CLI，也不授权执行。
+
 本文不提供一组“到处都能直接运行”的固定 IP、端口或 TP 值。所有
 `<PLACEHOLDER>` 都必须在执行前替换，并把替换后的版本作为本次运行合同保存。
 底层原理、transport 差异和 claim boundary 见
@@ -61,6 +63,22 @@ lifecycle_cleanup
 | DLC Runtime/driver/image | `<RUNTIME_DRIVER_IMAGE_IDENTITY>` |
 | Transport | `<tcp / lyp_full / dlccl_direct>` |
 | 功能断言 | `<EXPECTED_OUTPUT_OR_COMPARISON_CONTRACT>` |
+
+### 2.1.1 授权与恢复
+
+| 动作 | 授权状态/范围 |
+|---|---|
+| Query-only network probe | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Service bind / 端口暴露 | `<BIND_ADDRESS_PORT_NAMESPACE_ALLOWED_PEERS_FIREWALL / NOT_AUTHORIZED>` |
+| Install / build | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Device execution | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Artifact 写入 | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| task-owned graceful stop / KILL | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Privileged Host integration | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Host maintenance | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Site Recovery Contract | `<PATH_OR_NOT_APPLICABLE_WITH_REASON>` |
+
+填写合同不等于获得授权。Transport Qualification Gate、role launch、profiling 和 cleanup 只能在对应动作已授权且 deployment/cleanup baseline 已封存后执行。只有动作可能改变 Host 状态或影响既有 workload 时，才必须先闭合 Site Recovery Contract；其他运行应明确记录 `NOT_APPLICABLE` 及理由。
 
 不要只记录 branch 名、容器名或 `pip show` 版本。editable install、容器内 source 和
 实际 worker import path 都要能够对应到 exact identity。
@@ -191,8 +209,7 @@ python3 -m pip show vllm vllm-dlc mooncake-transfer-engine 2>/dev/null
 
 ## 5. 生成角色启动命令
 
-以下是命令骨架。先在 staging 文档中替换全部占位符，再执行替换后的版本；不得直接把
-尖括号模板粘贴进 shell。
+以下只描述命令形状。先保存 exact source identity、launcher/proxy `--help` 和 route evidence，由 `pd-separation` Skill 删除不受支持的参数并生成 staging 命令。占位符替换完成仍不代表命令已验证或已获执行授权。
 
 ### 5.1 Prefill role：对每个 P 实例执行
 
@@ -201,11 +218,12 @@ export PROFILE_RUN_DIR=<P_i_PROFILE_DIR>
 export MODEL=<MODEL_PATH>
 export PYTHONPATH=<MOONCAKE_AND_VLLM_SOURCE_PATHS>
 
-KV_TRANSFER_CONFIG='{"kv_connector":"MooncakeDLCConnector","kv_role":"kv_producer","kv_connector_module_path":"mooncake.mooncake_connector_dlc_v1"}'
+KV_TRANSFER_CONFIG='<DISCOVERED_PRODUCER_CONNECTOR_JSON>'
 
-python3 -m mooncake.pd_launcher \
+python3 -m <DISCOVERED_PD_LAUNCHER_MODULE> \
   --visible-devices <P_i_VISIBLE_DEVICES> \
   --mooncake-protocol <TRANSPORT> \
+  <VALIDATED_TRANSPORT_SPECIFIC_LAUNCHER_ARGS> \
   --side-channel-port <P_i_SIDE_BASE> \
   -- \
   --host 0.0.0.0 \
@@ -218,10 +236,9 @@ python3 -m mooncake.pd_launcher \
   --max-model-len <MAX_MODEL_LEN> \
   --max-num-batched-tokens <MAX_BATCHED_TOKENS> \
   --gpu-memory-utilization <MEMORY_UTILIZATION> \
-  --trust-remote-code \
   --enable-prefix-caching \
   --kv-transfer-config "$KV_TRANSFER_CONFIG" \
-  <OTHER_VALIDATED_P_ARGS>
+  <OTHER_VALIDATED_P_ARGS_INCLUDING_APPROVED_REVISION_PINNED_REMOTE_CODE_IF_REQUIRED>
 ```
 
 ### 5.2 Decode role：对每个 D 实例执行
@@ -231,11 +248,12 @@ export PROFILE_RUN_DIR=<D_j_PROFILE_DIR>
 export MODEL=<MODEL_PATH>
 export PYTHONPATH=<MOONCAKE_AND_VLLM_SOURCE_PATHS>
 
-KV_TRANSFER_CONFIG='{"kv_connector":"MooncakeDLCConnector","kv_role":"kv_consumer","kv_connector_module_path":"mooncake.mooncake_connector_dlc_v1"}'
+KV_TRANSFER_CONFIG='<DISCOVERED_CONSUMER_CONNECTOR_JSON>'
 
-python3 -m mooncake.pd_launcher \
+python3 -m <DISCOVERED_PD_LAUNCHER_MODULE> \
   --visible-devices <D_j_VISIBLE_DEVICES> \
   --mooncake-protocol <TRANSPORT> \
+  <VALIDATED_TRANSPORT_SPECIFIC_LAUNCHER_ARGS> \
   --side-channel-port <D_j_SIDE_BASE> \
   -- \
   --host 0.0.0.0 \
@@ -248,20 +266,19 @@ python3 -m mooncake.pd_launcher \
   --max-model-len <MAX_MODEL_LEN> \
   --max-num-batched-tokens <MAX_BATCHED_TOKENS> \
   --gpu-memory-utilization <MEMORY_UTILIZATION> \
-  --trust-remote-code \
   --enable-prefix-caching \
   --kv-transfer-config "$KV_TRANSFER_CONFIG" \
-  <OTHER_VALIDATED_D_ARGS>
+  <OTHER_VALIDATED_D_ARGS_INCLUDING_APPROVED_REVISION_PINNED_REMOTE_CODE_IF_REQUIRED>
 ```
 
-`pd_launcher` 的参数必须出现在第一个 `--` 前，vLLM server 参数放在 `--` 后。
+若 exact launcher parser 使用 `--` 分隔自身参数与 server 参数，则按捕获的 `--help` 放置；不把该分隔规则外推到其他 launcher。
 设备可见性、protocol、side-channel 和 store 环境必须在 import vLLM 和 worker spawn 前
 完成，不能等 worker 启动后再修改。
 
 ### 5.3 Proxy：注册 X 个 P 和 Y 个 D
 
 ```bash
-python3 -m mooncake.vllm_v1_proxy_server \
+python3 -m <DISCOVERED_PROXY_MODULE> \
   --host 0.0.0.0 \
   --port <PROXY_PORT> \
   --prefiller-hosts <P0_HOST> <P1_HOST> <...> \
@@ -274,6 +291,8 @@ python3 -m mooncake.vllm_v1_proxy_server \
 
 host 列表与 port 列表必须按索引一一对应。某个实例不可用时应从本次 Proxy 配置中
 移除，而不是保留死节点并依赖重试。修改池成员后重启 Proxy，保存新的 server epoch。
+
+`lyp_full` 的 transport-specific 参数必须包含 exact parser 所要求的 store host/base，并保证 P/D 与全部 rank-derived ports 一致。普通 TCP 不应继承 LYP store 参数。`--trust-remote-code` 仅在模型来源已批准且 revision 固定时作为显式可选参数加入。绑定 `0.0.0.0` 的未认证 API 只能位于可信网络或 source-restricted firewall 后；advertised peer address 必须是可路由地址。
 
 ## 6. 启动顺序
 
@@ -413,9 +432,9 @@ measured = COMMON_PREFIX + SUFFIX_B
 ### 8.4 Profiling 控制模板
 
 ```bash
-# 每个 selected role 的 vLLM API
-curl -f -X POST http://<SELECTED_P_API>/start_profile
-curl -f -X POST http://<SELECTED_D_API>/start_profile
+# 只有 exact route evidence 确认控制接口后才调用
+curl -f -X POST http://<SELECTED_P_API>/<DISCOVERED_START_PROFILE_ROUTE>
+curl -f -X POST http://<SELECTED_D_API>/<DISCOVERED_START_PROFILE_ROUTE>
 
 # 分别在 P/D 文件所在 namespace 记录 ANSI 起点
 python3 <ANSI_WINDOW_TOOL> start <P_PROFILE_DIR> --label <REQUEST_LABEL> --expected-ranks <P_TP>
@@ -426,8 +445,8 @@ python3 <ANSI_WINDOW_TOOL> stop <P_PROFILE_DIR> --label <REQUEST_LABEL> --expect
 python3 <ANSI_WINDOW_TOOL> stop <D_PROFILE_DIR> --label <REQUEST_LABEL> --expected-ranks <D_TP>
 
 # 最后停止 framework profiler
-curl -f -X POST http://<SELECTED_P_API>/stop_profile
-curl -f -X POST http://<SELECTED_D_API>/stop_profile
+curl -f -X POST http://<SELECTED_P_API>/<DISCOVERED_STOP_PROFILE_ROUTE>
+curl -f -X POST http://<SELECTED_D_API>/<DISCOVERED_STOP_PROFILE_ROUTE>
 ```
 
 如果 ANSI 文件只存在容器内，上述工具也必须在同一容器 namespace 执行，或先按保持

@@ -1,4 +1,11 @@
-# PyTorch DLC Backend 插件化迁移 prompt
+---
+prompt_schema: pytorch-dlc-plugin-migration/v1
+skill_identity: pytorch-dlc-plugin-migration
+discovery_policy: query_only_then_contract_proposal
+hardware_evidence: not_verified
+---
+
+# PyTorch DLC Backend 插件化迁移 Prompt
 
 面向“把已经投入生产的 PyTorch DLC Backend 迁移为标准 PyTorch 可加载插件”的日常开发任务。下面两个 prompt 分别覆盖单个迁移切片和跨阶段持续推进；替换 `<>` 中的参数后即可直接使用。
 
@@ -11,7 +18,7 @@
 
 ## 使用前提
 
-开始前应明确以下三个权威来源：
+开始前应明确以下三个权威来源，并使用 `pytorch-dlc-plugin-migration` Skill 执行。本文是可复用的任务入口，不替代 Skill 的授权、停止语义、验证状态和 Claim Boundary。当前 Harness 无法加载该 Skill，且 `<SKILLS_ROOT>/skills/engineering/pytorch-dlc-plugin-migration/SKILL.md` 也不可读时，返回 `blocked_missing_contract`，不要按本文直接执行。
 
 1. **生产 PyTorch DLC Backend**：硬件语义、DLC Kernel Launch Protocol、kernel name、参数顺序、dtype/layout 和错误行为的权威来源。
 2. **标准 PyTorch**：dispatcher、PrivateUse1、codegen、AOTI 和公开 Python API 契约的权威来源。
@@ -32,8 +39,8 @@
 请把生产 PyTorch DLC Backend 中已经投入使用的 <组件或能力> 迁移到标准 PyTorch 可加载的 PrivateUse1 插件。
 
 先读取：
-- /work/chipltech-knowledge-base/CONTEXT.md
-- /work/chipltech-knowledge-base/README.md
+- <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
+- <KNOWLEDGE_BASE_ROOT>/README.md
 - <迁移计划文档>
 - <当前进度文档>
 
@@ -45,6 +52,7 @@
 【允许修改的文件】<路径或目录>
 【禁止修改的文件】<路径或目录>
 【测试策略】<只做编译门禁 / 最小硬件 smoke / 批量行为测试后移>
+【已授权动作】<只读 / workspace 修改 / build / install / device execution / artifact 写入，逐项列出>
 【是否允许 commit/push】<均不允许 / 允许 commit / 允许 commit 和 push>
 
 请按下面顺序执行：
@@ -64,7 +72,8 @@
    - KernelDesc 接口适配。
    - YAML/codegen、include、namespace、visibility 和构建 source list。
 4. 保持生产语义不变：
-   - 不改 kernel name、参数顺序和 registration 逻辑。
+   - 不改 public operator semantics、kernel name、KernelDesc 参数顺序和三层 ABI。
+   - 用标准 PrivateUse1 插件注册替换内建 DLC registration；注册机制可以改变，算子选择和错误语义不能漂移。
    - 不改 dtype/layout、contiguous、rank 和错误边界。
    - 不加入 CPU computation fallback，也不吞掉 unsupported 或异步错误。
 5. 先关闭构建链：
@@ -79,6 +88,7 @@
 - 搬运内容和插件化改动边界。
 - 实际执行的编译、链接或最小 smoke 结果。
 - 明确的已完成项、显式限制和后移测试。
+- 每项结论的 evidence class、exact source/artifact identity、artifact path 和 Claim Boundary。
 - 如果获准提交：commit hash 和 push 结果。
 ```
 
@@ -97,8 +107,8 @@
 请先审计 <当前阶段> 的真实完成度，再用 multi-agent 推进 <下一阶段>。不要重复已完成工作，也不要因为窄 smoke 通过就宣布阶段完成。
 
 先读取：
-- /work/chipltech-knowledge-base/CONTEXT.md
-- /work/chipltech-knowledge-base/README.md
+- <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
+- <KNOWLEDGE_BASE_ROOT>/README.md
 - <权威计划文档>
 - <当前进度或日报>
 - 最近相关提交和工作树状态
@@ -111,12 +121,13 @@
 【下一阶段】<例如 P2 distributed/compiler/profiler>
 【允许后移的测试】<批量算子、长训练、多机等>
 【必须保留的门禁】<full compile、wheel import、最小硬件 smoke 等>
+【已授权动作】<只读 / workspace 修改 / build / install / device execution / artifact 写入，逐项列出>
 【是否允许 commit/push】<均不允许 / 允许 commit / 允许 commit 和 push>
 
 ### 先做完成度审计
 
 1. 从计划中列出每个交付物和退出条件。
-2. 为每一项寻找直接证据：源码、source list、生成物、ELF/wheel、命令输出或硬件结果。
+2. 为每一项寻找直接证据：源码、source list、生成物、ELF/wheel、命令输出或硬件结果。每份证据绑定 repository root、full SHA、dirty state、构建配置、命令、时间、artifact hash，以及适用的 package/device/environment identity。
 3. 状态只使用：
    - 已由直接证据证明完成。
    - 实现完成，行为测试后移。
@@ -158,6 +169,7 @@
 - multi-agent 文件所有权、验收和状态表。
 - 本轮完成的纵向切片及验证结果。
 - 后移测试账本和下一步顺序。
+- 每项结论的 evidence class、exact source/artifact identity、artifact path 和 Claim Boundary。
 - 如果获准提交：commit hash 和 push 结果。
 ```
 
@@ -179,7 +191,8 @@
 
 ## 相关资料
 
-- [DLC 业务 skill 使用示例](实际业务skill使用示例.md)
+- [DLC Platform 业务 Skill 使用示例](dlc-business-skill-examples.md)
 - [Chipltech-Family Accelerator 术语和规则](../CONTEXT.md)
 - [enabled_kernels Dispatch 与 CPU Fallback](../operator-dispatch/enabled-kernels-dispatch.md)
 - [Runtime 排障指南](../runtime-debugging/runtime-troubleshooting.md)
+- 外部 workflow：`skills.git` 中的 `skills/engineering/pytorch-dlc-plugin-migration/SKILL.md`，需通过当前 Harness 加载或从 `<SKILLS_ROOT>` 读取。
