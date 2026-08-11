@@ -117,6 +117,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 ### vLLM-DLC workflow
 
 - [vllm-dlc/prefill-decode-separation.md](vllm-dlc/prefill-decode-separation.md) — Prefill/Decode Separation 的拓扑、MooncakeDLCConnector、KV Cache transfer、验证阶梯和 claim boundaries。
+- [vllm-dlc/prefill-decode-separation-practical-guide.md](vllm-dlc/prefill-decode-separation-practical-guide.md) — 可填写的 X-P / Y-D 通用实操配置指南，覆盖端口矩阵、启动顺序、请求关联、第二条请求 profiling、验收和止损。
 - [prompt-examples/vllm-dlc-prefill-decode-separation.md](prompt-examples/vllm-dlc-prefill-decode-separation.md) — 配合已安装的 `pd-separation` skill 或 skills checkout，可直接填写并执行 PD 分离部署或诊断的 prompt。
 - [case-studies/vllm-dlc-pd-transport-and-lyp-recovery.md](case-studies/vllm-dlc-pd-transport-and-lyp-recovery.md) — Transport Qualification Gate、LYP group 修复、direct DLCCL 和 Site Recovery Contract 的真实复盘。
 - [vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) — 本地模型优先、ModelZoo 可选只读 reference、ordinary daily-base runtime qualification 和独立 DLC/TYD delivery 状态机。
