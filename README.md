@@ -111,6 +111,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [case-studies/vllm-attention-duplicate-kv-cache-update.md](case-studies/vllm-attention-duplicate-kv-cache-update.md) — 从 full-attention layer 收敛到跨层重复 KV cache update 的历史性能案例，并明确 source identity 与正式 benchmark 缺口。
 - [case-studies/vllm-hybrid-kv-cache-strided-output.md](case-studies/vllm-hybrid-kv-cache-strided-output.md) — 从单次 `reshape_and_cache` 内的 copy/slice 事件收敛到 hybrid Attention/Mamba non-contiguous destination view 与 output adaptation，并区分历史观察、机制推断和候选 strided-output 设计。
 - [case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md](case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md) — 从 MiniMax main 三仓交付提炼 Public Operator Schema、KernelDesc Descriptor ABI、冻结 DLC Custom Kernel Entry ABI、跨仓 owner 和 exact-artifact evidence 边界。
+- [case-studies/qknorm-topology-aware-allreduce-selection.md](case-studies/qknorm-topology-aware-allreduce-selection.md) — 从 QKNorm 三仓闭环提炼 communicator-owned topology/payload selection、Verified Collective Fallback、稳定 strategy ABI 和边界测试方法。
 - [case-studies/host-api22-fullstack-main-to-main-update.md](case-studies/host-api22-fullstack-main-to-main-update.md) — Host API 21→22 全栈主线更新 + TP4/EP 验证，提炼 binary identity、editable source 确认、Git bundle 中转与清理等可复用经验。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) — 可直接复用的 vLLM 性能热点分层定位 prompt。
 

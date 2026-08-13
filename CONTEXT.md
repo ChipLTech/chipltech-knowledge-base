@@ -92,6 +92,10 @@
 **DLCCL**：类 NCCL 的 DLC 集合通信库，用于 AllReduce、Broadcast、Reduce、AllGather、ReduceScatter 等多卡操作。
 禁止使用：`NCCL` 指 DLC 集合通信时。
 
+**Collective Selection Contract**：由已初始化 communicator 的实际 LYP topology、payload、dtype/layout、rank/root metadata 和候选实现能力共同决定 collective strategy 的 launch 前 contract。framework 和 DLC Custom Kernel 消费其稳定 strategy/metadata，不按 world size 重建 topology 或 lookup table。
+
+**Verified Collective Fallback**：首选 collective 实现不满足 payload、alignment、root 或其他能力前提时，对候选 fallback 的 graph、channel、rank order、rank range、唯一性和 metadata 重新完成验证后才能下发的降级路径。候选标记不等于验证通过；无可验证实现时 fail closed。
+
 **DLC_CL**：PyTorch 等 DLC Ecosystem 组件的支持库。
 禁止使用：`OpenCL`（除非明确讨论 OpenCL）。
 
@@ -197,6 +201,7 @@
 - **Prefill/Decode Separation** 要求 **Prefill Worker** 与 **Decode Worker** 的 model、tokenizer、cache layout、connector 和 request correlation identity 满足同一个 **KV Cache Transfer Contract**。
 - **Transport Qualification Gate** 在加载双 role 模型前验证实际 data plane；**Site Recovery Contract** 约束会改变 Host 状态的 LYP/driver/firmware/reboot 操作及其收尾。
 - **SMI Observation Envelope** 为模型验证、镜像交付、PD 分离、环境修复和 runtime debug 提供统一的 query-only device/process/HBM evidence seam。
+- **Collective Selection Contract** 在 communicator 侧拥有 topology/payload-aware selection；**Verified Collective Fallback** 在 launch 前消化正常能力边界，DLC Custom Kernel 只按稳定 strategy dispatch 并防御 descriptor ABI 损坏。
 
 ## 核心链路
 
