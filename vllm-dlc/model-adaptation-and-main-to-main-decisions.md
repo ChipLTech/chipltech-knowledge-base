@@ -66,6 +66,14 @@ shared_contract: vllm-dlc-contract/v1
 
 每个变更面至少记录 repository full SHA、dirty state、source owner、consumer owner、change kind、patch/diff identity、build artifact identity、验证 owner 和未验证范围。PR 按仓库责任和单一主要目的拆分，不按交付 patch 文件数量机械拆分。
 
+### Tested Revision 与 Publication Candidate
+
+Tested Revision 是实际产生 build/runtime evidence 的 checkout；Publication Candidate 是从当前目标 main 的隔离 clean worktree 构造的交付 revision。二者必须分别记录 full SHA、base、dirty state、scoped diff/tree 和 artifact/validation identity。验证 checkout 可以保留用于调查的 merge history 或无关现场文件，Publication Candidate 只能包含批准 scope，不能通过原地 squash 破坏 primary evidence。
+
+Patch Equivalence 证明声明 scope 的净差异关系，不自动转移 acceptance。stable patch-id 是 supporting evidence；还要核对完整 scoped diff/tree、排除无关路径，并在 base 变化后重跑受影响 contract/source 回归。若依赖解析、ABI、toolchain、native stack 或 build graph 可能变化，则重新 build 和执行相应 runtime gates。
+
+远端并发推进是 publication identity 变化，不是可忽略的 push race。旧 base 或 PR tip 的 exact lease 应阻止发布；随后基于新 main 重建 candidate、更新 identity 并重跑受影响门禁。改写现有远端 PR history 需要独立显式授权，只允许 exact expected old SHA 的 `--force-with-lease`；无 lease force push 不属于批准路径。read-only/no-finalize Skill 只报告这些门禁，不创建 worktree、commit 或 push。
+
 ### Public Schema、Descriptor 与 Kernel Entry
 
 Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry ABI 的正式定义见 [CONTEXT.md](../CONTEXT.md)。三层必须分别核验，并与 exact source、adapter 和 binary identity 绑定。
@@ -101,6 +109,7 @@ Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry A
 - **事实 / Fact**：manifest impact 当前仅为 future-change report。模型专属工作仅通过 Ticket 03 Model Adaptation child seam 单向委派和回收 sealed handoff。
 - **事实 / Fact**：DeepSeek TP=2 与 Llama TP=1 的 exact Ticket 06 v12 assignments 已完成 operational regression；该结果仍为 `operational_only` 且 `acceptance_eligible: false`。
 - **事实 / Fact**：stable skill 不修改、commit 或 finalize，alignment outcome 保持 unchanged。
+- **事实 / Fact**：freeze report 必须记录 Tested Revision；提出 publication 时再单独记录 Publication Candidate、base、Patch Equivalence、受影响回归、remote lease 和 publication authorization。纯 read-only impact analysis 不虚构 candidate，这些门禁本身也不授权 commit 或 push。
 
 ## 当前未验证项
 

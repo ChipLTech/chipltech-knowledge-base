@@ -48,6 +48,20 @@ Public Operator Schema、KernelDesc Descriptor ABI 与 DLC Custom Kernel Entry A
 
 停止后台 wrapper 后，容器内 `vllm serve`、EngineCore 和 TP/EP workers 曾继续运行。清理必须同时检查 HTTP endpoint、`docker top`、EngineCore、TP/EP worker 与端口监听。
 
+### 7. 验证 checkout 与发布 candidate 是两种 identity
+
+模型构建和运行验证使用保留现场的 PyTorch DLC Backend 与 vLLM-DLC merge checkout。领导随后要求每个 PR 相对最新 main 只保留一个 commit；这不是把验证 checkout 原地 squash，而是从各仓最新 main 创建隔离 clean worktree，只应用批准的 PR 净差异，并排除验证现场中的无关文件。
+
+历史闭环同时记录：
+
+- Tested Revision 的 full SHA、dirty/untracked state 和实际 build/runtime artifact。
+- Publication Candidate 的 exact base SHA、单提交 SHA、限定路径净差异和 stable patch-id。
+- squash/rebase 前后的 stable patch-id 相等，作为 Patch Equivalence supporting evidence。
+- vLLM-DLC main 并发推进后，旧 expected SHA 的 lease 阻止了推送；candidate 随后基于新 main 重建并重跑回归。
+- 用户明确授权后才使用带 exact expected old SHA 的 `--force-with-lease`，推送后重新核对远端 commit count 和 PR 状态。
+
+Patch Equivalence 只说明声明 scope 的净差异保持。base 变化可能改变组合行为，因此 patch-id 不转移完整 runtime acceptance；至少要重新执行受影响 source/contract 回归，若 artifact 或 runtime dependency graph 变化则重新 build 和运行对应门禁。
+
 ## 最小边界与根因
 
 - **LLVM 构建失败**：根因是 source 与 binary 不配对，不是 source ref 落后；最小边界在 compiler binary identity。
@@ -71,12 +85,15 @@ Public Operator Schema、KernelDesc Descriptor ABI 与 DLC Custom Kernel Entry A
 4. 主线已吸收旧 PR 功能时，用 merge 而非 rebase，逐 conflict 追溯意图，主线替代实现优先，只保留仍缺失且必需的差异。
 5. 后台 wrapper 停止不保证容器内子进程退出；清理需同时检查 endpoint、`docker top`、EngineCore、worker 与端口。
 6. 每次底层 artifact 变化后，重新执行 fresh-process runtime smoke 与模型验证，不继承旧 wheel/binary 的运行结论。
+7. 保留验证现场并在隔离 worktree 构造 Publication Candidate；记录 Tested Revision、candidate base/commit、scoped diff/tree 和 Patch Equivalence，不用单提交数量替代验证身份。
+8. 远端 main 或 PR branch tip 变化会使 publication lease 失效；基于新 main 重建 candidate、重跑受影响门禁，再在单独授权下使用 exact `--force-with-lease`。无 lease 的 force push 不属于安全发布路径。
 
 ## 不应泛化
 
 - 特定 SHA、wheel digest、Image ID、容器、端口、设备占用与模型 alias。
 - 本次固定 BF16 MiniMax profile 验证不能外推到任意 AWQ 配置、其他 TP/EP 拓扑、TYD/HHP Chip 或长上下文/并发/benchmark。
 - reasoning parser 未把 `<think>` 分离到独立 `reasoning` 字段是当前模型/parser 行为，不作为通用框架缺陷。
+- stable patch-id 相等不证明新 base 上的 build artifact、模型行为或 Real DLC Hardware acceptance 等价。
 
 ## Claim Boundary
 

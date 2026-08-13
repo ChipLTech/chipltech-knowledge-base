@@ -161,6 +161,12 @@
 **Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
 禁止使用：`alignment` 指未经强制回归验证的推测组合。
 
+**Tested Revision**：实际产生 build/runtime evidence 的 exact source revision、dirty state 和 artifact graph。验证期间使用的 merge history 或 working checkout 属于该 identity，不自动等于最终 PR commit。
+
+**Publication Candidate**：从当前目标 main 的隔离 clean worktree 构造、仅包含批准净差异的待发布 revision。它必须显式关联 Tested Revision、base SHA、scoped diff/tree identity 和回归结果；单独的 commit count 或 patch-id 不建立 runtime acceptance。
+
+**Patch Equivalence**：Tested Revision 与 Publication Candidate 在声明 path/scope 内净差异等价的证据。stable patch-id 可作为 supporting evidence，但不能替代 base identity、完整 scoped diff/tree、artifact rebuild 或受影响回归。
+
 **Static Stack Compatible**：exact immutable image 与 Host stack 的只读身份匹配通过的状态，绑定 Driver/Runtime API、四文件 CRT、DLC Custom Kernel library 和 LLVM 完整身份到一个显式批准或撤销的 policy profile。它只证明 artifact 身份，不代表 Real DLC Hardware execution。
 **Cold First-Compute Completion Ready**：在 fresh process 中完成 allocation、H2D、真实 device operation、synchronize、D2H 和 exact correctness 后得到的有界基础执行状态。它发现静态 policy 尚未认识的兼容性问题，但不能外推模型功能或 benchmark 稳定性。
 **Stack Preflight**：不修改运行库的独立启动前资格检查，由 Static Stack Compatible 与 Cold First-Compute Completion Ready 两个不可互相替代的 checkpoint 组成；任一失败即阻止模型加载或镜像发布。
@@ -202,6 +208,7 @@
 - **Transport Qualification Gate** 在加载双 role 模型前验证实际 data plane；**Site Recovery Contract** 约束会改变 Host 状态的 LYP/driver/firmware/reboot 操作及其收尾。
 - **SMI Observation Envelope** 为模型验证、镜像交付、PD 分离、环境修复和 runtime debug 提供统一的 query-only device/process/HBM evidence seam。
 - **Collective Selection Contract** 在 communicator 侧拥有 topology/payload-aware selection；**Verified Collective Fallback** 在 launch 前消化正常能力边界，DLC Custom Kernel 只按稳定 strategy dispatch 并防御 descriptor ABI 损坏。
+- **Tested Revision** 绑定实际执行证据；**Publication Candidate** 绑定最新目标 main 上的交付表示；二者只能通过声明范围内的 **Patch Equivalence** 和重跑门禁建立可审计关系。
 
 ## 核心链路
 
