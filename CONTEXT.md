@@ -96,6 +96,12 @@
 
 **Verified Collective Fallback**：首选 collective 实现不满足 payload、alignment、root 或其他能力前提时，对候选 fallback 的 graph、channel、rank order、rank range、唯一性和 metadata 重新完成验证后才能下发的降级路径。候选标记不等于验证通过；无可验证实现时 fail closed。
 
+**Evidence Ledger**：将报告输入按运行已证明、源码已存在、参考观察、推断和未知分类，并把每个对外结论绑定到来源、身份和 Claim Boundary 的事实账本。
+
+**Decision Summary**：面向指定读者和决策问题的独立结论产品，只保留主判断、最少支撑事实和边界；完整身份、调用链、失败证据和验证计划下沉到 Technical Attachment。
+
+**Technical Attachment**：供技术人员复核 Decision Summary 的详细材料，保存 exact identity、模型结构、量化参数、调用条件、失败边界、原始 evidence、性能口径和后续验证项。
+
 **DLC_CL**：PyTorch 等 DLC Ecosystem 组件的支持库。
 禁止使用：`OpenCL`（除非明确讨论 OpenCL）。
 
@@ -209,6 +215,7 @@
 - **SMI Observation Envelope** 为模型验证、镜像交付、PD 分离、环境修复和 runtime debug 提供统一的 query-only device/process/HBM evidence seam。
 - **Collective Selection Contract** 在 communicator 侧拥有 topology/payload-aware selection；**Verified Collective Fallback** 在 launch 前消化正常能力边界，DLC Custom Kernel 只按稳定 strategy dispatch 并防御 descriptor ABI 损坏。
 - **Tested Revision** 绑定实际执行证据；**Publication Candidate** 绑定最新目标 main 上的交付表示；二者只能通过声明范围内的 **Patch Equivalence** 和重跑门禁建立可审计关系。
+- **Evidence Ledger** 约束事实、推断和未知不混写；**Decision Summary** 回答读者决策问题；**Technical Attachment** 保存可复核细节，三者不能把摘要可读性换成证据越界。
 
 ## 核心链路
 

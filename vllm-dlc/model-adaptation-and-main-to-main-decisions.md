@@ -52,6 +52,16 @@ shared_contract: vllm-dlc-contract/v1
 - **事实 / Fact**：如果当前 DLC 软件栈缺少目标量化/MoE fused kernel，Python 层绕路或修改模型 config 不构成长期适配完成；应报告为 kernel capability gap 或 `not_verified`，并说明需要 DLC Custom Op / DLC_Custom_Kernel Repository 支持。
 - **建议 / Recommendation**：需要 serving 稳定性或性能补充证据时，可引用 Arsenal 的 vLLM benchmark 和黑盒 HTTP 测试入口；这些结果应作为 serving 层 evidence 记录，不得提升为 Verified vLLM Alignment 或 Real DLC Hardware acceptance。
 
+### Model Adaptation Analysis Reporting
+
+模型适配分析的执行证据与对外报告是两个产品：先建立 Evidence Ledger，再把技术细节下沉到 Technical Attachment，最后按读者决策问题生成独立的 Decision Summary。报告必须分别表达“路线可行”“当前完成到哪一阶段”和“是否达到稳定交付”，不能把 readiness、源码存在、timeout 或参考性能升级为适配完成、根因或实测。
+
+算子适配表使用实际 `KernelDesc::launch("custom_xxx")` 或明确的 kernel family，并沿 vLLM/vLLM-DLC、PyTorch DLC Backend、KernelDesc、DLC_Custom_Kernel Repository registry 闭合来源。模型模块名只作解释；DLCCL collective 不混入模型算子表；同平台其他模型的 kernel name、量化格式或 shape predicate 只能作为检索线索，不能直接类推。
+
+性能摘要同时给出原始口径和可重算换算：固定 input/output token policy、TP/EP、并发、TPOT、单请求 Decode token/s、是否包含 TTFT，以及固定输出长度的纯 Decode 时间。token/s 不是服务总吞吐，TTFT 不能由 input tokens 乘 TPOT 推导，参考模型数据不是目标模型实测或 SLA。
+
+详细生产步骤和可复制模板见 [Model Adaptation Analysis Summary](../prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md)；该 prompt 只生成报告，不替代 `model-adaptation` 的兼容性分析、`diagnosing-bugs` 的根因诊断或 Real DLC Hardware qualification。
+
 ## 跨仓变更归属与 ABI 配对
 
 一次模型适配或 Main-to-Main 调查可以覆盖多个仓库，但调查范围、修改范围和 PR 数量是三个不同集合。没有 patch 的仓库也应保留调查结论；“本轮不修改”可以是版本配对分析后的设计结果，不是遗漏。

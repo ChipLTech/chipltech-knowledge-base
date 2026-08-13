@@ -113,6 +113,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md](case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md) — 从 MiniMax main 三仓交付提炼 Public Operator Schema、KernelDesc Descriptor ABI、冻结 DLC Custom Kernel Entry ABI、跨仓 owner 和 exact-artifact evidence 边界。
 - [case-studies/qknorm-topology-aware-allreduce-selection.md](case-studies/qknorm-topology-aware-allreduce-selection.md) — 从 QKNorm 三仓闭环提炼 communicator-owned topology/payload selection、Verified Collective Fallback、稳定 strategy ABI 和边界测试方法。
 - [case-studies/host-api22-fullstack-main-to-main-update.md](case-studies/host-api22-fullstack-main-to-main-update.md) — Host API 21→22 全栈主线更新 + TP4/EP 验证，提炼 binary identity、editable source 确认、Git bundle 中转与清理等可复用经验。
+- [case-studies/model-adaptation-analysis-report-production.md](case-studies/model-adaptation-analysis-report-production.md) — 从 Hy3 GPTQ-Int4 报告复盘提炼 Evidence Ledger、Decision Summary/Technical Attachment 分层、真实 kernel launch name 核验和性能口径边界。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) — 可直接复用的 vLLM 性能热点分层定位 prompt。
 
 ### vLLM-DLC workflow
@@ -127,6 +128,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [vllm-dlc/distributed-collective-qualification.md](vllm-dlc/distributed-collective-qualification.md) — supporting reference；区分 native DLC_CL、PyTorch ProcessGroup、vLLM communicator、模型 route 与 MoE/custom-kernel ABI，缺硬件不升级为通过。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) — 每日空镜像初始化后接新模型适配的两阶段 prompt。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) — Model Adaptation 可复用 prompt。
+- [prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md](prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md) — 将已收集的模型适配证据整理为面向决策者的分析摘要与技术附件。
 - [prompt-examples/vllm-dlc-main-to-main-upgrade.md](prompt-examples/vllm-dlc-main-to-main-upgrade.md) — Main-to-Main Upgrade 可复用 prompt。
 
 如需让 agent 自动执行 repo discovery、阶段化重建和 smoke，可配合当前 Harness 已发现的 `dlc-env-setup` Skill，或 `<SKILLS_ROOT>/skills/engineering/dlc-env-setup/` 中的源包使用。

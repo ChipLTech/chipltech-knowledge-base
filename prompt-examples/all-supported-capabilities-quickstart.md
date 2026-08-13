@@ -41,6 +41,7 @@
 | 新模型只做运行资格验证 | 模型名、绝对目录 | [新模型验证 Quickstart](new-model-validation-quickstart.md) | `modelzoo-image-validation`，委托 `model-adaptation`、`dlc-env-setup` |
 | 从每日空镜像初始化环境并做新模型适配 | 模型名、绝对目录 | [每日空镜像到新模型适配](vllm-dlc-fresh-image-to-model-adaptation.md) | Stage 0/2 `model-adaptation`，Stage 1 `dlc-env-setup` |
 | 模型兼容性/加载/Serving 适配分析 | 模型名、绝对目录 | [vLLM-DLC Model Adaptation](vllm-dlc-model-adaptation.md) | `model-adaptation` |
+| 将模型适配证据整理成决策摘要 | 模型名、绝对目录、证据路径、读者问题 | [Model Adaptation Analysis Summary](vllm-dlc-model-adaptation-analysis-summary.md) | `model-adaptation`（报告模式） |
 | 模型资格通过后交付 DLC/TYD Images | 模型名、绝对目录 | [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md) | `modelzoo-image-validation` |
 | 按 Host Daily Image Runbook 做完整环境和模型验证 | 模型名、绝对目录 | [Host Daily Image 到模型验证](host-daily-image-to-model-validation.md) | Runbook 编排多个 Skills |
 | 重建或修复 DLC Ecosystem 工作站环境 | 模式、搜索根或现有材料 | [DLC Env Setup Skill 使用模板](dlc-env-setup-skill-usage.md) | `dlc-env-setup` |
@@ -116,6 +117,23 @@
 详细规则：[vLLM-DLC Model Adaptation 可复用 Prompt](vllm-dlc-model-adaptation.md)
 
 关键边界：不负责 DLC Ecosystem 重建，不做 Main-to-Main Upgrade，不直接修改 `vllm-dlc`；未执行的 real weights、DLC Runtime dispatch 和 Real DLC Hardware 项必须写 `not_verified`。
+
+## 3.1 将模型适配证据整理成决策摘要
+
+什么时候用：已有模型 config、源码、日志、kernel summary、性能参考或运行 artifacts，需要面向非一线实现人员输出可读的适配判断，而不是重新执行模型适配。
+
+直接这样说：
+
+```markdown
+请使用 `prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md`，将模型 `<MODEL_NAME>` 的适配材料整理成面向 `<AUDIENCE>` 的 Decision Summary 和 Technical Attachment。
+模型目录：`<ABSOLUTE_LOCAL_MODEL_PATH>`
+证据路径：`<EVIDENCE_PATHS>`
+读者决策问题：`<QUESTIONS>`
+```
+
+详细规则：[Model Adaptation Analysis Summary Prompt](vllm-dlc-model-adaptation-analysis-summary.md)
+
+关键边界：该入口只整理已有证据；不替代 `model-adaptation`、`diagnosing-bugs` 或 Real DLC Hardware qualification。readiness、源码存在、timeout、参考性能和单请求 token/s 不能升级为模型完成、根因、实测或服务吞吐。
 
 ## 4. 模型验证后交付 DLC/TYD Images
 
