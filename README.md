@@ -94,9 +94,13 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [testing/arsenal-ci-and-blackbox-testing.md](testing/arsenal-ci-and-blackbox-testing.md) — Arsenal CI、vLLM benchmark、黑盒 HTTP 测试和 DLCCL hang 分析入口。
 - [vllm-dlc/custom-op-integration-and-testing.md](vllm-dlc/custom-op-integration-and-testing.md) — vLLM DLC Custom Op 接入。
 
+### 技术沟通入口
+
+- [foundation/technical-delivery-summary.md](foundation/technical-delivery-summary.md) — 将已完成的实现、跨仓接入、验证或发布工作提炼为一句能力总结，并保持交付状态和 Evidence 层级。
+- [debugging-workflows/technical-issue-summary.md](debugging-workflows/technical-issue-summary.md) — 将已闭合的复杂故障证据压缩成 Sprint、Issue、owner 确认或 handoff 说明，并保持首次异常边界、量化闭合和 Claim Boundary。
+
 ### Runtime / Debug 入口
 
-- [debugging-workflows/technical-issue-summary.md](debugging-workflows/technical-issue-summary.md) — 将已闭合的复杂故障证据压缩成 Sprint、Issue、owner 确认或 handoff 说明，并保持首次异常边界、量化闭合和 Claim Boundary。
 - [runtime-debugging/dlc-runtime-api-reference.md](runtime-debugging/dlc-runtime-api-reference.md) — 基于固定镜像、源码 commit 和动态库 ABI 的 DLC Runtime、DLCSynapse Core、KernelDesc 版本化接口参考，包含生命周期、同步语义、DLC Runtime 完整函数族、支持矩阵、Success stub、ABI 缺失和已知缺陷。
 - [runtime-debugging/runtime-troubleshooting.md](runtime-debugging/runtime-troubleshooting.md) — DLCSynapse、DLC Runtime、DLCsim、Real DLC Hardware 排障。
 - [runtime-debugging/performance-profiling.md](runtime-debugging/performance-profiling.md) — Chipltech-Family Accelerator 性能 profiling、分层热点定位、异步计时边界和性能 Claim Boundary。

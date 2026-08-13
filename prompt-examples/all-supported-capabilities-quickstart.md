@@ -42,6 +42,7 @@
 | 从每日空镜像初始化环境并做新模型适配 | 模型名、绝对目录 | [每日空镜像到新模型适配](vllm-dlc-fresh-image-to-model-adaptation.md) | Stage 0/2 `model-adaptation`，Stage 1 `dlc-env-setup` |
 | 模型兼容性/加载/Serving 适配分析 | 模型名、绝对目录 | [vLLM-DLC Model Adaptation](vllm-dlc-model-adaptation.md) | `model-adaptation` |
 | 将模型适配证据整理成决策摘要 | 模型名、绝对目录、证据路径、读者问题 | [Model Adaptation Analysis Summary](vllm-dlc-model-adaptation-analysis-summary.md) | `model-adaptation`（报告模式） |
+| 将已完成技术工作提炼成一句话交付总结 | 实现/验证材料路径、目标读者 | [技术交付一句话总结方法](../foundation/technical-delivery-summary.md) | `technical-delivery-summary` |
 | 模型资格通过后交付 DLC/TYD Images | 模型名、绝对目录 | [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md) | `modelzoo-image-validation` |
 | 按 Host Daily Image Runbook 做完整环境和模型验证 | 模型名、绝对目录 | [Host Daily Image 到模型验证](host-daily-image-to-model-validation.md) | Runbook 编排多个 Skills |
 | 重建或修复 DLC Ecosystem 工作站环境 | 模式、搜索根或现有材料 | [DLC Env Setup Skill 使用模板](dlc-env-setup-skill-usage.md) | `dlc-env-setup` |
@@ -134,6 +135,37 @@
 详细规则：[Model Adaptation Analysis Summary Prompt](vllm-dlc-model-adaptation-analysis-summary.md)
 
 关键边界：该入口只整理已有证据；不替代 `model-adaptation`、`diagnosing-bugs` 或 Real DLC Hardware qualification。readiness、源码存在、timeout、参考性能和单请求 token/s 不能升级为模型完成、根因、实测或服务吞吐。
+
+## 3.2 将已完成技术工作提炼成一句话交付总结
+
+什么时候用：实现说明、diff、commit、测试或 review 材料已经存在，需要向 review 同事、日报、Sprint 或跨团队说明“交付了什么能力”，而不是复述跨仓接口和实现过程。故障根因简述使用 `technical-issue-summary`，不要走本入口。
+
+直接这样说：
+
+```markdown
+请使用 `technical-delivery-summary`，参考知识库 `foundation/technical-delivery-summary.md`，把下面材料提炼成一句面向 `<AUDIENCE>` 的技术交付总结：
+
+材料路径：`<IMPLEMENTATION_VALIDATION_OR_REVIEW_PATHS>`
+长度限制：<例如“一句话，不超过 40 字”；未指定写“默认”>
+
+先绑定 source implemented、integrated、validated、released 的实际证据层级，再提取“对象 + 新增行为 + 关键依据/条件 + 可感知结果”的能力主干。跨仓 plumbing、接口名、枚举值、helper、完整测试矩阵和历史过程下沉；不得把 build、历史 smoke 或 review 升级成当前 runtime validation 或 release。
+```
+
+QKNorm 拓扑感知 AllReduce 示例：
+
+```markdown
+请使用 `technical-delivery-summary`，参考 `foundation/technical-delivery-summary.md`，将知识库内 `case-studies/qknorm-topology-aware-allreduce-selection.md` 的历史三仓交付材料提炼成一句面向 review 同事的交付总结。
+
+请自行从材料提取“交付状态 + 对象 + 新增行为 + 关键依据/条件 + 可感知结果”的能力主干，并做删减测试。面向该读者时，把跨仓 plumbing、strategy int、root、Ring order、fallback 状态机和 helper 下沉到 supporting detail；按材料实际 Evidence 分别表达 source implemented、integrated、validated、merged 和 released，不要把它们当成单一强弱阶梯。
+```
+
+预期主句：
+
+> 实现了 QKNorm 算子根据机器实际 LYP topology 和 payload，自动选择对应的 AllReduce 通信实现。
+
+详细规则：[技术交付一句话总结方法](../foundation/technical-delivery-summary.md)
+
+关键边界：一句话总结只改变表达密度，不改变 Evidence 强度。source implementation、build、DLC Runtime execution、Real DLC Hardware validation、模型 acceptance、性能和 release 必须分别报告。
 
 ## 4. 模型验证后交付 DLC/TYD Images
 
