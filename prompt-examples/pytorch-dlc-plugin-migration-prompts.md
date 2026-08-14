@@ -22,10 +22,13 @@ hardware_evidence: not_verified
 
 1. **生产 PyTorch DLC Backend**：硬件语义、DLC Kernel Launch Protocol、kernel name、参数顺序、dtype/layout 和错误行为的权威来源。
 2. **标准 PyTorch**：dispatcher、PrivateUse1、codegen、AOTI 和公开 Python API 契约的权威来源。
-3. **插件架构参考**：只参考目录分层、注册入口、构建、wheel 和 CI 组织，不继承其他设备后端的实现语义。
+3. **插件架构参考**：必须先通过 source classification gate；只参考 disposition 明确允许的结构问题，不继承其他设备后端的实现语义。
 
 共同约束：
 
+- production PyTorch DLC Backend 始终是 DLC semantics authority；architecture reference 不转移 operator/device semantics。
+- 所有 external architecture reference 必须先登记 source locator、revision or SHA-256、license metadata、intended use、reviewer role 和 disposition；缺失、未 review 或 unresolved 时返回 `blocked_legal_boundary`。
+- `torch_npu` 等关键词只触发 review，不构成法律结论。实现作者只接收 independent DLC-native specification，不得直接从 reference 迁移；不得复制、翻译或机械改写 reference code、tests、templates、Skill prose、schema 或 eval。
 - 迁移已有实现，不把任务扩写成开发新的 DLC Custom Kernel。
 - 禁止 CPU computation fallback。CPU 只允许作为常量来源或 H2D/D2H transport 端点。
 - 不用注册数量、编译成功或单个 smoke 代替完整行为覆盖。
@@ -47,7 +50,7 @@ hardware_evidence: not_verified
 【生产 PyTorch DLC Backend】<绝对路径>
 【标准 PyTorch】<仓库或安装根目录，含版本>
 【目标插件仓库】<绝对路径>
-【插件架构参考】<例如 pytorch_npu 路径；没有则写“无”>
+【插件架构参考】<source locator、revision or SHA-256、license metadata、intended use、disposition；没有则写“无”>
 【本次范围】<组件、算子族或纵向能力>
 【允许修改的文件】<路径或目录>
 【禁止修改的文件】<路径或目录>

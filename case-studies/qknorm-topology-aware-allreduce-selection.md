@@ -6,6 +6,10 @@ QKNorm 在 Tensor Parallel 下需要跨 rank 聚合 Q/K 方差。相同 world si
 
 本案例记录 2026-08-13 一次跨 DLC_CL、PyTorch DLC Backend 和 DLC_Custom_Kernel Repository 的历史实现与 review 闭环。它保存可复用的 selector ownership、fallback 状态机、ABI 和验证经验，不把 MiniMax 专用阈值或 strategy 编号提升为全局规则。
 
+Evidence status: `historical_report_derived_observation`。原始个人路径当前为 `external_unavailable`，仓内没有足以重建 exact source/artifact manifest 的材料，因此 exact identity 为 `identity_unavailable`。以下“事实”是历史报告内的事实分类，不是当前 checkout 的 `direct_repository_evidence`；不得猜填缺失 SHA/digest。
+
+不可继承：本案例不能自动成为 approved Stack Policy、current topology qualification、current model acceptance 或 current performance baseline。
+
 ## 历史方案边界
 
 - **事实 / Fact**：DLC_CL 依据已初始化 communicator 的实际 LYP topology 和 QKNorm variance payload 复用正式 4-device/8-device lookup table，向 PyTorch DLC Backend 返回稳定 strategy、root 和 Ring order。
@@ -95,7 +99,7 @@ Review 应从“每个候选为什么能被提交”反向检查，而不只枚�
 
 ## 来源
 
-- `/home/xuansun/rel/x2/MiniMax-M2-QKNorm拓扑感知AllReduce完整实现与Review闭环过程-20260813.md`
-- `/home/xuansun/rel/MiniMax-M2-QKNorm拓扑感知AllReduce验证操作手册.md`
+- 个人过程资产：`external_unavailable`（历史位置已脱敏）
+- 个人验证手册：`external_unavailable`（历史位置已脱敏）
 
 以上绝对路径记录历史 provenance，其他 clone 可能不可访问；本文只保存从该内部工程材料独立提炼的 DLC-native 结论。

@@ -44,7 +44,7 @@
 | 编写测试 | `testing/pytorch-test-framework-guide.md` / `testing/dlc-kernel-test-framework-guide.md` |
 | vLLM 集成 | `vllm-dlc/custom-op-integration-and-testing.md` |
 | 模型功能验证 | `vllm-dlc/modelzoo-startup-params-spec.md` → `case-studies/modelzoo-batch-validation-all-difficulties.md` |
-| 环境配置 | `runtime-debugging/environment-setup-and-update.md` |
+| 环境配置 | 先加载 `dlc-env-setup`，它是唯一 current executable authority；`runtime-debugging/environment-setup-and-update.md` 仅作历史 rationale |
 | 常见报错 | `runtime-debugging/common-error-log.md` |
 | 调试命令 | `debugging-workflows/common-debug-commands.md` |
 | 性能热点或回归 | `runtime-debugging/performance-profiling.md` → `case-studies/` 中最近的性能案例 |
@@ -52,9 +52,9 @@
 ## 关键路径速记
 
 ### dispatch fallback 操作
-1. 找到 kernel 的 `DLC_CHECK_RESULT(lambda, ...)` lambda name
-2. 修改 `/usr/local/chipltech/synapse/include/enabled_kernels.hpp` 中对应常量
-3. `cd /work/pytorch && USE_CUDA=0 DEBUG=1 MAX_JOBS=32 python3 setup.py develop`
+1. 找到 kernel 的 `DLC_CHECK_RESULT(lambda, ...)` lambda name。
+2. 从 authoritative checkout 和 owning Skill 发现当前配置、构建与验证入口，不使用固定系统路径或历史 packaging 命令。
+3. 分别记录 source change、build、DLC Runtime execution 和 Real DLC Hardware evidence。
 
 ### ModelZoo 批量模型验证
 1. 使用 runner: `python3 /home/xuansun/modelconfig/run-one-model.py <model_name> <model_path>`

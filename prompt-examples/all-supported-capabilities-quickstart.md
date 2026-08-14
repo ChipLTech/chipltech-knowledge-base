@@ -14,6 +14,8 @@
 
 本页只提供薄入口和能力导航。正式执行规则以链接的详细 Prompt、Contract、Runbook、知识专题和当前 owning Skill 为准。本页不会复制维护第二套状态机。
 
+Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否则发现 `<SKILLS_ROOT>` 下的正式包；两者都不存在时返回 `blocked_missing_contract`。发现或安装成功不构成任何业务 runtime Evidence。
+
 ## 完全不知道该选哪个
 
 直接复制：
@@ -134,7 +136,7 @@
 
 详细规则：[Model Adaptation Analysis Summary Prompt](vllm-dlc-model-adaptation-analysis-summary.md)
 
-关键边界：该入口只整理已有证据；不替代 `model-adaptation`、`diagnosing-bugs` 或 Real DLC Hardware qualification。readiness、源码存在、timeout、参考性能和单请求 token/s 不能升级为模型完成、根因、实测或服务吞吐。
+关键边界：该入口只整理已有证据；读者和决策问题为必填，不执行 build、install、device、benchmark 或 workspace mutation，也不替代 `model-adaptation`、`diagnosing-bugs` 或 Real DLC Hardware qualification。readiness、源码存在、timeout、参考性能和单请求 token/s 不能升级为模型完成、根因、实测或服务吞吐。
 
 ## 3.2 将已完成技术工作提炼成一句话交付总结
 
@@ -161,7 +163,9 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 预期主句：
 
-> 实现了 QKNorm 算子根据机器实际 LYP topology 和 payload，自动选择对应的 AllReduce 通信实现。
+> Historical source 中已实现 QKNorm 算子根据机器实际 LYP topology 和 payload，自动选择对应的 AllReduce 通信实现。
+
+> Claim Boundary: 最终 exact-artifact topology qualification、当前 Real DLC Hardware validation、性能和 release 未验证。
 
 详细规则：[技术交付一句话总结方法](../foundation/technical-delivery-summary.md)
 

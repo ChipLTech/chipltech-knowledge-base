@@ -7,7 +7,7 @@
 - 本模板只负责受控初始化和最小验证，不负责 LLVM、PyTorch 或 DLC_Custom_Kernel Repository 的长构建。
 - CMake 要求是已安装版本严格大于 `3.27.0`；不要因为不是 `3.27.0` 就重装。只有缺失或版本不满足时，才按授权准备新版 CMake。
 - Arsenal CI 的常规初始化语义是把仓库同步到配置的 CI 默认分支最新 head；本模板允许采用“CI 默认最新”策略，但必须显式声明，且不能在非一次性工作区里执行 CI 脚本那种 `git reset --hard` / `git clean -fdx` 破坏性清理。
-- 执行权威来自当前发现的 `dlc-env-setup/SKILL.md` 及其 `scripts/`；本模板仅增加稳定 skill 明确不做的缺失仓库与 CMake bootstrap。
+- `dlc-env-setup` 是唯一 current executable authority；执行权威来自当前发现的 `dlc-env-setup/SKILL.md` 及其 `scripts/`。本模板仅增加稳定 skill 明确不做的缺失仓库与 CMake bootstrap。
 
 ---
 
@@ -48,23 +48,9 @@
 
 请严格按下面流程执行：
 
-1. 先确定版本策略和 CI 默认分支映射。
-   - 如果【版本策略】是 `CI默认最新`，按 Arsenal CI 的默认分支同步到最新 head，而不是要求用户逐仓给固定 commit。
-   - 当前可作为 bootstrap 默认映射的 CI 分支：
-     - `dlc-thunk`: `master`
-     - `DLCsim`: `main`
-     - `DLCSynapse`: `main`
-     - `DLC_CL`: `inc_nsteps`
-     - `LLVM`: `main`
-     - `DLC_Custom_Kernel`: `develop`
-     - `pytorch`: `release_25`
-     - 可选 `vllm`: `update-v0.11.0`
-     - 可选 `vllm-dlc`: <用户指定或仓库默认分支；Arsenal CI 不提供稳定默认>
-     - 可选 `chipltech_smi_lib`: `dev610`
-     - 可选 `cl-persistenced`: `main`
-     - 可选 `arsenal`: `main`
-     - 可选 `DLC-Kernel-Driver`: `master`（仅在需要 driver source 或 CI 对齐报告时纳入；不默认执行驱动安装/重载）
-     - 可选 `cl_tools`: `main`（仅在需要设备诊断工具 source 或 CI 对齐报告时纳入）
+1. 先确定版本策略并从当前 authoritative CI/config source 发现默认 ref。
+   - 如果【版本策略】是 `CI默认最新`，读取当前 Arsenal CI/config 的 exact identity 和逐仓默认 ref，形成待确认映射；本文不维护固定 branch inventory。
+   - 无法读取 authoritative CI/config、仓库未被当前配置覆盖或 ref 存在歧义时停止，不从历史文档、仓库名或常见 branch 猜测。
    - 如果【版本策略】是 `固定ref` 或 `混合`，仅对用户批准的仓库切换到对应 branch/tag/commit；缺少批准 ref 的仓库停下报告。
    - CI 脚本在一次性 Runner 中常用 `git reset --hard`、`git clean -fdx`、删除 build 目录和强制 submodule；本模板在共享工作区默认禁止这些破坏性操作，除非用户明确声明当前目录是 disposable bootstrap workspace。
 
@@ -168,7 +154,7 @@
     - 如果请求安装或构建 `chipltech_smi_lib`，先确认 `/usr/local` 修改授权和系统依赖变更授权；默认只做源码 discovery 和版本记录，不自动安装。
     - 如果后续实际执行 Real DLC Hardware serving/C1b，使用 `dlc-hardware-observability` 封存官方 `cltech_smi` identity 和四阶段 SMI Observation Envelope；本阶段只做静态/bootstrap 时记录 `not_applicable`，不新增 device execution。observer 缺失只报告 `blocked_missing_observability`，不推断硬件失败。
 
-10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。固定重建顺序为 `dlc-thunk -> LLVM -> DLCsim -> DLCSynapse -> DLC_CL -> DLC_Custom_Kernel Repository -> PyTorch -> vLLM-DLC -> vLLM`；LLVM 变化必须重建 DLCsim 和全部下游。
+10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。current executable order 和 invalidation 由 `dlc-env-setup` owning Skill 基于发现的 dependency identities 决定；本文不复制固定重建顺序。
     - 对 task-owned builder source 的所有主 repo 和 build-time submodule，输出 `safe.directory` 路径清单；不要配置宽泛的 `safe.directory '*'`。
     - 说明 PyTorch build version 必须在首次 configure 前设置，wheel metadata、generated `torch/version.py` 和 source-tree 外 import 必须完全相同。
     - 读取固定 vLLM source 的 `setup.py`，输出 core packaging mode。若 core 使用 `empty` platform 加独立 vLLM-DLC plugin，明确记录，不要传入不支持的 `VLLM_TARGET_DEVICE=dlc`。

@@ -68,12 +68,14 @@ lifecycle_cleanup
 
 | 动作 | 授权状态/范围 |
 |---|---|
-| Query-only network probe | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
-| Service bind / 端口暴露 | `<BIND_ADDRESS_PORT_NAMESPACE_ALLOWED_PEERS_FIREWALL / NOT_AUTHORIZED>` |
+| Passive local socket/process inspection | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Active network connect/health probe | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Functional model request | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Service bind | `<BIND_ADDRESS_PORT_NAMESPACE_ALLOWED_PEERS_FIREWALL / NOT_AUTHORIZED>` |
 | Install / build | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
 | Device execution | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
 | Artifact 写入 | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
-| task-owned graceful stop / KILL | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
+| Cleanup / task-owned graceful stop / KILL | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
 | Privileged Host integration | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
 | Host maintenance | `<AUTHORIZED_SCOPE / NOT_AUTHORIZED>` |
 | Site Recovery Contract | `<PATH_OR_NOT_APPLICABLE_WITH_REASON>` |
@@ -142,6 +144,10 @@ RPC/handshake 端口。必须从 exact code、启动日志和 `ss -lntp` 发现�
 显示 `/health=200`，但第一个真实 KV 请求会失败。
 
 基础检查：
+
+`ss` 的本地 listener/process 检查可以保持 passive；`curl` 和 `nc` 是主动 network probe，
+会发起连接，必须由 Active network connect/health probe 的授权覆盖。功能请求还必须单独由
+Functional model request 授权覆盖，不能从 network probe 授权推导。
 
 ```bash
 # 每台机器分别执行
@@ -564,10 +570,16 @@ curl --max-time 3 http://<OLD_API>/health
 | Functional equivalence | 与 monolithic comparison contract 一致 | `<PASS/FAIL>` |
 | Profiling isolation | warm-up 排除、offset、active ranks、唯一 measured 请求 | `<PASS/FAIL/NA>` |
 | Performance workload | 固定 workload、重复 attempts、指标与离散度 | `<PASS/FAIL/NA>` |
-| Cleanup | task process、端口、设备/HBM 回到 sealed baseline | `<PASS/FAIL>` |
+| Lifecycle / cleanup | task process、端口、设备/HBM 回到 sealed baseline | `<PASS/FAIL>` |
+| Applicable site recovery | 受影响的既有 workload、package/build 和 Host baseline 已逐项恢复；不适用时保存理由 | `<PASS/FAIL/NA>` |
 
-只有 request-correlated routing、KV consumption 和 functional equivalence 同时通过，才能写
-`pd_validated`。只完成配置、readiness 或 HTTP 请求时，结论保持 `not_verified`。
+终态聚合以 `pd-separation` owning Skill 为准：`blocked_cleanup_incomplete` 优先级最高；随后报告
+active blockers、mandatory gate failure 和未执行 core gate。只有 Static configuration、Transport
+qualification、Service readiness、Request routing、KV transfer、Functional equivalence、Lifecycle /
+cleanup 和 Applicable site recovery 这些全部 applicable core gates 通过，才能写 `pd_validated`。
+只完成配置、readiness、HTTP 请求、routing 或 KV consumption 的子集时，结论保持
+`not_verified` 或对应 blocker。Performance workload 和 stability baseline 独立报告；除非 deployment
+contract 明确将其设为 mandatory，否则不影响 functional `pd_validated`，也不得隐式写成性能通过。
 
 ## 13. 相关资料
 

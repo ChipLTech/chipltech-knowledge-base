@@ -6,6 +6,10 @@
 
 ## 背景与环境
 
+Evidence status: `historical_report_derived_observation`。原始过程资产当前为 `external_unavailable`；本文虽记录若干 SHA 和运行结论，但缺少仓内 manifest/digest 集合来复核完整 exact identity，未闭合部分标为 `identity_unavailable`，不得补猜。
+
+不可继承：本案例不能自动成为 approved Stack Policy、current topology qualification、current model acceptance 或 current performance baseline。
+
 - 执行节点 `node-8-45`，持久化容器 `minimax-m2.7-api21-persistent`（`--privileged`、`--pid=host`、`--ipc=host`、`--net=host`）。
 - 目标模型 `MiniMax-M2.7-Mix`（`/mnt/jfs/models/MiniMax-M2.7-Mix`），物理卡 `0,1,2,3`，TP4 + Expert Parallel、AWQ Marlin、BF16、eager。
 - Host Driver `v22.0.0` / Host API `Api_Version_22`。
@@ -101,6 +105,6 @@ Patch Equivalence 只说明声明 scope 的净差异保持。base 变化可能�
 
 ## 来源
 
-- `/home/xuansun/inn/MiniMax-M2.7-HostAPI22全栈主线更新与TP4-EP验证过程资产-20260810.md`
+- 个人过程资产：`external_unavailable`（历史位置已脱敏）
 - [vllm-fused-moe-schema-kernel-abi-boundary.md](vllm-fused-moe-schema-kernel-abi-boundary.md)
 - [model-adaptation-and-main-to-main-decisions.md](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)

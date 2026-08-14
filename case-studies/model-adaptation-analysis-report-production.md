@@ -4,6 +4,10 @@
 
 本案例复盘 2026-08-13 一次 Hy3 GPTQ-Int4 适配分析报告从长版技术材料压缩为决策摘要的过程。它沉淀报告生产方法，不建立 Hy3 当前 runtime、语义正确性、性能或 Real DLC Hardware acceptance。
 
+Evidence status: `historical_report_derived_observation`。原始个人过程资产当前为 `external_unavailable`，目标 source/package/model/artifact identity 无仓内 manifest 可复核，故为 `identity_unavailable`；不得猜填缺失 SHA/digest。
+
+不可继承：本案例不能自动成为 approved Stack Policy、current topology qualification、current model acceptance 或 current performance baseline。
+
 ## 最有价值的通用规则
 
 ### 1. 先建 Evidence Ledger
@@ -86,6 +90,6 @@ DLCCL collective 属于通信 contract，应在通信/拓扑分析中单独表�
 
 ## 来源
 
-- `/home/xuansun/rel/Hy3-GPTQ-Int4适配分析报告生成与优化过程资产-20260813.md`
+- 个人过程资产：`external_unavailable`（历史位置已脱敏）
 - [模型适配与 Main-to-Main 决策记录](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
 - [vLLM-DLC Model Adaptation Prompt](../prompt-examples/vllm-dlc-model-adaptation.md)

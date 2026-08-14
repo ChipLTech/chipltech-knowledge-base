@@ -32,7 +32,7 @@
 
 | 状态 | 最小证据 | 推荐动词 |
 |---|---|---|
-| Source implemented | identified source 中已存在对应行为 | 实现、支持 |
+| Source implemented | identified source 中已存在对应行为 | source 中已实现；避免裸“支持” |
 | Integrated | 所需组件边界已完成接入 | 接入、打通 |
 | Validated | identified implementation/artifact 通过声明检查 | 验证、确认 |
 | Merged | identified change 已进入目标分支 | 合入 |
@@ -102,7 +102,7 @@ fallback 只有在其安全保证是本次交付重点时才进入一句话。�
 - 删除后对象产生歧义，补充领域角色；
 - 删除后交付状态被夸大，恢复边界限定。
 
-默认只保留一个主句。仓库范围或验证边界确实重要时，追加一条独立说明，不把它们塞回主句。
+通用场景默认只保留一个主句。Chipltech 分支必须再输出一行字面 `Claim Boundary:`，不把边界塞回主句，也不将该总结写成 Qualification Artifact。
 
 ## 输出模板
 
@@ -132,15 +132,17 @@ Source implemented + QKNorm 算子 + 自动选择 AllReduce 实现 + 实际 LYP 
 
 推荐一句话：
 
-> 实现了 QKNorm 算子根据机器实际 LYP topology 和 payload，自动选择对应的 AllReduce 通信实现。
+> Historical source 中已实现 QKNorm 算子根据机器实际 LYP topology 和 payload，自动选择对应的 AllReduce 通信实现。
 
 面向不熟悉集合通信的读者：
 
-> 实现了 QKNorm 算子根据机器实际 LYP topology 和数据量，自动选择对应的多卡方差归约通信实现。
+> Historical source 中已实现 QKNorm 算子根据机器实际 LYP topology 和数据量，自动选择对应的多卡方差归约通信实现。
 
 需要说明范围时单独追加：
 
 > 相关能力已在 DLC_CL、PyTorch DLC Backend 和 DLC_Custom_Kernel Repository 完成接入；当前 source、build、历史 hardware smoke 与目标 topology 的最终 Real DLC Hardware 验证状态应分别报告。
+
+> Claim Boundary: 该示例来自历史 source implementation；最终 exact-artifact topology qualification、当前 Real DLC Hardware validation、性能和 release 未由这句话证明。
 
 ## 常见错误
 

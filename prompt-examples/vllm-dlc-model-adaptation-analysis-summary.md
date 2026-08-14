@@ -5,8 +5,9 @@ required_user_inputs:
   - model_name
   - absolute_local_model_path
   - evidence_paths
+  - audience
+  - decision_questions
 derived_or_proposed_inputs:
-  - audience_and_decision_questions
   - report_format
   - technical_attachment_path
 discovery_policy: evidence_bound_then_reader_first_summary
@@ -18,7 +19,7 @@ missing_input_reason: blocked_missing_evidence
 
 ## 用途
 
-把已经收集的模型适配材料整理成面向指定读者的 `Decision Summary`，并保留可复核的 `Technical Attachment`。这是报告生产 prompt，不执行模型适配、根因诊断、benchmark、Real DLC Hardware qualification 或 image delivery。
+把已经收集的模型适配材料整理成面向指定读者的 `Decision Summary`，并保留可复核的 `Technical Attachment`。`audience` 和 `decision_questions` 是 required user inputs，不能可靠提供时返回 `blocked_missing_reader_contract`。这是报告生产 prompt，不执行 build、install、workspace mutation、模型适配、根因诊断、benchmark、Real DLC Hardware qualification 或 image delivery。
 
 ## 可复制 Prompt
 

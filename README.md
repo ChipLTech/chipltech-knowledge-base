@@ -13,7 +13,7 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 已有材料：<路径或“请自动发现”>
 ```
 
-`chipltech-context` 会读取本仓库的 `CONTEXT.md`、`README.md` 和统一能力入口，选择正式 Prompt、业务 Contract 与 owning Skill。完全不知道该选哪个能力时，查看 [全部已支持能力 Quickstart](prompt-examples/all-supported-capabilities-quickstart.md)。
+`chipltech-context` 会读取本仓库的 `CONTEXT.md`、`README.md` 和统一能力入口，选择正式 Prompt、业务 Contract 与 owning Skill。当前 Harness 已发现时直接加载；否则只读发现 `<SKILLS_ROOT>` 下的正式 Skill 包；两者都不存在时返回 `blocked_missing_contract`。Skill discovery 只证明 publication/install 可用，不是 runtime Evidence。完全不知道该选哪个能力时，查看 [全部已支持能力 Quickstart](prompt-examples/all-supported-capabilities-quickstart.md)。
 
 Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置依赖；未选择 Hermes 时，直接使用当前 Kilo/Harness。
 
