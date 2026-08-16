@@ -27,6 +27,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - **精度定位方法论**：CPU Reference、Hardware-Aware Reference、Model-Site Dump → pytorch_test 复现的完整流程。
 - **debug 命令速查和 Runtime 排障**：常用调试命令、环境检查、异步错误定位等。
 - **测试框架用法**：pytorch_test Framework、dlc_kernel_test Framework 的使用指南。
+- **机器可验证合同**：distributed collective qualification、communicator-owned topology/payload selection、identity freshness 和 fail-closed 状态边界。
 - **真实 case study**：跨模型、跨算子的精度问题和运行时故障复盘，AI 可直接参考相似案例。
 - **常用 prompt 示例**：团队内部沉淀的高频、好用的业务 prompt 模板，便于同事直接复用。
 
@@ -129,7 +130,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md](vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) — 本地模型优先、ModelZoo 可选只读 reference、ordinary daily-base runtime qualification 和独立 DLC/TYD delivery 状态机。
 - [prompt-examples/modelzoo-model-to-dlc-tyd-images.md](prompt-examples/modelzoo-model-to-dlc-tyd-images.md) — 填写模型名称、本地目录和 target 的 runtime-first image delivery prompt。
 - [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](vllm-dlc/model-adaptation-and-main-to-main-decisions.md) — Model Adaptation 与 Main-to-Main Upgrade 的稳定决策、证据分类和当前只读边界。
-- [vllm-dlc/distributed-collective-qualification.md](vllm-dlc/distributed-collective-qualification.md) — supporting reference；区分 native DLC_CL、PyTorch ProcessGroup、vLLM communicator、模型 route 与 MoE/custom-kernel ABI，缺硬件不升级为通过。
+- [vllm-dlc/distributed-collective-qualification.md](vllm-dlc/distributed-collective-qualification.md) — supporting reference；区分 native DLC_CL、PyTorch ProcessGroup、vLLM communicator、模型 route 与 MoE/custom-kernel ABI，并说明 frozen v1、exact v2、`vllm-dlc-collective-selection/v1`、deterministic clock seam 和 controlled fixture 的证据边界。
 - [prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md](prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md) — 每日空镜像初始化后接新模型适配的两阶段 prompt。
 - [prompt-examples/vllm-dlc-model-adaptation.md](prompt-examples/vllm-dlc-model-adaptation.md) — Model Adaptation 可复用 prompt。
 - [prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md](prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md) — 将已收集的模型适配证据整理为面向决策者的分析摘要与技术附件。
