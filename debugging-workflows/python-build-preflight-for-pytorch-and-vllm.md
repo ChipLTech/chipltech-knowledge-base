@@ -3,13 +3,13 @@
 ## 适用场景
 
 - 准备重建 PyTorch 2.5.0 wheel，但不想等到长时间编译后才发现 Python packaging 或基础依赖不对。
-- 准备执行本地 `vllm` / `vllm-dlc` editable install，需要先确认构建工具链。
+- 准备执行本地 `vllm` / `vllm-cl` editable install，需要先确认构建工具链。
 - 已经遇到 metadata generation、`build_editable`、`pybind11`、NumPy bridge 等错误，想快速判断是前置依赖没对齐还是源码本身有问题。
 
 ## 核心结论
 
 1. PyTorch 与 `vllm` 的高频失败点，很多并不在编译逻辑本身，而在 build 前的 Python packaging 工具链。
-2. PyTorch wheel 的关键预检是 `numpy==1.26.4` 与 `USE_NUMPY` 路线；`vllm` / `vllm-dlc` 的关键预检是 `setuptools`、`setuptools-scm`、`packaging`、`pybind11`、`grpcio-tools` 等依赖是否齐全。
+2. PyTorch wheel 的关键预检是 `numpy==1.26.4` 与 `USE_NUMPY` 路线；`vllm` / `vllm-cl` 的关键预检是 `setuptools`、`setuptools-scm`、`packaging`、`pybind11`、`grpcio-tools` 等依赖是否齐全。
 3. 如果需要自动执行同一套 preflight，可调用 `dlc-env-setup` skill 内的 `scripts/pytorch-preflight.sh` 和 `scripts/vllm-preflight.sh`；本文只保留平台无关的规则与检查项。
 
 ## 操作步骤
@@ -24,7 +24,7 @@ python3 -m pip --version
 python3 -m pip list | rg '^(pip|setuptools|setuptools-scm|wheel|ninja|jinja2|packaging|numpy|pybind11|grpcio-tools)\b'
 ```
 
-如果当前目标包含 `vllm` 或 `vllm-dlc`，建议确认 Python 版本在 `>=3.10,<3.12`。
+如果当前目标包含 `vllm` 或 `vllm-cl`，建议确认 Python 版本在 `>=3.10,<3.12`。
 
 ### 2. PyTorch wheel build preflight
 
@@ -50,7 +50,7 @@ rg '^USE_NUMPY:BOOL=' "$PYTORCH_SRC/build/CMakeCache.txt"
 
 `USE_NUMPY:BOOL=ON` 才能支撑后续 `torch.tensor(...).numpy()` 的运行时桥接。
 
-### 3. `vllm` / `vllm-dlc` build preflight
+### 3. `vllm` / `vllm-cl` build preflight
 
 在 PyTorch wheel 已经通过基础 smoke 的前提下，再补：
 
@@ -73,12 +73,12 @@ python3 -m pip install pybind11 grpcio-tools==1.78.0
 
 - 实际 build subprocess 使用的 Python、setuptools、CMake 和 compiler identity。
 - 当前 PyTorch distribution、wheel SHA、import origin 和 native extension digest。
-- vLLM core 是 in-tree device build，还是 `empty` platform 加独立 vLLM-DLC plugin。
+- vLLM core 是 in-tree device build，还是 `empty` platform 加独立 vLLM-CL plugin。
 - editable metadata、source full SHA、实际 import path 和 native binary digest 是否属于同一构建 epoch。
 
 ### 4. wheel 与本地路径前置检查
 
-在安装 `vllm-dlc` 前，确认它引用的 PyTorch wheel 路径确实存在于当前机器。不要把别人的本地 wheel 路径直接沿用到当前环境。
+在安装 `vllm-cl` 前，确认它引用的 PyTorch wheel 路径确实存在于当前机器。不要把别人的本地 wheel 路径直接沿用到当前环境。
 
 ### 5. 进入长编译前的 go/no-go 判断
 

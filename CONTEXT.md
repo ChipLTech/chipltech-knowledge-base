@@ -50,15 +50,17 @@
 
 ### 平台与运行时
 
-**DLC Ecosystem**：Chipltech-Family Accelerator 的完整硬件和软件环境，包括 PyTorch DLC Backend、vLLM DLC Custom Op、DLC_Custom_Kernel Repository、DLCSynapse、DLC Runtime、DLCsim、dlc-thunk、DLCCL、DLC_CL 和 Real DLC Hardware。
+**DLC Ecosystem**：Chipltech-Family Accelerator 的完整硬件和软件环境，包括 PyTorch DLC Backend、vLLM-CL Custom Op、DLC_Custom_Kernel Repository、DLCSynapse、DLC Runtime、DLCsim、dlc-thunk、DLCCL、DLC_CL 和 Real DLC Hardware。
 禁止使用：裸 `DLC` 指代生态。
 
 **DLC Platform**：框架可见的执行目标，PyTorch、vLLM、SGLang 等在 Chipltech-Family Accelerator 上运行 tensor 或 DLC Custom Op 时选择的平台。
 
 **PyTorch DLC Backend**：将 ATen 算子 dispatch 到 DLC 实现的 PyTorch 后端，通常使用 KernelDesc + DLCSynapse 发射 DLC Custom Kernel。
 
-**vLLM DLC Custom Op**：vLLM 框架中通过 PyTorch extension 机制注册的 DLC tensor 操作，实现打包参数并发射 DLC Custom Kernel。
+**vLLM-CL Custom Op**：vLLM 框架中通过 PyTorch extension 机制注册的 DLC tensor 操作，实现打包参数并发射 DLC Custom Kernel。
 禁止使用：`custom kernel` 指框架可见的 op。
+
+**vLLM-CL Repository**：Chipltech 维护的 vLLM hardware plugin 仓库，正式 Git 仓库名和 Python Distribution 均为 `vllm-cl`，正式 Git URL 为 `git@github.com:ChipLTech/vllm-cl.git`，Python import package 为 `vllm_cl`，native extension 为 `vllm_cl.vllm_cl_C`。新命令、路径、环境变量、artifact identity 和文档必须使用这些名称。改名前的 `vllm-dlc` / `vllm_dlc` 只允许出现在明确标注为 historical/legacy 的原始证据或兼容说明中，不代表另一个组件。
 
 **DLC Custom Op**：框架可见（PyTorch / vLLM / SGLang）的 DLC tensor 操作，不等于 DLC Custom Kernel。
 
@@ -166,7 +168,7 @@
 
 **DLC Runtime Capability Boundary**：host 侧 custom kernel launch 支持与 CUDA 式 device 侧持久运行时控制之间的能力分界。
 
-**Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-dlc revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
+**Verified vLLM Alignment**：一个经过全部强制回归验证，并由可审计 evidence 证明的 vLLM commit 与 vllm-cl revision 组合。候选 commit、当前 checkout、安装版本或 README 记录只能作为恢复线索，不能称为 Verified vLLM Alignment。
 禁止使用：`alignment` 指未经强制回归验证的推测组合。
 
 **Tested Revision**：实际产生 build/runtime evidence 的 exact source revision、dirty state 和 artifact graph。验证期间使用的 merge history 或 working checkout 属于该 identity，不自动等于最终 PR commit。
@@ -187,7 +189,8 @@
 | `国产 TPU` | Chipltech-Family Accelerator |
 | `DLC`（指平台/生态/后端） | DLC Platform / DLC Ecosystem / PyTorch DLC Backend |
 | `DLC Custom Kernel`（指仓库） | DLC_Custom_Kernel Repository |
-| `custom kernel`（指框架 op） | DLC Custom Op / vLLM DLC Custom Op |
+| `vllm-dlc` / `vllm_dlc`（当前仓库、Distribution 或 import） | `vllm-cl` / `vllm_cl`；仅历史原始证据保留旧名 |
+| `custom kernel`（指框架 op） | DLC Custom Op / vLLM-CL Custom Op |
 | `Synapse` | DLCSynapse |
 | `runtime` | DLC Runtime |
 | `NCCL`（指 DLC 通信） | DLCCL |
@@ -201,8 +204,8 @@
 ## 组件关系
 
 - **Chipltech-Family Accelerator** 包含 **DLC Chip**、**TYD Chip** 和 **HHP Chip**。
-- **DLC Ecosystem** 包含 **DLC Platform**、**PyTorch DLC Backend**、**vLLM DLC Custom Op**、**DLC_Custom_Kernel Repository**、**DLCSynapse**、**DLC Runtime**、**DLCsim**、**dlc-thunk**、**DLCCL**、**DLC_CL** 和 **Real DLC Hardware**。
-- **PyTorch DLC Backend** 和 **vLLM DLC Custom Op** 都使用 **KernelDesc** 遵循 **DLC Kernel Launch Protocol**。
+- **DLC Ecosystem** 包含 **DLC Platform**、**PyTorch DLC Backend**、**vLLM-CL Custom Op**、**DLC_Custom_Kernel Repository**、**DLCSynapse**、**DLC Runtime**、**DLCsim**、**dlc-thunk**、**DLCCL**、**DLC_CL** 和 **Real DLC Hardware**。
+- **PyTorch DLC Backend** 和 **vLLM-CL Custom Op** 都使用 **KernelDesc** 遵循 **DLC Kernel Launch Protocol**。
 - **KernelDesc** 打包 tensor、output、scalar、format 和操作元数据后按名称发射 **DLC Custom Kernel**。
 - **Public Operator Schema**、**KernelDesc Descriptor ABI** 和 **DLC Custom Kernel Entry ABI** 是三层独立 contract，共同约束 **DLC Kernel Launch Protocol**。
 - **DLCSynapse** 消费发射请求，将执行分发到 **DLCsim** 或 **Real DLC Hardware**。
@@ -224,7 +227,7 @@
 
 ```
 vLLM / SGLang / PyTorch
-  -> PyTorch DLC Backend / vLLM DLC Custom Op
+  -> PyTorch DLC Backend / vLLM-CL Custom Op
   -> KernelDesc argument packing
   -> DLCSynapse / DLC Runtime launch
   -> DLC Custom Kernel binary

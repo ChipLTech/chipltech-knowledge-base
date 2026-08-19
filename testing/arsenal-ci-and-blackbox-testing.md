@@ -38,7 +38,7 @@ Arsenal 是 ChipLTech 软件链 CI 系统与工具集成仓库。它不是单个
 
 这里检查的是 commit subject，不应写成 PR title lint。PR/commit 规则应按权威级别分别记录：自动检查、仓库贡献文档、目标分支历史惯例、团队内部推荐。历史样本比例只能作为有日期的经验，不能提升为平台强制规则。
 
-格式必须按目标仓库分流。PyTorch/Arsenal 自动检查要求 `<type>: #<issue> <summary>` 时，不添加 scope 或外仓 issue 代替本仓 `#issue`。vLLM-DLC 若当前规则允许 scope，可使用 `<type>(<scope>): #<issue> <summary>`。跨仓 issue 可在 PR 正文使用完整 `Owner/Repo#issue` 避免归属歧义；是否允许写入 subject 以目标仓库当前检查为准。vLLM upstream 投稿遵循 upstream 当时的分类与贡献流程，不套用 ChipLTech 内部分支格式。一个标题只表达一个主要目的，PR title 与 head commit subject 保持一致风格。
+格式必须按目标仓库分流。PyTorch/Arsenal 自动检查要求 `<type>: #<issue> <summary>` 时，不添加 scope 或外仓 issue 代替本仓 `#issue`。vLLM-CL 若当前规则允许 scope，可使用 `<type>(<scope>): #<issue> <summary>`。跨仓 issue 可在 PR 正文使用完整 `Owner/Repo#issue` 避免归属歧义；是否允许写入 subject 以目标仓库当前检查为准。vLLM upstream 投稿遵循 upstream 当时的分类与贡献流程，不套用 ChipLTech 内部分支格式。一个标题只表达一个主要目的，PR title 与 head commit subject 保持一致风格。
 
 常见路由：
 
@@ -78,12 +78,12 @@ Arsenal 是 ChipLTech 软件链 CI 系统与工具集成仓库。它不是单个
 |---|---|---|
 | DLC_Custom_Kernel Repository source/entry ABI | [DLC Kernel 测试指南](dlc-kernel-test-framework-guide.md) | Kernel test 不证明上层 descriptor、完整模型或 image 可用 |
 | PyTorch DLC Backend schema/dispatch/KernelDesc | [PyTorch 测试指南](pytorch-test-framework-guide.md) 与 [算子接入指南](../pytorch-dlc-backend/operator-integration-guide.md) | source/build evidence 不证明 DLC Runtime execution 或模型正确性 |
-| vLLM generic framework path | 目标 vLLM repository 当前 unit/model-path rules | vLLM test 不证明 vLLM-DLC plugin 或 DLC Custom Kernel 正确性 |
-| vLLM-DLC lifecycle/model patch | owning vLLM-DLC tests 与 [Model Adaptation 决策](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md) | source/AST test 不证明真实 rank 时序和数值 |
+| vLLM generic framework path | 目标 vLLM repository 当前 unit/model-path rules | vLLM test 不证明 vLLM-CL plugin 或 DLC Custom Kernel 正确性 |
+| vLLM-CL lifecycle/model patch | owning vLLM-CL tests 与 [Model Adaptation 决策](../vllm-cl/model-adaptation-and-main-to-main-decisions.md) | source/AST test 不证明真实 rank 时序和数值 |
 | 跨仓 API/ABI 或 toolchain pairing | ARC_Debug 固定 branch/SHA 组合与 owning component tests | branch 名或 build success 不证明 artifact 已运行 |
-| DLC Runtime/device path | [模型镜像 Runtime Qualification Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) | C1b 不证明模型语义正确 |
-| serving 行为 | [模型镜像 Runtime Qualification Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) | HTTP 200、Ready 或非空输出不构成完整 PASS |
-| image delivery | [模型镜像交付状态机](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) | 旧 wheel/image 的 evidence 不转移给新 artifact |
+| DLC Runtime/device path | [模型镜像 Runtime Qualification Contract](../vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md) | C1b 不证明模型语义正确 |
+| serving 行为 | [模型镜像 Runtime Qualification Contract](../vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md) | HTTP 200、Ready 或非空输出不构成完整 PASS |
+| image delivery | [模型镜像交付状态机](../vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md) | 旧 wheel/image 的 evidence 不转移给新 artifact |
 
 跨仓修复应先做本地最小复现，再用 ARC_Debug 验证固定组合。Gate 的最低要求、状态词汇和 acceptance 以表中 owning Contract 为准；本表不维护第二套门禁。
 
@@ -212,7 +212,7 @@ python3 check_version.py --summary
 - [pytorch-test-framework-guide.md](pytorch-test-framework-guide.md)
 - [dlc-kernel-test-framework-guide.md](dlc-kernel-test-framework-guide.md)
 - [../runtime-debugging/performance-profiling.md](../runtime-debugging/performance-profiling.md)
-- [../vllm-dlc/model-adaptation-and-main-to-main-decisions.md](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [../vllm-cl/model-adaptation-and-main-to-main-decisions.md](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
 
 ## 来源
 

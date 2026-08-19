@@ -12,7 +12,7 @@ DLC-Family Accelerator 的开发主路径不是 CUDA 那种完整暴露 GPU devi
 
 ```
 vLLM / SGLang / PyTorch
-  -> PyTorch DLC Backend / vLLM DLC Custom Op
+  -> PyTorch DLC Backend / vLLM-CL Custom Op
   -> KernelDesc argument packing
   -> DLCSynapse / DLC Runtime launch
   -> DLC Custom Kernel binary
@@ -86,7 +86,7 @@ LLVM
 | 组件 | 角色 |
 |------|------|
 | **PyTorch DLC Backend** | ATen 算子 dispatch 到 DLC 实现 |
-| **vLLM DLC Custom Op** | vLLM 侧通过 torch extension 暴露 DLC op |
+| **vLLM-CL Custom Op** | vLLM 侧通过 torch extension 暴露 DLC op |
 | **DLC_Custom_Kernel Repository** | kernel 源码、syntests、注册元数据和二进制产物 |
 | **DLCSynapse** | kernel 编译/执行框架组件 |
 | **DLC Runtime** | launch、stream/event、异步错误等执行 API 表面 |
@@ -115,7 +115,7 @@ PyTorch DLC Backend 额外事实：
 
 ### vLLM
 
-PagedAttention 高吞吐 LLM 推理引擎。在 DLC Platform 上通过 vLLM DLC Custom Op 运行。
+PagedAttention 高吞吐 LLM 推理引擎。在 DLC Platform 上通过 vLLM-CL Custom Op 运行。
 
 ### SGLang
 

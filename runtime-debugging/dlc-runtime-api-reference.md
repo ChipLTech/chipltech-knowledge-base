@@ -4,7 +4,7 @@
 
 本文是 DLC Runtime C API、DLCSynapse Core C API 和 `KernelDesc` launch 层在指定版本上的静态接口参考，适用于：
 
-- PyTorch DLC Backend、vLLM DLC Custom Op 和 DLC_CL 的 host 侧集成。
+- PyTorch DLC Backend、vLLM-CL Custom Op 和 DLC_CL 的 host 侧集成。
 - DLC Runtime 的 device、memory、stream、event、kernel、Graph 和 memory pool 开发。
 - 根据接口返回值、异步完成点和对象生命周期定位问题。
 - 判断一个兼容命名接口在当前版本中是真实实现、受限实现还是 compatibility stub。
@@ -54,7 +54,7 @@
 ## 分层模型
 
 ```text
-PyTorch DLC Backend / vLLM DLC Custom Op / DLC_CL
+PyTorch DLC Backend / vLLM-CL Custom Op / DLC_CL
   -> KernelDesc / dlcKernelDesc* argument packing
   -> dlc_runtime_api.h: dlc* compatibility API
   -> dlc_runtime.cpp: handle/type/status adaptation

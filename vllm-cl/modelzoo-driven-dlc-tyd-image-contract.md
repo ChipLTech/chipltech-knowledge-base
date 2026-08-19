@@ -255,7 +255,7 @@ delivered_runtime_qualified_by_equivalent_environment
 
 TYD delivery 默认从同一模型已交付 DLC image 的 immutable Image ID 派生。该 DLC image 是 TYD 的 build baseline，不替代 TYD full-stack qualification。
 
-在该基线之上，必须以 `DLC_TPU_VERSION=2` 重编 dlc-thunk、LLVM、DLCsim、DLCSynapse、DLC_CL、DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和适用 vLLM-DLC extension。仅设置 image `ENV` 不证明完整重编。
+在该基线之上，必须以 `DLC_TPU_VERSION=2` 重编 dlc-thunk、LLVM、DLCsim、DLCSynapse、DLC_CL、DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和适用 vLLM-CL extension。仅设置 image `ENV` 不证明完整重编。
 
 已有其他模型的 TYD image 只可作为 build recipe、attestation schema 或 component-provenance reference。除非它被明确审计为 model-agnostic、immutable、inspectable 的 reusable full-stack TYD base，否则不得直接替代当前模型的 qualified DLC image 作为最终 TYD delivery 的基础。
 
@@ -273,9 +273,9 @@ TYD full-stack rebuild 是当前模型 image delivery 的下游阶段，必须�
 
 - 从 DLC Image ID 创建新的 task-owned builder，固定 `DLC_TPU_VERSION=2`，模型权重不挂入 image。
 - 从 Host driver 的权威版本面记录 driver API version，并选择明确兼容该 version 的最小 DLCSynapse ref；历史 tag、已有 TYD image 或 tag 名称不能替代 Host driver version、source header、installed library 和 fresh import 的四层 compatibility 证明。该 fresh import 只证明 userspace compatibility；TYD target runtime 仍只能在允许的 TYD hardware 上证明。
-- 记录 dlc-thunk、DLCsim、DLCSynapse、DLC_CL、LLVM、DLC_Custom_Kernel Repository、PyTorch、vLLM、vLLM-DLC 的 source ref、submodule refs、build entrypoint、build log 和安装目标 hash。
+- 记录 dlc-thunk、DLCsim、DLCSynapse、DLC_CL、LLVM、DLC_Custom_Kernel Repository、PyTorch、vLLM、vLLM-CL 的 source ref、submodule refs、build entrypoint、build log 和安装目标 hash。
 - builder 的实际 `cmake --version` 必须严格大于 `3.27.0`。若 daily base 不满足，只能在 network/download/build 授权有效时使用批准的 Kitware 官方 release 和官方 SHA-256 在 task root bootstrap；校验值缺失/不匹配或无授权时在长编译前返回 `blocked_missing_authorization` 或 `blocked_unresolved_runtime_contract`。实际 Python/setuptools build subprocess 必须解析到该 approved CMake；`ctest`、`cpack` 仅在调用时验证。compiler、Python build environment、wheel build version、extension binary 和 package import path 必须在 builder 内实际闭合。
-- 先探测 fixed vLLM source 的 packaging mode。core 使用 `empty` platform 且 DLC 由独立 vLLM-DLC plugin 提供时，必须显式记录该模式；不得强行传入不被 core 支持的 `VLLM_TARGET_DEVICE=dlc`。
+- 先探测 fixed vLLM source 的 packaging mode。core 使用 `empty` platform 且 DLC 由独立 vLLM-CL plugin 提供时，必须显式记录该模式；不得强行传入不被 core 支持的 `VLLM_TARGET_DEVICE=dlc`。
 
 TYD full-stack rebuild 顺序固定为：
 
@@ -287,7 +287,7 @@ DLCSynapse
 DLC_CL
 DLC_Custom_Kernel Repository
 PyTorch DLC Backend
-vLLM-DLC extension
+vLLM-CL extension
 vLLM core
 ```
 
@@ -307,7 +307,7 @@ CMake subprocess mismatch
 PyTorch runtime version mismatch
   -> remove task build/dist/generated version file; rebuild from clean tree with fixed build version
 native dependency/API change
-  -> rebuild every downstream component from the changed dependency through vLLM-DLC/vLLM
+  -> rebuild every downstream component from the changed dependency through vLLM-CL/vLLM
 ```
 
 每次自动恢复必须新建 failure epoch、保存第一失败边界，并在恢复后执行受影响的最小 fresh validation。不能安全归入上述路径的失败保持 blocker，不用已有 image 或静态 library 存在性伪造成功。

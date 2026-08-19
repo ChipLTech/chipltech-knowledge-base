@@ -82,7 +82,7 @@ request / scheduler
 -> block / layer
 -> stage（Attention、MLP、MoE、cache、communication 等）
 -> framework wrapper / unified operation
--> DLC Attention Backend、PyTorch DLC Backend 或 vLLM DLC Custom Op
+-> DLC Attention Backend、PyTorch DLC Backend 或 vLLM-CL Custom Op
 -> DLC Runtime / DLCSynapse launch、copy、queue、sync
 -> DLC Custom Kernel
 ```

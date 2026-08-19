@@ -3,7 +3,7 @@
 ## 适用场景
 
 - PyTorch 2.5.0 wheel 已经构建并重装完成，需要确认环境是否真的可用。
-- 本地 `vllm` 或 `vllm-dlc` 刚做完 editable install，需要一个短路径判断它们是否健康。
+- 本地 `vllm` 或 `vllm-cl` 刚做完 editable install，需要一个短路径判断它们是否健康。
 - 想区分“包已经装上”与“DLC Platform 运行时真的健康”这两个不同问题。
 
 ## 核心结论
@@ -18,7 +18,7 @@
 
 ### 1. 切到源码树外目录
 
-推荐使用 `/tmp` 或其他明确不在 PyTorch、`vllm`、`vllm-dlc` 源码树内的目录。
+推荐使用 `/tmp` 或其他明确不在 PyTorch、`vllm`、`vllm-cl` 源码树内的目录。
 
 原因：站在源码树里 `import torch`，可能命中源码目录，出现假阴性，误判为 wheel 安装失败。
 
@@ -53,20 +53,20 @@ Jiutian 75B 恢复案例已经证明：设备可见、allocation 和 H2D 均可�
 ```bash
 python3 -c "import vllm; print(vllm.__version__, vllm.__file__)"
 python3 -m pip show vllm
-python3 -m pip list | rg '^(vllm|vllm-dlc|vllm_dlc|UNKNOWN|triton|torch|numpy)\b'
+python3 -m pip list | rg '^(vllm|vllm-cl|vllm_cl|UNKNOWN|triton|torch|numpy)\b'
 ```
 
 如果 contract 使用 candidate 内建 `DLCPlatform`：
 
 - 验证 candidate import path 和实际 platform class。
 - 记录 platform entry points、`VLLM_PLUGINS` 和 plugin 禁用状态。
-- 将 `vllm_dlc` package/import 标记为 `not_applicable`，不要执行预期失败的 plugin import 命令。
+- 将 `vllm_cl` package/import 标记为 `not_applicable`，不要执行预期失败的 plugin import 命令。
 
-如果 contract 使用 `vllm-dlc` plugin，再执行：
+如果 contract 使用 `vllm-cl` plugin，再执行：
 
 ```bash
-python3 -c "import vllm_dlc; print(vllm_dlc.__file__)"
-python3 -m pip show vllm_dlc
+python3 -c "import vllm_cl; print(vllm_cl.__file__)"
+python3 -m pip show vllm_cl
 ```
 
 Plugin import 或 metadata 失败必须使 package checkpoint 失败，不能只打印后继续。两种 contract 都应确认 `pip list` 中不再出现 `UNKNOWN`；如果当前环境策略不需要 `triton`，确认它没有成为残留冲突源。
@@ -149,12 +149,12 @@ print("LAYERED_RUNTIME_EXECUTION_PASS", flush=True)
 ```bash
 scripts/runtime-smoke.sh /tmp \
   --require-vllm \
-  --skip-vllm-dlc \
+  --skip-vllm-cl \
   --require-device-execution \
   --device-index 0
 ```
 
-Plugin deployment 将 `--skip-vllm-dlc` 替换为 `--require-vllm-dlc`；candidate 内建 `DLCPlatform` 使用 `--skip-vllm-dlc`，并单独验证 platform class、import path、entry points 和 plugin 禁用状态。`DLC_PACKAGE_SMOKE_TIMEOUT` 和 `DLC_RUNTIME_SMOKE_TIMEOUT` 可分别覆盖默认 45 秒 package/import 和 execution timeout。
+Plugin deployment 将 `--skip-vllm-cl` 替换为 `--require-vllm-cl`；candidate 内建 `DLCPlatform` 使用 `--skip-vllm-cl`，并单独验证 platform class、import path、entry points 和 plugin 禁用状态。`DLC_PACKAGE_SMOKE_TIMEOUT` 和 `DLC_RUNTIME_SMOKE_TIMEOUT` 可分别覆盖默认 45 秒 package/import 和 execution timeout。
 
 运行前仍应读取实际脚本或 `--help`。如果历史脚本版本没有 `--require-device-execution`，或没有明确输出 allocation、H2D、device operation、synchronize、D2H 和 correctness，它只能创建 `Package/Import Ready` checkpoint；此时仍需额外运行第 4 节的 layered execution smoke。
 
@@ -163,7 +163,7 @@ Plugin deployment 将 `--skip-vllm-dlc` 替换为 `--require-vllm-dlc`；candida
 - `import torch` 失败：先确认是否仍在源码树内，再回到 wheel 重装与安装位置检查。
 - NumPy bridge 失败：回到 PyTorch build preflight，重点检查 `numpy==1.26.4` 与 `USE_NUMPY`。
 - `torch.backends.dlc` 不可用：回到底层依赖安装和 DLC Platform 对接检查。
-- Contract 必需的 `vllm` / `vllm_dlc` import 失败：回到 packaging preflight，而不是直接重编 PyTorch。标记为 `not_applicable` 的 plugin 不执行失败式探测。
+- Contract 必需的 `vllm` / `vllm_cl` import 失败：回到 packaging preflight，而不是直接重编 PyTorch。标记为 `not_applicable` 的 plugin 不执行失败式探测。
 - device enumeration 失败：检查设备映射、设备节点、权限和 DLC Runtime/Host driver identity。
 - allocation 失败：检查 HBM、任务占用和 allocation 日志，不把它和 device operation hang 混为一谈。
 - H2D 失败或 hang：边界记录为 copy path，不继续执行上层模型验证。
@@ -175,7 +175,7 @@ Plugin deployment 将 `--skip-vllm-dlc` 替换为 `--require-vllm-dlc`；candida
 
 1. **在源码树中 smoke**：最常见的误判来源。
 2. **只做 `import torch`**：这不足以验证 NumPy bridge 和 DLC Platform 可用性。
-3. **把 `vllm` import 失败直接归因给 `vllm-dlc`**：底层 PyTorch wheel 不健康时，上层 import 往往只是受害者。
+3. **把 `vllm` import 失败直接归因给 `vllm-cl`**：底层 PyTorch wheel 不健康时，上层 import 往往只是受害者。
 4. **忽略 `UNKNOWN` metadata**：这说明 editable install 元数据本身还有问题。
 5. **用 allocation/H2D 代替执行验证**：设备内存可用不代表首个 device operation 能完成。
 6. **恢复命令 exit 0 就声明健康**：service restart、soft reset 或进程清理后必须由 fresh-process layered probe 验收。

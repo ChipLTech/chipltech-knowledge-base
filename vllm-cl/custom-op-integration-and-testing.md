@@ -1,20 +1,20 @@
-# vLLM DLC Custom Op 接入和测试
+# vLLM-CL Custom Op 接入和测试
 
 ## 适用场景
 
 - 为 vLLM 添加新的 DLC Custom Op。
 - 理解 vLLM 侧从 Python API 到 DLC Custom Kernel 的完整接入链路。
-- 排查 vLLM DLC 编译或运行问题。
+- 排查 vLLM-CL 编译或运行问题。
 
 ## 核心结论
 
-vLLM DLC Custom Op 通过 PyTorch extension 机制注册，接入链路为：Python wrapper (`vllm/_custom_ops.py`) → C++ binding (`torch_bindings.cpp`) → C++ 实现 (`ops.h` + `<op>.cpp`) → KernelDesc::launch("custom_<kernel>") → DLC_Custom_Kernel Repository。
+vLLM-CL Custom Op 通过 PyTorch extension 机制注册，接入链路为：Python wrapper (`vllm/_custom_ops.py`) → C++ binding (`torch_bindings.cpp`) → C++ 实现 (`ops.h` + `<op>.cpp`) → KernelDesc::launch("custom_<kernel>") → DLC_Custom_Kernel Repository。
 
-本链路中的具体文件位置属于 source-version evidence，不是永久布局。开始修改前必须固定 vLLM、vLLM-DLC、PyTorch DLC Backend 和 DLC_Custom_Kernel Repository 的实际 full SHA、packaging mode、import origin 与 native binary identity，再确定当前 owner 是 vLLM in-tree extension、独立 vLLM-DLC plugin 还是 PyTorch DLC Backend。
+本链路中的具体文件位置属于 source-version evidence，不是永久布局。开始修改前必须固定 vLLM、vLLM-CL、PyTorch DLC Backend 和 DLC_Custom_Kernel Repository 的实际 full SHA、packaging mode、import origin 与 native binary identity，再确定当前 owner 是 vLLM in-tree extension、独立 vLLM-CL plugin 还是 PyTorch DLC Backend。
 
 ## 接入链路
 
-下面路径描述历史 in-tree DLC extension 布局。当前 checkout 使用独立 vLLM-DLC plugin 或其他 packaging mode 时，应以实际 registration、build metadata 和 import path 为准，不要创建平行 binding 或强行套用旧目录。
+下面路径描述历史 in-tree DLC extension 布局。当前 checkout 使用独立 vLLM-CL plugin 或其他 packaging mode 时，应以实际 registration、build metadata 和 import path 为准，不要创建平行 binding 或强行套用旧目录。
 
 ```
 Python API: vllm/_custom_ops.py
@@ -87,13 +87,13 @@ Tensor my_dlc_op(const Tensor& input, ...) {
 
 ### 步骤 6：编译 vLLM
 
-先读取当前 source tree 的 build metadata，确认是 vLLM in-tree device extension 还是独立 vLLM-DLC plugin。只有当前构建系统明确支持 `VLLM_TARGET_DEVICE=dlc` 时才使用：
+先读取当前 source tree 的 build metadata，确认是 vLLM in-tree device extension 还是独立 vLLM-CL plugin。只有当前构建系统明确支持 `VLLM_TARGET_DEVICE=dlc` 时才使用：
 
 ```bash
 VLLM_TARGET_DEVICE=dlc pip install -e .
 ```
 
-若 core vLLM 使用 `empty` platform 并由 vLLM-DLC plugin 提供 DLC Platform 能力，应按该 plugin 的版本化构建方式安装，不得为复用本命令改变 packaging mode。
+若 core vLLM 使用 `empty` platform 并由 vLLM-CL plugin 提供 DLC Platform 能力，应按该 plugin 的版本化构建方式安装，不得为复用本命令改变 packaging mode。
 
 ### 步骤 7：编写测试
 
@@ -140,11 +140,11 @@ python test_dlc/run.py my_custom_kernel
 
 ## 相关资料
 
-- [CONTEXT.md](../CONTEXT.md) — vLLM DLC Custom Op、DLC Attention Backend 定义
+- [CONTEXT.md](../CONTEXT.md) — vLLM-CL Custom Op、DLC Attention Backend 定义
 - [pytorch-dlc-backend/operator-integration-guide.md](../pytorch-dlc-backend/operator-integration-guide.md)
 - [model-adaptation-and-main-to-main-decisions.md](model-adaptation-and-main-to-main-decisions.md)
 
 ## 来源
 
 - `/work/plan/dlc基础/vllm DLC算子添加及测试方法.md`
-- `/work/plan/dlc基础/DLC基础知识手册.md` vLLM DLC Custom Op 接入速记部分
+- `/work/plan/dlc基础/DLC基础知识手册.md` vLLM-CL Custom Op 接入速记部分

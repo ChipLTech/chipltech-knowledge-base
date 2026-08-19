@@ -6,7 +6,7 @@
 
 ## 证据与身份边界
 
-- **事实 / Fact**：调查覆盖 DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和 vLLM-DLC；最终交付只有后三个仓库的 patch。DLC_Custom_Kernel Repository 无 patch 是冻结 baseline 方案的设计结果。
+- **事实 / Fact**：调查覆盖 DLC_Custom_Kernel Repository、PyTorch DLC Backend、vLLM 和 vLLM-CL；最终交付只有后三个仓库的 patch。DLC_Custom_Kernel Repository 无 patch 是冻结 baseline 方案的设计结果。
 - **事实 / Fact**：历史 P8 安装 artifact 曾完成 QKNorm/RoPE、TP4 DLCCL、模型加载、服务和两类功能请求。
 - **事实 / Fact**：之后重建的正式 PyTorch wheel 完成 source test、torchgen、全量编译、wheel integrity、隔离安装和 schema/dispatch smoke。
 - **未验证 / Not verified**：上述 P8 Real DLC Hardware evidence 绑定旧安装 artifact，不能转移给新正式 wheel 或候选 image；交付时新 artifact 的硬件复验仍待完成。
@@ -58,7 +58,7 @@ expert-map logging 在字符串格式化前对 Chipltech-Family Accelerator tens
 |---|---|---|
 | QKNorm public schema、DLC dispatch、host validation、baseline descriptor adapter | PyTorch DLC Backend | 属于 public op 和 KernelDesc launch contract |
 | expert-map accelerator-safe logging | vLLM | 是跨后端通用 framework 行为 |
-| runner lifecycle barrier、模型 patch 重复 reduction | vLLM-DLC | 属于 DLC integration 和 model patch |
+| runner lifecycle barrier、模型 patch 重复 reduction | vLLM-CL | 属于 DLC integration 和 model patch |
 | frozen baseline DLC Custom Kernel | DLC_Custom_Kernel Repository 无本轮 patch | 当前路径通过 adapter 使用其已证明能力子集 |
 
 ## 验证矩阵

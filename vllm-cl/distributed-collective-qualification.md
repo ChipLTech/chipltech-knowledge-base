@@ -1,4 +1,4 @@
-# vLLM-DLC Distributed Collective Qualification
+# vLLM-CL Distributed Collective Qualification
 
 ## 适用场景
 
@@ -11,7 +11,7 @@
 
 1. DLC_CL/DLCCL native symbol、ordered descriptor 和 exact loaded binary。
 2. PyTorch ProcessGroup DLCCL public API、dtype/shape/count、completion boundary 和 fallback。
-3. vLLM DLC communicator 实际 route；native symbol 存在不证明该 route 调用了 collective。
+3. vLLM-CL communicator 实际 route；native symbol 存在不证明该 route 调用了 collective。
 4. 模型 workload 激活的 primitive、rank/world size、rank order 和 topology。
 5. active MoE dispatch/combine、Public Operator Schema、KernelDesc Descriptor ABI 与 DLC Custom Kernel Entry ABI/binary。
 6. topology/payload-aware route 的 selector owner、输入、稳定 strategy ABI、metadata domain、cache key 和 fallback validation。
@@ -22,7 +22,7 @@
 
 当一个 collective 有多种 topology-specific 实现时，qualification 还必须验证以下 ownership 和状态机：
 
-机器合同并行保留 frozen `vllm-dlc-distributed-collective-qualification/v1` 与 exact `v2`；validator 不把 v1 route 静默解释为 v2。v2 只允许 communicator route 持有 `selection`，并使用独立版本的 closed-world `vllm-dlc-collective-selection/v1` 子合同，显式绑定 selector source/binary identity、subject hardware topology digest、payload bytes、dtype/layout constraints 与 actual layout、local rank、primary/secondary root 角色、rank domain 和 mapping、actual rank-order permutation、selected strategy ID、exact native consumer route ID/metadata ABI digest、完整 selection-input cache-key digest，以及 fallback preferred/candidate 的逐项 validation/commit state。rank order 可以是任意完整、唯一、in-range permutation，不要求自然顺序。
+机器合同并行保留 frozen `vllm-cl-distributed-collective-qualification/v1` 与 exact `v2`；validator 不把 v1 route 静默解释为 v2。v2 只允许 communicator route 持有 `selection`，并使用独立版本的 closed-world `vllm-cl-collective-selection/v1` 子合同，显式绑定 selector source/binary identity、subject hardware topology digest、payload bytes、dtype/layout constraints 与 actual layout、local rank、primary/secondary root 角色、rank domain 和 mapping、actual rank-order permutation、selected strategy ID、exact native consumer route ID/metadata ABI digest、完整 selection-input cache-key digest，以及 fallback preferred/candidate 的逐项 validation/commit state。rank order 可以是任意完整、唯一、in-range permutation，不要求自然顺序。
 
 1. 已初始化 communicator 是实际 LYP topology、正式 lookup table、rank/root metadata 和 rank order 的唯一 selector owner；world size 只描述参与者数量，不证明 topology。
 2. framework 计算并传入真实 payload 及必要的 dtype/layout 信息，按所有 selection inputs 缓存结果，并只把稳定 strategy 与 descriptor metadata 传给 DLC Custom Kernel。payload-aware config 不得按 communicator 单键缓存。

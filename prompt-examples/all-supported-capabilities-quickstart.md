@@ -41,9 +41,9 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 | 你要做的事 | 最少提供 | 主要入口 | Owning Skill / 角色 |
 | --- | --- | --- | --- |
 | 新模型只做运行资格验证 | 模型名、绝对目录 | [新模型验证 Quickstart](new-model-validation-quickstart.md) | `modelzoo-image-validation`，委托 `model-adaptation`、`dlc-env-setup` |
-| 从每日空镜像初始化环境并做新模型适配 | 模型名、绝对目录 | [每日空镜像到新模型适配](vllm-dlc-fresh-image-to-model-adaptation.md) | Stage 0/2 `model-adaptation`，Stage 1 `dlc-env-setup` |
-| 模型兼容性/加载/Serving 适配分析 | 模型名、绝对目录 | [vLLM-DLC Model Adaptation](vllm-dlc-model-adaptation.md) | `model-adaptation` |
-| 将模型适配证据整理成决策摘要 | 模型名、绝对目录、证据路径、读者问题 | [Model Adaptation Analysis Summary](vllm-dlc-model-adaptation-analysis-summary.md) | `model-adaptation`（报告模式） |
+| 从每日空镜像初始化环境并做新模型适配 | 模型名、绝对目录 | [每日空镜像到新模型适配](vllm-cl-fresh-image-to-model-adaptation.md) | Stage 0/2 `model-adaptation`，Stage 1 `dlc-env-setup` |
+| 模型兼容性/加载/Serving 适配分析 | 模型名、绝对目录 | [vLLM-CL Model Adaptation](vllm-cl-model-adaptation.md) | `model-adaptation` |
+| 将模型适配证据整理成决策摘要 | 模型名、绝对目录、证据路径、读者问题 | [Model Adaptation Analysis Summary](vllm-cl-model-adaptation-analysis-summary.md) | `model-adaptation`（报告模式） |
 | 将已完成技术工作提炼成一句话交付总结 | 实现/验证材料路径、目标读者 | [技术交付一句话总结方法](../foundation/technical-delivery-summary.md) | `technical-delivery-summary` |
 | 模型资格通过后交付 DLC/TYD Images | 模型名、绝对目录 | [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md) | `modelzoo-image-validation` |
 | 按 Host Daily Image Runbook 做完整环境和模型验证 | 模型名、绝对目录 | [Host Daily Image 到模型验证](host-daily-image-to-model-validation.md) | Runbook 编排多个 Skills |
@@ -60,9 +60,9 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 | DLC Runtime 报错、hang、worker 退出或进程残留 | 日志、命令、说明 | [业务套餐七](dlc-business-skill-examples-quickstart.md#套餐七dlc-runtime-报错hang-或进程残留) | `diagnosing-bugs` |
 | vLLM 部分 token 后异步 launch failure / HTTP 500 | 启动命令、固定请求、日志 | [异步 Launch Failure 定位](vllm-async-launch-failure-localization.md) | `diagnosing-bugs`，必要时 `model-adaptation` |
 | vLLM TTFT/TPOT/ITL/吞吐性能热点 | serve command、固定 workload、baseline | [性能热点分层定位](vllm-performance-hotspot-localization.md) | `diagnosing-bugs` |
-| 模型 distributed/MoE route 资格边界 | 模型/deployment identity、active route inventory | [Distributed Collective Qualification](../vllm-dlc/distributed-collective-qualification.md)（supporting reference，不是独立 capability entrypoint） | `model-adaptation` |
-| Prefill/Decode Separation 部署或诊断 | 模型名、绝对目录 | [Prefill/Decode Separation](vllm-dlc-prefill-decode-separation.md) | `pd-separation` |
-| 精确 upstream vLLM Main-to-Main Upgrade | 目标 full SHA、仓库/evidence | [Main-to-Main Upgrade](vllm-dlc-main-to-main-upgrade.md) | `main-to-main-upgrade` |
+| 模型 distributed/MoE route 资格边界 | 模型/deployment identity、active route inventory | [Distributed Collective Qualification](../vllm-cl/distributed-collective-qualification.md)（supporting reference，不是独立 capability entrypoint） | `model-adaptation` |
+| Prefill/Decode Separation 部署或诊断 | 模型名、绝对目录 | [Prefill/Decode Separation](vllm-cl-prefill-decode-separation.md) | `pd-separation` |
+| 精确 upstream vLLM Main-to-Main Upgrade | 目标 full SHA、仓库/evidence | [Main-to-Main Upgrade](vllm-cl-main-to-main-upgrade.md) | `main-to-main-upgrade` |
 | 可选：固定 Hermes ModelZoo runner 做单模型验证 | 模型名、模型路径 | [Hermes ModelZoo 单模型验证](hermes-modelzoo-batch-validation.md) | 仅限匹配的固定环境；通用资格使用 `modelzoo-image-validation` |
 | 长任务换 Session 或交接同事 | 当前 Session/材料 | [业务套餐八](dlc-business-skill-examples-quickstart.md#套餐八长任务换-session-或交接同事) | `handoff` |
 | 把可复用经验写回知识库 | 报告、日志、测试或实验目录 | [业务套餐九](dlc-business-skill-examples-quickstart.md#套餐九把本次经验写回知识库) | 按问题域更新，必要时加载对应 Skill |
@@ -93,16 +93,16 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 直接这样说：
 
 ```markdown
-参考 `prompt-examples/vllm-dlc-fresh-image-to-model-adaptation.md`，在每日空镜像环境下完成模型 `<MODEL_NAME>` 的 vLLM-DLC / DLC Platform 适配。
+参考 `prompt-examples/vllm-cl-fresh-image-to-model-adaptation.md`，在每日空镜像环境下完成模型 `<MODEL_NAME>` 的 vLLM-CL / DLC Platform 适配。
 
 模型目录：`<ABSOLUTE_LOCAL_MODEL_PATH>`
 
 请严格按三个阶段执行：先用 `model-adaptation` 做只读 capability matrix 和 pre-handoff deployment profile；再用 `dlc-env-setup` 完成环境、C1a/C1b 和 `environment_handoff/v1`；handoff 合格后再做 device-backed adaptation。其余可发现字段自动发现，只在下一步确实需要时请求最小授权。
 ```
 
-详细规则：[每日空镜像到新模型 vLLM-DLC 适配 Prompt](vllm-dlc-fresh-image-to-model-adaptation.md)
+详细规则：[每日空镜像到新模型 vLLM-CL 适配 Prompt](vllm-cl-fresh-image-to-model-adaptation.md)
 
-关键边界：环境通过不等于模型 acceptance；Stage 2 不直接修改 `vllm-dlc`；短 Prompt smoke 不能外推长上下文、Chunked Prefill 或完整 Real DLC Hardware acceptance。
+关键边界：环境通过不等于模型 acceptance；Stage 2 不直接修改 `vllm-cl`；短 Prompt smoke 不能外推长上下文、Chunked Prefill 或完整 Real DLC Hardware acceptance。
 
 ## 3. 单模型兼容性或 Serving 适配分析
 
@@ -111,15 +111,15 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 直接这样说：
 
 ```markdown
-请使用 `model-adaptation` 分析模型 `<MODEL_NAME>` 的 vLLM-DLC / DLC Platform 兼容性。
+请使用 `model-adaptation` 分析模型 `<MODEL_NAME>` 的 vLLM-CL / DLC Platform 兼容性。
 模型目录：`<ABSOLUTE_LOCAL_MODEL_PATH>`
 
-参考 `prompt-examples/vllm-dlc-model-adaptation.md`。先完成只读 compatibility matrix 和 deployment profile；只有匹配的 handoff、qualification execution 和 device authorization 齐全时，才继续 device-backed validation。
+参考 `prompt-examples/vllm-cl-model-adaptation.md`。先完成只读 compatibility matrix 和 deployment profile；只有匹配的 handoff、qualification execution 和 device authorization 齐全时，才继续 device-backed validation。
 ```
 
-详细规则：[vLLM-DLC Model Adaptation 可复用 Prompt](vllm-dlc-model-adaptation.md)
+详细规则：[vLLM-CL Model Adaptation 可复用 Prompt](vllm-cl-model-adaptation.md)
 
-关键边界：不负责 DLC Ecosystem 重建，不做 Main-to-Main Upgrade，不直接修改 `vllm-dlc`；未执行的 real weights、DLC Runtime dispatch 和 Real DLC Hardware 项必须写 `not_verified`。
+关键边界：不负责 DLC Ecosystem 重建，不做 Main-to-Main Upgrade，不直接修改 `vllm-cl`；未执行的 real weights、DLC Runtime dispatch 和 Real DLC Hardware 项必须写 `not_verified`。
 
 ## 3.1 将模型适配证据整理成决策摘要
 
@@ -128,13 +128,13 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 直接这样说：
 
 ```markdown
-请使用 `prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md`，将模型 `<MODEL_NAME>` 的适配材料整理成面向 `<AUDIENCE>` 的 Decision Summary 和 Technical Attachment。
+请使用 `prompt-examples/vllm-cl-model-adaptation-analysis-summary.md`，将模型 `<MODEL_NAME>` 的适配材料整理成面向 `<AUDIENCE>` 的 Decision Summary 和 Technical Attachment。
 模型目录：`<ABSOLUTE_LOCAL_MODEL_PATH>`
 证据路径：`<EVIDENCE_PATHS>`
 读者决策问题：`<QUESTIONS>`
 ```
 
-详细规则：[Model Adaptation Analysis Summary Prompt](vllm-dlc-model-adaptation-analysis-summary.md)
+详细规则：[Model Adaptation Analysis Summary Prompt](vllm-cl-model-adaptation-analysis-summary.md)
 
 关键边界：该入口只整理已有证据；读者和决策问题为必填，不执行 build、install、device、benchmark 或 workspace mutation，也不替代 `model-adaptation`、`diagnosing-bugs` 或 Real DLC Hardware qualification。readiness、源码存在、timeout、参考性能和单请求 token/s 不能升级为模型完成、根因、实测或服务吞吐。
 
@@ -207,14 +207,14 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 6. 重建或修复 DLC Ecosystem 环境
 
-什么时候用：工作站或容器的 PyTorch 2.5.0 wheel、DLC Platform、DLC_Custom_Kernel Repository、vLLM 或 vLLM-DLC 环境损坏或需要阶段化重建。
+什么时候用：工作站或容器的 PyTorch 2.5.0 wheel、DLC Platform、DLC_Custom_Kernel Repository、vLLM 或 vLLM-CL 环境损坏或需要阶段化重建。
 
 直接这样说：
 
 ```markdown
 请使用 `dlc-env-setup` 修复 DLC Ecosystem 环境。
 
-模式：<全量重建 / 从某阶段开始 / 只修 vLLM-vLLM-DLC>
+模式：<全量重建 / 从某阶段开始 / 只修 vLLM-vLLM-CL>
 已有仓库或错误材料：<路径；不知道写“请自动发现”>
 
 参考 `prompt-examples/dlc-env-setup-skill-usage.md`。先只读发现仓库、Git identity、依赖健康和最小 rebuild 起点；任何 ref 切换、安装、构建、`/usr/local` 修改或 Host maintenance 都按最小授权执行。
@@ -368,7 +368,7 @@ QKNorm 拓扑感知 AllReduce 示例：
 直接这样说：
 
 ```markdown
-请使用 `diagnosing-bugs` 定位这次 vLLM-DLC 异步 launch failure。
+请使用 `diagnosing-bugs` 定位这次 vLLM-CL 异步 launch failure。
 
 完整启动命令、固定失败请求、server log 和 client output：`<ARTIFACT_PATH>`
 
@@ -386,7 +386,7 @@ QKNorm 拓扑感知 AllReduce 示例：
 直接这样说：
 
 ```markdown
-请使用 `diagnosing-bugs` 定位这次 vLLM-DLC 性能热点或回归。
+请使用 `diagnosing-bugs` 定位这次 vLLM-CL 性能热点或回归。
 
 模型、完整 serve command、固定 workload、baseline 和 artifact 目录：`<MATERIAL_PATH>`
 
@@ -407,29 +407,29 @@ QKNorm 拓扑感知 AllReduce 示例：
 请使用 `pd-separation` 部署并验证模型 `<MODEL_NAME>` 的 Prefill/Decode Separation。
 模型目录：`<ABSOLUTE_LOCAL_MODEL_PATH>`
 
-参考 `prompt-examples/vllm-dlc-prefill-decode-separation.md`。自动发现并提出 topology、设备、端口、transport 和 KV Cache Transfer Contract；先完成 Transport Qualification Gate，再加载 Prefill/Decode roles，持续执行到 `pd_validated` 或明确 terminal blocker。
+参考 `prompt-examples/vllm-cl-prefill-decode-separation.md`。自动发现并提出 topology、设备、端口、transport 和 KV Cache Transfer Contract；先完成 Transport Qualification Gate，再加载 Prefill/Decode roles，持续执行到 `pd_validated` 或明确 terminal blocker。
 ```
 
-详细规则：[vLLM-DLC Prefill/Decode Separation Prompt](vllm-dlc-prefill-decode-separation.md)
+详细规则：[vLLM-CL Prefill/Decode Separation Prompt](vllm-cl-prefill-decode-separation.md)
 
 关键边界：两个 role Ready、HTTP 200、非空输出或 connector handshake 都不证明 KV Cache transfer；`pd_validated` 需要 request-correlated routing、KV consumption 和 monolithic functional equivalence evidence。
 
 ## 18. Main-to-Main Upgrade
 
-什么时候用：把 vLLM-DLC main 对齐到精确 upstream vLLM full SHA、恢复未知基线，或做全局 compatibility impact 分析。
+什么时候用：把 vLLM-CL main 对齐到精确 upstream vLLM full SHA、恢复未知基线，或做全局 compatibility impact 分析。
 
 直接这样说：
 
 ```markdown
-请使用 `main-to-main-upgrade` 分析 vLLM-DLC 对齐任务。
+请使用 `main-to-main-upgrade` 分析 vLLM-CL 对齐任务。
 
 目标 upstream vLLM 完整 SHA：`<TARGET_VLLM_FULL_SHA>`
 仓库快照、历史范围和已有 evidence：`<PATH_OR_SUMMARY>`
 
-参考 `prompt-examples/vllm-dlc-main-to-main-upgrade.md`。先核验全部强制输入和当前 Git 状态；缺失时返回精确 blocker。保持 report-only、no-finalize，不修改仓库、不 commit、不写入伪造的 Verified vLLM Alignment。
+参考 `prompt-examples/vllm-cl-main-to-main-upgrade.md`。先核验全部强制输入和当前 Git 状态；缺失时返回精确 blocker。保持 report-only、no-finalize，不修改仓库、不 commit、不写入伪造的 Verified vLLM Alignment。
 ```
 
-详细规则：[vLLM-DLC Main-to-Main Upgrade Prompt](vllm-dlc-main-to-main-upgrade.md)
+详细规则：[vLLM-CL Main-to-Main Upgrade Prompt](vllm-cl-main-to-main-upgrade.md)
 
 关键边界：target 必须是 full SHA；候选 checkout、README 或历史记录不能称为 Verified vLLM Alignment；单模型适配应改用 `model-adaptation`。
 

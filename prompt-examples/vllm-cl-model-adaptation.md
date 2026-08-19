@@ -1,7 +1,7 @@
 ---
-prompt_schema: vllm-dlc-reusable-prompt/v2
+prompt_schema: vllm-cl-reusable-prompt/v2
 skill_identity: model-adaptation
-shared_contract: vllm-dlc-contract/v1
+shared_contract: vllm-cl-contract/v1
 required_user_inputs:
   - model_name
   - absolute_local_model_path
@@ -18,7 +18,7 @@ missing_input_reason: blocked_missing_asset
 hardware_evidence: not_verified
 ---
 
-# vLLM-DLC Model Adaptation 可复用 Prompt
+# vLLM-CL Model Adaptation 可复用 Prompt
 
 ## 用途
 
@@ -36,11 +36,11 @@ hardware_evidence: not_verified
 模型名称：<MODEL_NAME>
 模型目录：<ABSOLUTE_LOCAL_MODEL_PATH>
 
-先 query-only 读取模型 config、weights、tokenizer/processor，计算 stable digest；自动发现 vLLM/vllm-dlc/source/package full SHAs、dirty state、可用设备和历史 evidence，并在源码树外提出 artifact destination。然后生成 resolved model identity、capability matrix、TP/PP/EP/DCP、dtype/quantization、context/batching、Chunked Prefill、served alias、hardware requirement、SMI status 和 dependency inventory。revision 无可信来源时写 `null`，不要阻断已由绝对路径和 digest 唯一确定的本地资产。
+先 query-only 读取模型 config、weights、tokenizer/processor，计算 stable digest；自动发现 vLLM/vllm-cl/source/package full SHAs、dirty state、可用设备和历史 evidence，并在源码树外提出 artifact destination。然后生成 resolved model identity、capability matrix、TP/PP/EP/DCP、dtype/quantization、context/batching、Chunked Prefill、served alias、hardware requirement、SMI status 和 dependency inventory。revision 无可信来源时写 `null`，不要阻断已由绝对路径和 digest 唯一确定的本地资产。
 
 默认先执行只读 static/pre-handoff analysis。若当前已有匹配的 `environment_handoff/v1`、`qualification_execution` 和 device execution authorization，则继续 device-backed validation；KILL 另需 `task_owned_kill`。否则只在该步骤成为继续条件时返回 `blocked_missing_authorization` 或 handoff blocker，不要求我预填上述派生字段。
 
-通过 `shared_contract: vllm-dlc-contract/v1` 消费 runner，不自行复制其行为。Dummy 仅可在合格 real-weight failure 后 diagnostic-only。保持 vllm-dlc source/manifest/alignment/metadata/branch/index/generated files 只读；不得声称 Verified vLLM Alignment。未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
+通过 `shared_contract: vllm-cl-contract/v1` 消费 runner，不自行复制其行为。Dummy 仅可在合格 real-weight failure 后 diagnostic-only。保持 vllm-cl source/manifest/alignment/metadata/branch/index/generated files 只读；不得声称 Verified vLLM Alignment。未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
 
 模型适配分析时额外检查：
 - serving 启动参数与请求中的 `model` 名必须一致；如果启动用了 `--served-model-name`，OpenAI 请求必须使用该 alias，而不是误用模型路径。
@@ -63,5 +63,5 @@ hardware_evidence: not_verified
 
 ## 相关资料
 
-- [模型适配与 Main-to-Main 决策记录](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [模型适配与 Main-to-Main 决策记录](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
 - [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md)

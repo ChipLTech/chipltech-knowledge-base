@@ -19,8 +19,8 @@
 - dispatch fallback: operator-dispatch/enabled-kernels-dispatch.md
 - 测试: testing/pytorch-test-framework-guide.md, testing/dlc-kernel-test-framework-guide.md
 - 精度定位: precision-debugging/precision-debugging-overview.md
-- vLLM: vllm-dlc/custom-op-integration-and-testing.md
-- 批量模型验证: `case-studies/modelzoo-batch-validation-all-difficulties.md` → `vllm-dlc/modelzoo-startup-params-spec.md` → `prompt-examples/hermes-modelzoo-batch-validation.md`
+- vLLM: vllm-cl/custom-op-integration-and-testing.md
+- 批量模型验证: `case-studies/modelzoo-batch-validation-all-difficulties.md` → `vllm-cl/modelzoo-startup-params-spec.md` → `prompt-examples/hermes-modelzoo-batch-validation.md`
 - 调试: debugging-workflows/common-debug-commands.md
 - runtime: runtime-debugging/runtime-troubleshooting.md
 - 性能定位: runtime-debugging/performance-profiling.md
@@ -42,8 +42,8 @@
 | dispatch 配置 | `operator-dispatch/enabled-kernels-dispatch.md` |
 | 算子精度定位 | `precision-debugging/precision-debugging-overview.md` → `model-site-dump-to-repro.md` |
 | 编写测试 | `testing/pytorch-test-framework-guide.md` / `testing/dlc-kernel-test-framework-guide.md` |
-| vLLM 集成 | `vllm-dlc/custom-op-integration-and-testing.md` |
-| 模型功能验证 | `vllm-dlc/modelzoo-startup-params-spec.md` → `case-studies/modelzoo-batch-validation-all-difficulties.md` |
+| vLLM 集成 | `vllm-cl/custom-op-integration-and-testing.md` |
+| 模型功能验证 | `vllm-cl/modelzoo-startup-params-spec.md` → `case-studies/modelzoo-batch-validation-all-difficulties.md` |
 | 环境配置 | 先加载 `dlc-env-setup`，它是唯一 current executable authority；`runtime-debugging/environment-setup-and-update.md` 仅作历史 rationale |
 | 常见报错 | `runtime-debugging/common-error-log.md` |
 | 调试命令 | `debugging-workflows/common-debug-commands.md` |
@@ -63,7 +63,7 @@
 4. 排除 `VLLM_USE_DLC_COL_MAJOR_MATMUL` (当前版本不兼容)
 5. 容器: `modelzoo-batch-base` (Tier 1), `qwen32b_env` (Tier 2)
 6. 参考: `case-studies/modelzoo-batch-validation-all-difficulties.md` (16 个已知困难)
-7. 参考: `vllm-dlc/modelzoo-startup-params-spec.md` (启动参数规范)
+7. 参考: `vllm-cl/modelzoo-startup-params-spec.md` (启动参数规范)
 8. 参考: `prompt-examples/hermes-modelzoo-batch-validation.md` (Hermes 批量验证 prompt)
 
 ### 精度定位原则

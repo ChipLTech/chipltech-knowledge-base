@@ -15,7 +15,7 @@
 
 - 新机器或新容器中还没有完整的 DLC Ecosystem 源码仓库。
 - 缺少满足 `cmake --version > 3.27.0` 的可用 CMake。
-- 本地 `vllm` / `vllm-dlc` repair 所需仓库尚未 clone。
+- 本地 `vllm` / `vllm-cl` repair 所需仓库尚未 clone。
 - 希望先完成可审计的初始化，再进入标准重建流程。
 
 ## 初始化模板
@@ -40,7 +40,7 @@
 【是否允许 clone 缺失仓库】<是/否>
 【是否允许下载新版 CMake 源码】<是/否>
 【是否允许修改 /usr/local】<是/否>
-【是否包含 vllm / vllm-dlc】<是/否>
+【是否包含 vllm / vllm-cl】<是/否>
 【版本策略】<CI默认最新 / 固定ref / 混合；默认推荐 CI默认最新>
 【已批准的仓库 ref】<若版本策略为 CI默认最新，可写“使用 Arsenal CI 默认分支最新 head”；若固定ref/混合，逐仓库填写 remote URL、branch/tag 和可选 commit SHA；不得自行猜测>
 【批准的 CMake 版本与 SHA-256】<版本必须 >3.27.0；SHA-256 来自 Kitware 官方发布信息或用户批准值；没有则写“未提供”>
@@ -57,7 +57,7 @@
 2. 先做 repo discovery，不要默认 `/home/workspace`。
    - 先检查交互 shell 和计划使用的实际 Python/setuptools build subprocess 分别解析到的 `cmake`；只有二者为同一 approved binary 且版本严格大于 `3.27.0` 时，才记录路径/版本并跳过 CMake bootstrap。`ctest`、`cpack` 仅在本次会调用时检查。
    - 搜索可用 CMake 源码树、`dlc-thunk`、`DLCsim`、`DLCSynapse`、`DLC_CL`、`LLVM`、`DLC_Custom_Kernel`、`pytorch`。
-   - 如果要求包含 `vllm` / `vllm-dlc`，再搜索这两个仓库。
+   - 如果要求包含 `vllm` / `vllm-cl`，再搜索这两个仓库。
    - 如果要求 SMI 观测、driver source、设备诊断工具 source 或 CI 对齐报告，再搜索 `chipltech_smi_lib`、`arsenal`、`cl-persistenced`、`DLC-Kernel-Driver` 和 `cl_tools`；这些不是 `dlc-env-setup` 的最小必需仓库，缺失时只在被请求时 clone。
    - 对每个 Git 候选记录并回显：发现路径、`git rev-parse --show-toplevel`、`git remote -v`、`git branch --show-current`、`git rev-parse HEAD`、`git status --short`。
    - CI默认最新策略下，remote 必须匹配 ChipLTech 对应仓库，branch 必须是映射中的 CI 默认分支；固定ref/混合策略下，Git root、remote、branch/tag 和 HEAD 必须与【已批准的仓库 ref】一致或获得用户明确确认后，才能把候选列入 repo map。
@@ -75,7 +75,7 @@
      - `git@github.com:ChipLTech/DLC_Custom_Kernel.git`
      - `git@github.com:ChipLTech/pytorch.git`
      - 可选：`git@github.com:ChipLTech/vllm.git`
-     - 可选：`git@github.com:ChipLTech/vllm-dlc.git`
+     - 可选：`git@github.com:ChipLTech/vllm-cl.git`
      - 可选：`git@github.com:ChipLTech/chipltech_smi_lib.git`
      - 可选：`git@github.com:ChipLTech/cl-persistenced.git`
      - 可选：`git@github.com:ChipLTech/arsenal.git`
@@ -114,7 +114,7 @@
    - `export DLC_CUSTOM_KERNEL_SRC=/path/to/DLC_Custom_Kernel`
    - `export PYTORCH_SRC=/path/to/pytorch`
    - 可选：`export VLLM_SRC=/path/to/vllm`
-   - 可选：`export VLLM_DLC_SRC=/path/to/vllm-dlc`
+   - 可选：`export VLLM_CL_SRC=/path/to/vllm-cl`
    - 可选：`export CHIPLTECH_SMI_LIB_SRC=/path/to/chipltech_smi_lib`
    - 可选：`export ARSENAL_SRC=/path/to/arsenal`
    - 可选：`export CL_PERSISTENCED_SRC=/path/to/cl-persistenced`
@@ -157,7 +157,7 @@
 10. 如果后续 target 包含 TYD full-stack rebuild，在 bootstrap 结束前额外输出 driver API compatibility map：当前 driver API、候选 DLCSynapse ref、source header 中的 API version、需要重新构建的下游组件。不要根据 tag 名称、已有 image 或已安装同名 library 推断兼容性。current executable order 和 invalidation 由 `dlc-env-setup` owning Skill 基于发现的 dependency identities 决定；本文不复制固定重建顺序。
     - 对 task-owned builder source 的所有主 repo 和 build-time submodule，输出 `safe.directory` 路径清单；不要配置宽泛的 `safe.directory '*'`。
     - 说明 PyTorch build version 必须在首次 configure 前设置，wheel metadata、generated `torch/version.py` 和 source-tree 外 import 必须完全相同。
-    - 读取固定 vLLM source 的 `setup.py`，输出 core packaging mode。若 core 使用 `empty` platform 加独立 vLLM-DLC plugin，明确记录，不要传入不支持的 `VLLM_TARGET_DEVICE=dlc`。
+    - 读取固定 vLLM source 的 `setup.py`，输出 core packaging mode。若 core 使用 `empty` platform 加独立 vLLM-CL plugin，明确记录，不要传入不支持的 `VLLM_TARGET_DEVICE=dlc`。
 
 11. 初始化完成后停止，不继续长构建。交付：
    - 最终 repo map，以及每个仓库的 Git root、remote、branch/tag、HEAD、status。

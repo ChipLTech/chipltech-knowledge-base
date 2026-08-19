@@ -2,7 +2,7 @@
 
 > 适用场景: Hermes 执行单个模型的 DLC Platform 功能验证
 > 依赖: `modelzoo-batch-base` 容器, `run-one-model.py`
-> 知识库: `vllm-dlc/modelzoo-startup-params-spec.md`, `case-studies/modelzoo-batch-validation-all-difficulties.md`
+> 知识库: `vllm-cl/modelzoo-startup-params-spec.md`, `case-studies/modelzoo-batch-validation-all-difficulties.md`
 
 ## 用途
 

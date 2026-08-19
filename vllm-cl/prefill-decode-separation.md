@@ -1,4 +1,4 @@
-# vLLM-DLC Prefill/Decode Separation
+# vLLM-CL Prefill/Decode Separation
 
 ## 适用场景
 
@@ -13,7 +13,7 @@
 - **建议 / Recommendation**：跨机器部署使用 TCP；`lyp_full` 仅用于已经单独验证的同机拓扑。旧 `lyp` 只用于诊断，不作为生产推荐。
 - **建议 / Recommendation**：加载两个模型实例前先执行 Transport Qualification Gate，要求双端并发初始化、非空 payload、send/receive completion 和内容校验。
 - **事实 / Fact**：`/health`、connector handshake、HTTP 200、非空输出和 benchmark 完成都不能单独证明 KV transfer 已完成。
-- **未验证 / Not verified**：当前资料未绑定 mooncake-dlc、vLLM、vllm-dlc 和 PyTorch DLC Backend 的 exact full SHA，也未给出 TransferEngine 全部 RPC/handshake 端口，因此具体 CLI、metadata、端口和 layout 必须以实际 checkout 与 `--help` 为准。
+- **未验证 / Not verified**：当前资料未绑定 mooncake-dlc、vLLM、vllm-cl 和 PyTorch DLC Backend 的 exact full SHA，也未给出 TransferEngine 全部 RPC/handshake 端口，因此具体 CLI、metadata、端口和 layout 必须以实际 checkout 与 `--help` 为准。
 
 ## 术语与组件边界
 
@@ -32,7 +32,7 @@
 
 | 类别 | 必须记录 |
 |---|---|
-| Source/package identity | vLLM、vllm-dlc、mooncake-dlc、PyTorch DLC Backend、DLC Runtime 的 exact identity |
+| Source/package identity | vLLM、vllm-cl、mooncake-dlc、PyTorch DLC Backend、DLC Runtime 的 exact identity |
 | Model identity | weights、tokenizer/processor、可信 revision 或 recursive digest、API model alias |
 | Role profile | Prefill/Decode host/container epoch、visible devices、TP/PP/EP/DCP、dtype、quantization、context、block/cache 配置 |
 | Topology | `single_node_tcp`、`single_node_lyp_full`、qualified `single_node_dlccl_direct` 或 `cross_machine_tcp` |
@@ -215,6 +215,6 @@ Chip ID 写入、kernel module reload、HBM repair、Bluejay/firmware 初始化�
 - [Model Adaptation 与 Main-to-Main 决策](model-adaptation-and-main-to-main-decisions.md)
 - [性能分析](../runtime-debugging/performance-profiling.md)
 - [Arsenal CI 与黑盒测试](../testing/arsenal-ci-and-blackbox-testing.md)
-- [PD 分离可复用 Prompt](../prompt-examples/vllm-dlc-prefill-decode-separation.md)
-- [node-8-45 PD transport 与 LYP 恢复案例](../case-studies/vllm-dlc-pd-transport-and-lyp-recovery.md)
+- [PD 分离可复用 Prompt](../prompt-examples/vllm-cl-prefill-decode-separation.md)
+- [node-8-45 PD transport 与 LYP 恢复案例](../case-studies/vllm-cl-pd-transport-and-lyp-recovery.md)
 - 外部 workflow：`skills.git` 中的 `skills/engineering/pd-separation/SKILL.md`，需安装到 Kilo 或从 skills checkout 读取。

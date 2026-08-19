@@ -2,18 +2,18 @@
 
 ## 问题现象
 
-一份 Qwen3.5-27B 历史运行报告显示：模型在 DLC Chip、TP=2、vLLM-DLC eager serving 中单 token decode 延迟偏高。目标是从端到端请求逐层定位热点，而不是预设某个 Attention kernel 有缺陷。
+一份 Qwen3.5-27B 历史运行报告显示：模型在 DLC Chip、TP=2、vLLM-CL eager serving 中单 token decode 延迟偏高。目标是从端到端请求逐层定位热点，而不是预设某个 Attention kernel 有缺陷。
 
 ## 证据与身份边界
 
 原始过程文档记录了 Real DLC Hardware 请求日志、profile JSON、DLCSynapse `syn_*.ansi` log、kernel summary 和带 `torch.dlc.synchronize()` 的插桩结果，但没有保存：
 
-- vLLM、vllm-dlc、PyTorch DLC Backend、DLCSynapse 的 exact revision。
+- vLLM、vllm-cl、PyTorch DLC Backend、DLCSynapse 的 exact revision。
 - image digest、dirty state 和修改文件路径。
 - profile 工具/version/config identity。
 - 可由当前工作区读取的原始 artifact 路径。
 
-当前 `/work/vllm` 和 `/work/vllm-dlc` 源码搜索不到报告中的 `forward_includes_kv_cache_update` 或 `unified_kv_cache_update()`。因此本文把具体字段、调用链和修复记为 **historical reported observation**，不描述为当前源码事实。通用方法和 claim boundary 不依赖该字段存在。
+当前 `/work/vllm` 和 `/work/vllm-cl` 源码搜索不到报告中的 `forward_includes_kv_cache_update` 或 `unified_kv_cache_update()`。因此本文把具体字段、调用链和修复记为 **historical reported observation**，不描述为当前源码事实。通用方法和 claim boundary 不依赖该字段存在。
 
 ## 历史 workload
 
@@ -137,7 +137,7 @@ declared ownership
 以下仍为 `not_verified`：
 
 - exact source/image/package identity。
-- 当前 vLLM/vllm-dlc 是否仍存在相同 contract。
+- 当前 vLLM/vllm-cl 是否仍存在相同 contract。
 - 去除 print、强制同步和临时 wrapper 后的 TTFT、TPOT、ITL、request latency 和 throughput 收益。
 - 多 server epoch 的性能分布和稳定性。
 - 长上下文、prefill、并发、Graph、speculative decoding 和其他 KV cache layout。

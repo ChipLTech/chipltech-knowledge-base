@@ -1,6 +1,6 @@
 # 用 `dlc-env-setup` skill 重建 DLC Ecosystem 工作站环境
 
-专门面向 DLC Ecosystem 工作站重建与修复的 prompt 模板。执行权威是当前已发现的 `dlc-env-setup/SKILL.md` 及其脚本，覆盖 repo discovery、Git 安全检查、分阶段重建、PyTorch 2.5.0 wheel、可选本地 `vllm` / `vllm-dlc` repair，以及源码树外 DLC Runtime smoke。`/work` 仅可作为部署示例，不能假定为当前路径。
+专门面向 DLC Ecosystem 工作站重建与修复的 prompt 模板。执行权威是当前已发现的 `dlc-env-setup/SKILL.md` 及其脚本，覆盖 repo discovery、Git 安全检查、分阶段重建、PyTorch 2.5.0 wheel、可选本地 `vllm` / `vllm-cl` repair，以及源码树外 DLC Runtime smoke。`/work` 仅可作为部署示例，不能假定为当前路径。
 
 **阅读说明**：
 - `▶ 可复制 prompt` 后的代码块可直接发给 AI，使用前替换 `<>` 占位符。
@@ -31,10 +31,10 @@
 边界如下：
 
 - `model-adaptation` 的 pre-handoff analysis 只负责 capability matrix、deployment profile 和模型级 Attention/tokenizer/processor/distributed 边界，不得 model load 或 device execution。
-- `dlc-env-setup` 负责环境层的 repo discovery、Git 安全检查、DLC Ecosystem 分阶段重建、PyTorch 2.5.0 wheel、本地 `vllm` / `vllm-dlc` repair 和可执行 C1a/C1b probe；Host Daily Image Runbook 负责 C0/C1a/C1b evidence、handoff 与后续 workload mechanics。
+- `dlc-env-setup` 负责环境层的 repo discovery、Git 安全检查、DLC Ecosystem 分阶段重建、PyTorch 2.5.0 wheel、本地 `vllm` / `vllm-cl` repair 和可执行 C1a/C1b probe；Host Daily Image Runbook 负责 C0/C1a/C1b evidence、handoff 与后续 workload mechanics。
 - `runtime-smoke.sh /tmp` 和 import 只证明 package/import health，不是 handoff、C1b、模型 serving 或 device-backed adaptation gate。
 - device-backed model-adaptation 只在 Contract-bound pre-handoff profile、C0/C1a/C1b/required collective 和 `environment_handoff/v1` 都合格后开始，不得把环境初始化结果当作新模型的 Real DLC Hardware acceptance、DLC Runtime dispatch 或 Verified vLLM Alignment 证据。
-- 可直接使用 [vllm-dlc-fresh-image-to-model-adaptation.md](vllm-dlc-fresh-image-to-model-adaptation.md) 作为三阶段 prompt 模板。
+- 可直接使用 [vllm-cl-fresh-image-to-model-adaptation.md](vllm-cl-fresh-image-to-model-adaptation.md) 作为三阶段 prompt 模板。
 
 ## 全量或分阶段重建
 
@@ -58,7 +58,7 @@
 【搜索根目录】<例如 /work,$HOME；不确定则写“请自动发现”>
 【版本策略】<保持当前 checkout / CI默认最新 / 固定ref / 混合；缺仓库且授权 bootstrap 时默认推荐 CI默认最新>
 【需要切换的批准 ref】<保持当前 checkout 时写“无”；CI默认最新可写“使用 Arsenal CI 默认分支最新 head”；固定ref/混合时逐仓库填写 remote URL、目标 branch/tag 和可选 commit SHA>
-【是否包含 vllm / vllm-dlc】<是/否>
+【是否包含 vllm / vllm-cl】<是/否>
 【是否允许修改 /usr/local】<是/否>
 【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；若已满足则不要重装
 【容器/宿主机约束】<是否挂载 /mnt/jfs、/dev、/sys、/lib/modules、/var/log；是否允许驱动/LYP/软重置操作>
@@ -66,12 +66,12 @@
 请严格按下面流程执行：
 
 1. 先做 repo discovery，不要默认 `/home/workspace`。
-   - 按当前 SKILL.md 发现必需仓库；可选工作被请求时再发现 `vllm` 和 `vllm-dlc`。
+   - 按当前 SKILL.md 发现必需仓库；可选工作被请求时再发现 `vllm` 和 `vllm-cl`。
    - 对每个 Git 仓库记录并回显：路径、`git rev-parse --show-toplevel`、`git remote -v`、`git branch --show-current`、`git rev-parse HEAD`、`git status --short`。
    - 验证发现路径确实位于该 Git root 下，remote 与批准来源一致，branch/tag 和 HEAD 满足输入约束。
    - 同名候选、remote 不匹配、detached HEAD 未获批准或 authoritative root 不明确时，按当前 SKILL.md 停止。
    - 缺少必需仓库时按当前 SKILL.md 停止；只有用户明确授权 bootstrap 时，才转用 <KNOWLEDGE_BASE_ROOT>/prompt-examples/dlc-env-setup-environment-bootstrap.md，并先确定 `CI默认最新`、`固定ref` 或 `混合` 版本策略。
-   - 回显最终 repo map 和统一 shell 变量：`CMAKE_BIN`、可选 `CMAKE_SRC`、`DLC_THUNK_SRC`、`DLCSIM_SRC`、`DLCSYNAPSE_SRC`、`DLC_CL_SRC`、`LLVM_SRC`、`DLC_CUSTOM_KERNEL_SRC`、`PYTORCH_SRC`，以及可选的 `VLLM_SRC`、`VLLM_DLC_SRC`。
+   - 回显最终 repo map 和统一 shell 变量：`CMAKE_BIN`、可选 `CMAKE_SRC`、`DLC_THUNK_SRC`、`DLCSIM_SRC`、`DLCSYNAPSE_SRC`、`DLC_CL_SRC`、`LLVM_SRC`、`DLC_CUSTOM_KERNEL_SRC`、`PYTORCH_SRC`，以及可选的 `VLLM_SRC`、`VLLM_CL_SRC`。
 
 2. 按当前 SKILL.md 验证每个源码树的预期 build entrypoint。不要以目录名存在替代入口验证，缺失时立即停止。
 
@@ -102,12 +102,12 @@
     - 安装后确认 DLC Custom Kernel 相关库、header 和测试工具落在预期 `/usr/local/chipltech/synapse/` 位置。
 
 6a. 容器和设备可见性检查保留以下本地策略：
-   - 如果请求 `vllm` / `vllm-dlc` 或模型 serving smoke，先确认容器能看到 `/mnt/jfs` 与 `/dev/dlc*`，并记录 `DLC_VISIBLE_DEVICES`。
+   - 如果请求 `vllm` / `vllm-cl` 或模型 serving smoke，先确认容器能看到 `/mnt/jfs` 与 `/dev/dlc*`，并记录 `DLC_VISIBLE_DEVICES`。
    - 多卡、模型 serving 或本地 repair 场景需要关注 `--ipc=host`、`--pid=host`、足够 `--shm-size`、`memlock` 和 `stack` ulimit；缺失时报告环境 blocker，不用代码绕过。
    - 驱动重载、软重置、`cltech-init`/`dlc-init`、LYP repair、物理机 reboot 只在用户明确授权时执行；否则只报告建议和证据。
    - 如果出现卡在 DP/TP 初始化、shared memory broadcast 长时间无可用 block、显存被占用或 suspected operator hang，先记录日志和相关进程，再按授权检查 `peek_stuck.sh`、LYP 和设备状态；不要直接 kill 非本任务进程。
 
-7. 请求本地 `vllm` / `vllm-dlc` repair 时：
+7. 请求本地 `vllm` / `vllm-cl` repair 时：
    - 先确认 PyTorch 2.5.0 wheel 和 DLC Runtime smoke 健康，再运行 `<DLC_ENV_SETUP_SCRIPTS>/vllm-preflight.sh`。
    - 该脚本是 editable-install packaging prerequisites 的可执行 source of truth；仍需本地确认 Python 版本满足仓库要求，并确认两个仓库的 remote/ref 与 Python import surface 匹配。
    - 优先从已批准的本地源码做最小 editable-install repair。是否使用 `--no-deps` 必须由“仅 metadata 损坏且依赖已验证健康”的证据支持。
@@ -142,12 +142,12 @@
 /dlc-env-setup <把上面模板里的需求、批准 ref 和约束作为参数传入>
 ```
 
-## 只修本地 `vllm` / `vllm-dlc`
+## 只修本地 `vllm` / `vllm-cl`
 
 **▶ 可复制 prompt（替换 `<>` 后直接使用）：**
 
 ```md
-请使用当前 `dlc-env-setup` skill，只修本地 `vllm` / `vllm-dlc` 安装链路。除非证据表明底层 PyTorch wheel 或 DLC Runtime 不健康，否则不要重建原生依赖。
+请使用当前 `dlc-env-setup` skill，只修本地 `vllm` / `vllm-cl` 安装链路。除非证据表明底层 PyTorch wheel 或 DLC Runtime 不健康，否则不要重建原生依赖。
 
 先发现并回显 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 和 `<DLC_ENV_SETUP_SCRIPTS>`，然后读取：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
@@ -157,16 +157,16 @@
 - <KNOWLEDGE_BASE_ROOT>/debugging-workflows/python-build-preflight-for-pytorch-and-vllm.md
 
 【vllm 仓库根目录】<路径或“请自动发现”>
-【vllm-dlc 仓库根目录】<路径或“请自动发现”>
+【vllm-cl 仓库根目录】<路径或“请自动发现”>
 【批准 ref】<两个仓库各自的 remote URL、branch/tag 和可选 commit SHA>
 【PyTorch wheel 路径】<路径或“请自动发现”>
-【当前症状】<例如 packaging 缺失 / UNKNOWN metadata / build_editable hook 缺失 / import vllm_dlc 失败>
+【当前症状】<例如 packaging 缺失 / UNKNOWN metadata / build_editable hook 缺失 / import vllm_cl 失败>
 
 执行顺序：
 1. 对两个仓库检查 Git root、remote、branch、HEAD 和 status；身份不匹配、候选不唯一或工作树不干净时按当前 SKILL.md 停止。
 2. 从源码树外运行 `<DLC_ENV_SETUP_SCRIPTS>/runtime-smoke.sh /tmp`。PyTorch、NumPy bridge 或 DLC Platform 不健康时停止，归类为底层问题。本 prompt 只修 package/import，不追加 Real DLC Hardware execution、model load 或 serving；这些工作必须改走 ModelZoo Contract 的 pre-handoff profile -> C0/C1a/C1b/collective -> `environment_handoff/v1` 完整链路。
 3. 运行 `<DLC_ENV_SETUP_SCRIPTS>/vllm-preflight.sh`，并确认它使用预期 Python/pip 环境。
-4. 验证当前 `vllm` 与 `vllm-dlc` 批准 ref 的 Python import surface 兼容；缺少被引用模块时停止并报告 ref mismatch。
+4. 验证当前 `vllm` 与 `vllm-cl` 批准 ref 的 Python import surface 兼容；缺少被引用模块时停止并报告 ref mismatch。
 5. 优先做最小 editable-install repair。只有证据确认问题仅限 metadata 且依赖健康时才使用 `--no-deps`。
 6. 对 `UNKNOWN` 先定位具体 metadata 所属包和损坏证据，只修复关联项，不 blanket 删除。
 7. 不因发现 `triton` 就卸载；只有批准 ref、依赖声明或复现冲突提供证据时才做最小处置。
@@ -178,7 +178,7 @@
 
 ## 什么时候停
 
-以当前已发现的 `dlc-env-setup/SKILL.md` 的 `Stop Immediately When` 为准。模板额外要求在仓库 remote/ref 身份不匹配、Python package manager 指向不明、`vllm`/`vllm-dlc` import surface 不兼容，或请求组件在 `runtime-smoke.sh` 中导入失败时停止。
+以当前已发现的 `dlc-env-setup/SKILL.md` 的 `Stop Immediately When` 为准。模板额外要求在仓库 remote/ref 身份不匹配、Python package manager 指向不明、`vllm`/`vllm-cl` import surface 不兼容，或请求组件在 `runtime-smoke.sh` 中导入失败时停止。
 
 ## 相关资料
 

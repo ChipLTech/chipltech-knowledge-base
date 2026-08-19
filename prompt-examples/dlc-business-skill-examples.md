@@ -405,7 +405,7 @@
 | dispatch fallback、enabled kernels | operator-dispatch/ | 新发现的 lambda name、dispatch 规则、fallback 注意事项 |
 | pytorch_test Framework 复现 | testing/ | 复现 shape/tolerance/Variant 选择等通用经验 |
 | DLC Runtime 挂起、异步错误、设备残留 | runtime-debugging/ | 可复现的 DLC Runtime 排障流程 |
-| vLLM attention/KV cache | vllm-dlc/ | DLC Attention Backend 或 KV cache layout 相关问题 |
+| vLLM attention/KV cache | vllm-cl/ | DLC Attention Backend 或 KV cache layout 相关问题 |
 | 调试命令、trace 分析 | debugging-workflows/ | 可复用的调试命令和流程 |
 
 3. 如果写 case study，按以下结构组织：

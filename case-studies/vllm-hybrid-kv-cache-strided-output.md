@@ -11,7 +11,7 @@
 来源文档保存了 shape、stride、调用链摘录和机制分析，但没有保存可从当前工作区复核的：
 
 - 模型完整名称、revision 或资产 digest。
-- vLLM、vllm-dlc、PyTorch DLC Backend、DLCSynapse、DLC Runtime 和 DLC Custom Kernel 的 exact revision/package identity。
+- vLLM、vllm-cl、PyTorch DLC Backend、DLCSynapse、DLC Runtime 和 DLC Custom Kernel 的 exact revision/package identity。
 - image digest、dirty state、设备拓扑、TP/PP/EP、prefill/decode workload 和 Graph/eager identity。
 - 原始 trace、日志、代码 diff、profile 配置和重复样本路径。
 - 无插桩 baseline、候选修复结果和正式 benchmark。
@@ -57,9 +57,9 @@ size 为 1 的维度允许非标准 stride 而不破坏 PyTorch contiguous 判�
 
 ```text
 vLLM Attention Backend
--> vllm_dlc._custom_ops.reshape_and_cache()
+-> vllm_cl._custom_ops.reshape_and_cache()
 -> torch.ops._C_dlc_cache_ops.reshape_and_cache()
--> vllm-dlc/csrc/cache.cpp::reshape_and_cache()
+-> vllm-cl/csrc/cache.cpp::reshape_and_cache()
 -> KernelDesc output path
 -> custom_reshape_and_cache_bf16
 ```

@@ -94,7 +94,7 @@ python3 scripts/compare_rsthinker_precision_dumps.py --run_dir /work/RSThinker/p
 
 - 扩展到更多 RSTester 样本，建立 token match rate 和 task score 分布。
 - 若后续样本出现 cosine 断崖或 token mismatch，再按单变量原则切换一个 dispatch 进行定位。
-- 进入 vLLM DLC Serving Path 前，应先保留本 PyTorch DLC Backend Adaptation Path 基线作为回归 oracle。
+- 进入 vLLM-CL Serving Path 前，应先保留本 PyTorch DLC Backend Adaptation Path 基线作为回归 oracle。
 
 ## 来源
 

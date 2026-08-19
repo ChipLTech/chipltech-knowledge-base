@@ -2,7 +2,7 @@
 
 ## 问题现象
 
-一次持久化容器内完成 Host API 21 → 22 的运行时栈升级、DLC_Custom_Kernel Repository 从 `develop` 切到 `main`、PyTorch DLC Backend 与 vLLM-DLC 在保留 MiniMax PR 修改的前提下合入各自主线，并完成 TP4/EP4 模型服务验证。过程中暴露了几类与“版本配对 / 身份核对”相关的独立问题，失败表象与真实 owner 常常不一致。
+一次持久化容器内完成 Host API 21 → 22 的运行时栈升级、DLC_Custom_Kernel Repository 从 `develop` 切到 `main`、PyTorch DLC Backend 与 vLLM-CL 在保留 MiniMax PR 修改的前提下合入各自主线，并完成 TP4/EP4 模型服务验证。过程中暴露了几类与“版本配对 / 身份核对”相关的独立问题，失败表象与真实 owner 常常不一致。
 
 ## 背景与环境
 
@@ -25,7 +25,7 @@ LLVM source 已指向最新 main（`1907051bc985135b6c776b23ef917f418d827c17`）
 
 ### 2. 更新运行仓库前先确认 editable source
 
-容器内同时存在 `/work/*` 与 `/work/minimax-src/*` 多套 checkout。安装元数据确认实际执行链是 `/work/minimax-src/{pytorch,vllm,vllm-dlc}`，而非通用 `/work/{pytorch,vllm,vllm-dlc}`。判定运行源码不能只看 editable metadata 的 version 字符串（来自安装时生成），还要同时核对 `direct_url.json`、`module.__file__` 和进程命令，最后落到 source Git SHA。
+容器内同时存在 `/work/*` 与 `/work/minimax-src/*` 多套 checkout。安装元数据确认实际执行链是 `/work/minimax-src/{pytorch,vllm,vllm-cl}`，而非通用 `/work/{pytorch,vllm,vllm-cl}`。判定运行源码不能只看 editable metadata 的 version 字符串（来自安装时生成），还要同时核对 `direct_url.json`、`module.__file__` 和进程命令，最后落到 source Git SHA。
 
 ### 3. 主机只读 mirror + Git bundle 中转，避免把私钥复制进容器
 
@@ -46,7 +46,7 @@ merge-base 审计
 
 ### 5. 三层 ABI 必须分别核对
 
-Public Operator Schema、KernelDesc Descriptor ABI 与 DLC Custom Kernel Entry ABI 是三个独立 contract；optional 参数为 `None` 不代表 descriptor slot 自动消失。本次对 QKNorm 与 AWQ fused-MoE 分别核对了调用链（vLLM-DLC patch → torch op → CommOps.cpp → KernelDesc → DLC Custom Kernel entry）的有序参数匹配。
+Public Operator Schema、KernelDesc Descriptor ABI 与 DLC Custom Kernel Entry ABI 是三个独立 contract；optional 参数为 `None` 不代表 descriptor slot 自动消失。本次对 QKNorm 与 AWQ fused-MoE 分别核对了调用链（vLLM-CL patch → torch op → CommOps.cpp → KernelDesc → DLC Custom Kernel entry）的有序参数匹配。
 
 ### 6. 后台 wrapper 停止不保证容器内子进程退出
 
@@ -54,14 +54,14 @@ Public Operator Schema、KernelDesc Descriptor ABI 与 DLC Custom Kernel Entry A
 
 ### 7. 验证 checkout 与发布 candidate 是两种 identity
 
-模型构建和运行验证使用保留现场的 PyTorch DLC Backend 与 vLLM-DLC merge checkout。领导随后要求每个 PR 相对最新 main 只保留一个 commit；这不是把验证 checkout 原地 squash，而是从各仓最新 main 创建隔离 clean worktree，只应用批准的 PR 净差异，并排除验证现场中的无关文件。
+模型构建和运行验证使用保留现场的 PyTorch DLC Backend 与 vLLM-CL merge checkout。领导随后要求每个 PR 相对最新 main 只保留一个 commit；这不是把验证 checkout 原地 squash，而是从各仓最新 main 创建隔离 clean worktree，只应用批准的 PR 净差异，并排除验证现场中的无关文件。
 
 历史闭环同时记录：
 
 - Tested Revision 的 full SHA、dirty/untracked state 和实际 build/runtime artifact。
 - Publication Candidate 的 exact base SHA、单提交 SHA、限定路径净差异和 stable patch-id。
 - squash/rebase 前后的 stable patch-id 相等，作为 Patch Equivalence supporting evidence。
-- vLLM-DLC main 并发推进后，旧 expected SHA 的 lease 阻止了推送；candidate 随后基于新 main 重建并重跑回归。
+- vLLM-CL main 并发推进后，旧 expected SHA 的 lease 阻止了推送；candidate 随后基于新 main 重建并重跑回归。
 - 用户明确授权后才使用带 exact expected old SHA 的 `--force-with-lease`，推送后重新核对远端 commit count 和 PR 状态。
 
 Patch Equivalence 只说明声明 scope 的净差异保持。base 变化可能改变组合行为，因此 patch-id 不转移完整 runtime acceptance；至少要重新执行受影响 source/contract 回归，若 artifact 或 runtime dependency graph 变化则重新 build 和运行对应门禁。
@@ -107,4 +107,4 @@ Patch Equivalence 只说明声明 scope 的净差异保持。base 变化可能�
 
 - 个人过程资产：`external_unavailable`（历史位置已脱敏）
 - [vllm-fused-moe-schema-kernel-abi-boundary.md](vllm-fused-moe-schema-kernel-abi-boundary.md)
-- [model-adaptation-and-main-to-main-decisions.md](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [model-adaptation-and-main-to-main-decisions.md](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)

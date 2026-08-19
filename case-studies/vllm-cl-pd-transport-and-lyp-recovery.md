@@ -1,8 +1,8 @@
-# Case Study: vLLM-DLC PD transport 与 LYP 恢复
+# Case Study: vLLM-CL PD transport 与 LYP 恢复
 
 ## 问题现象
 
-在 DLC Chip 节点 `node-8-45` 上验证 vLLM-DLC Prefill/Decode Separation 时，monolithic Qwen3-1.7B 可返回确定性结果，但 PD transport 连续遇到三类问题：
+在 DLC Chip 节点 `node-8-45` 上验证 vLLM-CL Prefill/Decode Separation 时，monolithic Qwen3-1.7B 可返回确定性结果，但 PD transport 连续遇到三类问题：
 
 - Protocol `tcp` 的 TransferEngine 仍自动安装 RDMA，并因 completion queue / RNIC 初始化失败阻止双 role 启动。
 - `lyp_full` 的 Prefill、Decode、Proxy 与 request correlation 均可建立，但 data plane 卡在 `ProcessGroupDLCCL.send().wait()` / `recv().wait()`。
@@ -11,7 +11,7 @@
 ## 背景与环境
 
 - vLLM：`a208f41eee15d15b0da619ded9384fda5efd2e7f`
-- vllm-dlc：`ce14cbc726c73df65a3ec6e970da523c6ed22ea8`
+- vllm-cl：`ce14cbc726c73df65a3ec6e970da523c6ed22ea8`
 - mooncake-dlc main：`92381029f07d719ec6a50b4fc698324de168fba3`
 - direct transport branch：`572dbf0dcd00337db0cbe82a015d8d824988da97`
 - PyTorch：2.5.0
@@ -158,8 +158,8 @@ PD 返回 `PD-OK`，usage 与 monolithic baseline 相同。该 request correlati
 
 ## 来源
 
-- `/home/xuansun/文档/node-8-45_vllm-dlc_PD分离测试完整过程资产_20260723.md`
-- `/home/xuansun/vllm-dlc-workspace/artifacts/pd-baseline-response.json`
-- `/home/xuansun/vllm-dlc-workspace/artifacts/pd-dlccl-direct-response.json`
-- `/home/xuansun/vllm-dlc-workspace/artifacts/dlccl-direct-producer-after-repair.json`
-- `/home/xuansun/vllm-dlc-workspace/artifacts/dlccl-direct-consumer-after-repair.json`
+- `/home/xuansun/文档/node-8-45_vllm-cl_PD分离测试完整过程资产_20260723.md`
+- `/home/xuansun/vllm-cl-workspace/artifacts/pd-baseline-response.json`
+- `/home/xuansun/vllm-cl-workspace/artifacts/pd-dlccl-direct-response.json`
+- `/home/xuansun/vllm-cl-workspace/artifacts/dlccl-direct-producer-after-repair.json`
+- `/home/xuansun/vllm-cl-workspace/artifacts/dlccl-direct-consumer-after-repair.json`

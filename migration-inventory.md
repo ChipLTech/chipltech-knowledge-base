@@ -22,7 +22,7 @@
 | cuda和dlc生态分析.md | `foundation/dlc-vs-cuda-comparison.md` | done | 否 | 否 | 否 | custom launch 生态与 CUDA runtime 生态对比 | 合并到对比文档 |
 | 后端不同.md | `foundation/dlc-vs-cuda-comparison.md` | done | 否 | 否 | 否 | Attention backend 选择差异 | 合并到对比文档 |
 | pytorch算子插入.md | `pytorch-dlc-backend/operator-integration-guide.md` | done | 是(远程URL) | 否 | 否 | PyTorch DLC 算子接入完整流程 | 远程图片 URL 不从原始资料迁移 |
-| vllm DLC算子添加及测试方法.md | `vllm-dlc/custom-op-integration-and-testing.md` | done | 是 | 否 | 否 | vLLM DLC Custom Op 接入链路 | |
+| vllm DLC算子添加及测试方法.md | `vllm-cl/custom-op-integration-and-testing.md` | done | 是 | 否 | 否 | vLLM-CL Custom Op 接入链路 | |
 | DLC_kernel测试框架新人使用指南.md | `testing/dlc-kernel-test-framework-guide.md` | done | 否 | 否 | 否 | pytorch_test Framework 使用指南 | |
 | torch的测试框架新人使用指南.md | `testing/pytorch-test-framework-guide.md` | done | 否 | 否 | 否 | PyTorch DLC 原生测试框架指南 | |
 | DLC常用调试指令和方法.md | `debugging-workflows/common-debug-commands.md` | done | 是 | 可能 | 否 | 设备、Synapse、trace、peek、RDMA 等调试命令 | 需检查路径是否脱敏 |
@@ -99,7 +99,7 @@
 | /work/plan/dlc基础/dlc环境配置更新各个仓_assets/ | assets/runtime-debugging/env-setup/ | pending | | |
 | /work/plan/dlc基础/报错问题记录_assets/ | assets/runtime-debugging/error-log/ | pending | | |
 | /work/plan/dlc基础/vscode调试配置debug_assets/ | assets/debugging-workflows/vscode/ | pending | | |
-| /work/plan/dlc基础/vllm DLC算子添加及测试方法_assets/ | assets/vllm-dlc/ | done | 3 | |
+| /work/plan/dlc基础/vllm DLC算子添加及测试方法_assets/ | assets/vllm-cl/ | done | 3 | |
 | /tmp/newraw_converted/ 各 docx 图片 | assets/foundation/dlccl/ assets/foundation/synapse-usage/ assets/runtime-debugging/ assets/foundation/builtin/ | done | 47 | DLCCL/Synapse/Profile/TPU架构/builtin 图片 |
 
 ## 知识正确性审查报告

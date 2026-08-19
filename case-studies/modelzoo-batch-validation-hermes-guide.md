@@ -65,7 +65,7 @@ if __name__ == "__main__":
 **修复**: 使用 `docker exec -e PYTHONPATH="..."` 传递，或在容器内脚本中
 `os.environ["PYTHONPATH"] = "..."`。
 
-**PYTHONPATH 固定值**: `/opt/qwen-site-packages:/opt/qwen-src/vllm:/opt/qwen-src/vllm-dlc:/workspace/src/torchvision`
+**PYTHONPATH 固定值**: `/opt/qwen-site-packages:/opt/qwen-src/vllm:/opt/qwen-src/vllm-cl:/workspace/src/torchvision`
 
 ### 5. 软重启后 DeepSeek 服务中断
 
@@ -106,7 +106,7 @@ python3 /home/xuansun/modelconfig/run-one-model.py <model_name> <model_path>
 
 | 变量 | 值 |
 |---|---|
-| PYTHONPATH | `/opt/qwen-site-packages:/opt/qwen-src/vllm:/opt/qwen-src/vllm-dlc:/workspace/src/torchvision` |
+| PYTHONPATH | `/opt/qwen-site-packages:/opt/qwen-src/vllm:/opt/qwen-src/vllm-cl:/workspace/src/torchvision` |
 | DLC_VISIBLE_DEVICES | `4,5,6,7` |
 | DLC_SYN_COPY_ASYNC | `O0` |
 | HF_HUB_OFFLINE | `1` |

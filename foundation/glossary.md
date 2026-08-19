@@ -36,7 +36,7 @@
 | DLC Ecosystem | 完整硬件+软件环境 |
 | DLC Platform | 框架可见的执行目标 |
 | PyTorch DLC Backend | ATen 算子 dispatch 到 DLC |
-| vLLM DLC Custom Op | vLLM 框架的 DLC tensor 操作 |
+| vLLM-CL Custom Op | vLLM 框架的 DLC tensor 操作 |
 | DLC Custom Op | 框架可见的 DLC tensor 操作 |
 | DLC Custom Kernel | 编译为 DLC 执行的命名底层 kernel |
 | DLC_Custom_Kernel Repository | kernel 源码+测试+注册元数据+产物的仓库 |
@@ -82,10 +82,10 @@
 
 ```
 DLC-Family Accelerator > {DLC Chip, TYD Chip, HHP Chip}
-DLC Ecosystem > {DLC Platform, PyTorch DLC Backend, vLLM DLC Custom Op,
+DLC Ecosystem > {DLC Platform, PyTorch DLC Backend, vLLM-CL Custom Op,
                  DLC_Custom_Kernel Repository, DLCSynapse, DLC Runtime,
                  DLCsim, dlc-thunk, DLCCL, DLC_CL, Real DLC Hardware}
-PyTorch DLC Backend/vLLM DLC Custom Op -> KernelDesc -> DLC Kernel Launch Protocol
+PyTorch DLC Backend/vLLM-CL Custom Op -> KernelDesc -> DLC Kernel Launch Protocol
 DLCSynapse -> DLCsim | Real DLC Hardware
 Explicit DMA Dataflow: HBM -> VMEM -> XYS/PGX/NWS -> VMEM -> HBM
 ```

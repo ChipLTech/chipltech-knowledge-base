@@ -11,7 +11,7 @@ discovery_policy: local_query_only_then_contract_proposal
 
 ## 用途
 
-本文只拥有 Host/container preparation、C1a/C1b、real-weight functional、benchmark 和 cleanup 的执行 mechanics。状态、claim 和 image delivery 语义由 [规范 Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) 定义。
+本文只拥有 Host/container preparation、C1a/C1b、real-weight functional、benchmark 和 cleanup 的执行 mechanics。状态、claim 和 image delivery 语义由 [规范 Contract](../vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md) 定义。
 
 ## 用户接口
 

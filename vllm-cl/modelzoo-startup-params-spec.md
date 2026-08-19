@@ -27,14 +27,14 @@
 | `seed` | 搜索 `--seed N` | 0 |
 | `max_model_len` | 搜索 `--max-model-len N` | 1024 |
 | `trust_remote_code` | 搜索 `--trust-remote-code` | 按 config.json 中 auto_map 判定 |
-| `max_num_seqs` | 搜索 `--max-num-seqs N` | 8；当前 vLLM DLC engine 不支持 1 |
+| `max_num_seqs` | 搜索 `--max-num-seqs N` | 8；当前 vLLM-CL engine 不支持 1 |
 
 ### 2. 必须从 ModelZoo README.md 提取的环境变量
 
 | 变量 | 搜索模式 | 当前 host 是否使用 |
 |---|---|---|
 | `DLC_SYN_URING` | `DLC_SYN_URING=1` | ✅ 可安全使用 |
-| `VLLM_USE_DLC_COL_MAJOR_MATMUL` | `VLLM_USE_DLC_COL_MAJOR_MATMUL=1` | **❌ 必须排除** — 与 sealed vLLM-DLC 不兼容，导致 Engine Init 失败 |
+| `VLLM_USE_DLC_COL_MAJOR_MATMUL` | `VLLM_USE_DLC_COL_MAJOR_MATMUL=1` | **❌ 必须排除** — 与 sealed vLLM-CL 不兼容，导致 Engine Init 失败 |
 | `VLLM_USE_V1` | `VLLM_USE_V1=1` | ✅ 可安全使用 |
 | `DLC_SYN_COPY_ASYNC` | `DLC_SYN_COPY_ASYNC=O0` | ✅ 必须使用（当前 Host 稳定 profile） |
 
@@ -101,9 +101,9 @@
 
 **降级逻辑**：
 ```
-Tier 1 (daily vLLM + vllm-dlc)
+Tier 1 (daily vLLM + vllm-cl)
   ↓ server 15min 无响应 / engine init 失败 / 输出错误
-Tier 2 (chiju_env:0729 O2, vllm-dlc 需编译, vllm 需 symlink)
+Tier 2 (chiju_env:0729 O2, vllm-cl 需编译, vllm 需 symlink)
   ↓ 仍失败
 记录 both_tiers_failed → 标记 Hermes 下一步操作
 ```

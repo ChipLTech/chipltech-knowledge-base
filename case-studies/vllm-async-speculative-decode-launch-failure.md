@@ -18,7 +18,7 @@ GLM-5.1-Mix AWQ 在 TYD Chip、TP8/EP8 serving 中完成模型加载和 API read
 - Graph：`FULL_DECODE_ONLY`。
 - PyTorch：2.5.0。
 - vLLM：`0.2.8.dev14983+gfc84bce57`。
-- vllm-dlc：`0.1.dev77+gcee737e46.d20260708`。
+- vllm-cl：`0.1.dev77+gcee737e46.d20260708`。
 
 ## 定位路径
 

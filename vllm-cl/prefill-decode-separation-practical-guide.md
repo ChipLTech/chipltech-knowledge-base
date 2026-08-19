@@ -1,4 +1,4 @@
-# vLLM-DLC PD 分离通用实操配置指南
+# vLLM-CL PD 分离通用实操配置指南
 
 ## 1. 用途与结论边界
 
@@ -57,7 +57,7 @@ lifecycle_cleanup
 | tokenizer/processor identity | `<TOKENIZER_IDENTITY>` |
 | weights revision/digest | `<MODEL_REVISION_OR_DIGEST>` |
 | vLLM full SHA / package | `<VLLM_IDENTITY>` |
-| vllm-dlc full SHA / package | `<VLLM_DLC_IDENTITY>` |
+| vllm-cl full SHA / package | `<VLLM_CL_IDENTITY>` |
 | mooncake-dlc full SHA / package | `<MOONCAKE_DLC_IDENTITY>` |
 | PyTorch DLC Backend | `<PYTORCH_DLC_IDENTITY>` |
 | DLC Runtime/driver/image | `<RUNTIME_DRIVER_IMAGE_IDENTITY>` |
@@ -187,7 +187,7 @@ hostname
 ps -ef
 ss -lntp
 ulimit -l
-python3 -m pip show vllm vllm-dlc mooncake-transfer-engine 2>/dev/null
+python3 -m pip show vllm vllm-cl mooncake-transfer-engine 2>/dev/null
 ```
 
 同时记录 DLC 设备、进程、HBM、频率和 link 状态。确认：
@@ -584,7 +584,7 @@ contract 明确将其设为 mandatory，否则不影响 functional `pd_validated
 ## 13. 相关资料
 
 - [Prefill/Decode Separation](prefill-decode-separation.md)
-- [PD transport 与 LYP 恢复案例](../case-studies/vllm-dlc-pd-transport-and-lyp-recovery.md)
-- [PD 分离可复用 Prompt](../prompt-examples/vllm-dlc-prefill-decode-separation.md)
+- [PD transport 与 LYP 恢复案例](../case-studies/vllm-cl-pd-transport-and-lyp-recovery.md)
+- [PD 分离可复用 Prompt](../prompt-examples/vllm-cl-prefill-decode-separation.md)
 - [性能 Profiling](../runtime-debugging/performance-profiling.md)
 - [DLC 设备观测](../runtime-debugging/chipltech-smi-observability.md)

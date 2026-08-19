@@ -1,7 +1,7 @@
 ---
-prompt_schema: vllm-dlc-reusable-prompt/v1
+prompt_schema: vllm-cl-reusable-prompt/v1
 skill_identity: main-to-main-upgrade
-shared_contract: vllm-dlc-contract/v1
+shared_contract: vllm-cl-contract/v1
 required_inputs:
   - target_vllm_full_sha
   - lineage_tag
@@ -22,7 +22,7 @@ missing_input_reason: blocked_missing_target
 hardware_evidence: not_verified
 ---
 
-# vLLM-DLC Main-to-Main Upgrade 可复用 Prompt
+# vLLM-CL Main-to-Main Upgrade 可复用 Prompt
 
 ## 用途
 
@@ -57,7 +57,7 @@ hardware_evidence: not_verified
 - artifact/evidence references: <ARTIFACT_EVIDENCE_REFERENCES>
 - commit authorization state: <COMMIT_AUTHORIZATION_STATE>
 
-先列出缺失输入并停止；缺 target 使用 `blocked_missing_target`。保持 unknown baseline 为 unknown，并按历史 mandatory evidence、explicit Git pin、correlated candidate、checkout/install/README clue 的可信度顺序报告。使用 `model-adaptation` 作为唯一模型专属 child seam。通过 `shared_contract: vllm-dlc-contract/v1` 的 skills-owned public seam 引用确定性检查。manifest 只生成 future-impact report；不得修改 vllm-dlc、commit、finalize、写 metadata 或声称新的 Verified vLLM Alignment。Ticket 06 exact v12 DeepSeek TP=2 与 Llama TP=1 只证明 bounded operational state；不要把该 evidence 继承到此新 target。未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
+先列出缺失输入并停止；缺 target 使用 `blocked_missing_target`。保持 unknown baseline 为 unknown，并按历史 mandatory evidence、explicit Git pin、correlated candidate、checkout/install/README clue 的可信度顺序报告。使用 `model-adaptation` 作为唯一模型专属 child seam。通过 `shared_contract: vllm-cl-contract/v1` 的 skills-owned public seam 引用确定性检查。manifest 只生成 future-impact report；不得修改 vllm-cl、commit、finalize、写 metadata 或声称新的 Verified vLLM Alignment。Ticket 06 exact v12 DeepSeek TP=2 与 Llama TP=1 只证明 bounded operational state；不要把该 evidence 继承到此新 target。未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
 ```
 
 ## 停止语义与 Evidence
@@ -69,4 +69,4 @@ hardware_evidence: not_verified
 
 ## 相关资料
 
-- [模型适配与 Main-to-Main 决策记录](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [模型适配与 Main-to-Main 决策记录](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)

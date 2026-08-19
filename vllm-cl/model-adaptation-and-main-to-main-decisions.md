@@ -1,6 +1,6 @@
-# vLLM-DLC 模型适配与 Main-to-Main 决策记录
+# vLLM-CL 模型适配与 Main-to-Main 决策记录
 
-shared_contract: vllm-dlc-contract/v1
+shared_contract: vllm-cl-contract/v1
 
 ## 适用场景
 
@@ -9,16 +9,16 @@ shared_contract: vllm-dlc-contract/v1
 ## 当前实现范围
 
 - **事实 / Fact**：Ticket 01-07 的当前实现只位于 skills repository 与 chipltech-knowledge-base repository。
-- **事实 / Fact**：当前 candidate 对 vllm-dlc repository 严格 read-only；不修改源码、manifest、alignment、metadata、branch、index 或 generated files。
+- **事实 / Fact**：当前 candidate 对 vllm-cl repository 严格 read-only；不修改源码、manifest、alignment、metadata、branch、index 或 generated files。
 - **事实 / Fact**：Model Adaptation 与 Main-to-Main Upgrade 已由 Ticket 07 发布为 stable Kilo engineering skills；它们仍保持 read-only、report-only/no-finalize 边界，不提升 Ticket 06 evidence。
-- **目标架构决策 / Target architecture decision**：未来可由 vllm-dlc repository 持有 deterministic DLC Runtime contracts、instrumentation、manifest、alignment 和 finalization backend。这不是当前 Ticket 01-05 的实现事实。
-- **建议 / Recommendation**：知识文档只保存稳定决策和证据含义；可变接口细节由 `shared_contract: vllm-dlc-contract/v1` 的 public seam 单独维护。
+- **目标架构决策 / Target architecture decision**：未来可由 vllm-cl repository 持有 deterministic DLC Runtime contracts、instrumentation、manifest、alignment 和 finalization backend。这不是当前 Ticket 01-05 的实现事实。
+- **建议 / Recommendation**：知识文档只保存稳定决策和证据含义；可变接口细节由 `shared_contract: vllm-cl-contract/v1` 的 public seam 单独维护。
 
 ## 历史观察与可信度
 
-- **事实 / Fact**：当前 `vllm_alignment.yaml` 的 vLLM version、commit 和 vllm-dlc branch 均为 `unknown`，不能提供 Main-to-Main 的旧 commit。
-- **事实 / Fact**：vllm-dlc Git 历史显式记录过 upstream commit `2488d1dca2df05059fcfbad0a1612ef2a5202b47`。
-- **经验 / Experience**：upstream commit `3072ed636a8993f69e6c2ab4d4a90bb50f04ab81` 与 vllm-dlc profiler 提交存在时间和主题关联，但历史没有显式声明它是 Verified vLLM Alignment。
+- **事实 / Fact**：当前 `vllm_alignment.yaml` 的 vLLM version、commit 和 vllm-cl branch 均为 `unknown`，不能提供 Main-to-Main 的旧 commit。
+- **事实 / Fact**：vllm-cl Git 历史显式记录过 upstream commit `2488d1dca2df05059fcfbad0a1612ef2a5202b47`。
+- **经验 / Experience**：upstream commit `3072ed636a8993f69e6c2ab4d4a90bb50f04ab81` 与 vllm-cl profiler 提交存在时间和主题关联，但历史没有显式声明它是 Verified vLLM Alignment。
 - **事实 / Fact**：规划时的本地 vLLM checkout `a208f41eee15d15b0da619ded9384fda5efd2e7f` 晚于 alignment 文件初建日期，不能证明初始 alignment。
 - **经验 / Experience**：跨仓提交时间、主题和代码关系可提高候选可信度，但不能替代 mandatory sealed evidence。
 
@@ -56,11 +56,11 @@ shared_contract: vllm-dlc-contract/v1
 
 模型适配分析的执行证据与对外报告是两个产品：先建立 Evidence Ledger，再把技术细节下沉到 Technical Attachment，最后按读者决策问题生成独立的 Decision Summary。报告必须分别表达“路线可行”“当前完成到哪一阶段”和“是否达到稳定交付”，不能把 readiness、源码存在、timeout 或参考性能升级为适配完成、根因或实测。
 
-算子适配表使用实际 `KernelDesc::launch("custom_xxx")` 或明确的 kernel family，并沿 vLLM/vLLM-DLC、PyTorch DLC Backend、KernelDesc、DLC_Custom_Kernel Repository registry 闭合来源。模型模块名只作解释；DLCCL collective 不混入模型算子表；同平台其他模型的 kernel name、量化格式或 shape predicate 只能作为检索线索，不能直接类推。
+算子适配表使用实际 `KernelDesc::launch("custom_xxx")` 或明确的 kernel family，并沿 vLLM/vLLM-CL、PyTorch DLC Backend、KernelDesc、DLC_Custom_Kernel Repository registry 闭合来源。模型模块名只作解释；DLCCL collective 不混入模型算子表；同平台其他模型的 kernel name、量化格式或 shape predicate 只能作为检索线索，不能直接类推。
 
 性能摘要同时给出原始口径和可重算换算：固定 input/output token policy、TP/EP、并发、TPOT、单请求 Decode token/s、是否包含 TTFT，以及固定输出长度的纯 Decode 时间。token/s 不是服务总吞吐，TTFT 不能由 input tokens 乘 TPOT 推导，参考模型数据不是目标模型实测或 SLA。
 
-详细生产步骤和可复制模板见 [Model Adaptation Analysis Summary](../prompt-examples/vllm-dlc-model-adaptation-analysis-summary.md)；该 prompt 只生成报告，不替代 `model-adaptation` 的兼容性分析、`diagnosing-bugs` 的根因诊断或 Real DLC Hardware qualification。
+详细生产步骤和可复制模板见 [Model Adaptation Analysis Summary](../prompt-examples/vllm-cl-model-adaptation-analysis-summary.md)；该 prompt 只生成报告，不替代 `model-adaptation` 的兼容性分析、`diagnosing-bugs` 的根因诊断或 Real DLC Hardware qualification。
 
 ## 跨仓变更归属与 ABI 配对
 
@@ -69,7 +69,7 @@ shared_contract: vllm-dlc-contract/v1
 | 变更面 | 首要 owner | 稳定判断规则 |
 |---|---|---|
 | 通用模型 API、日志或跨后端框架行为 | vLLM | 对所有后端成立的修复优先进入 upstream framework，不放入 DLC 专用 patch |
-| DLC worker 生命周期、DLC model patch、plugin registration | vLLM-DLC | 只承载 DLC Platform integration，不重复 upstream 或 fused layer 已拥有的 collective |
+| DLC worker 生命周期、DLC model patch、plugin registration | vLLM-CL | 只承载 DLC Platform integration，不重复 upstream 或 fused layer 已拥有的 collective |
 | public operator schema、PyTorch DLC dispatch、host wrapper、KernelDesc packing | PyTorch DLC Backend 或当前实际 extension owner | 先按 source/packaging identity 确认 owner，不用历史目录布局猜测 |
 | DLC Custom Kernel 实现、entry ABI、variant 和 kernel metadata | DLC_Custom_Kernel Repository | 静态审计确认 source gap 后记录缺失；只有要把它认定为当前 workload 的必要修复时才要求运行必要性 evidence |
 | compiler、DLCSynapse、DLC Runtime、DLCCL 或其他 native binary | 对应 native component | 代码存在但 build/runtime artifact 不配对时，分类为版本配对，不写成源码缺失 |
@@ -130,9 +130,9 @@ Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry A
 - **事实 / Fact**：该 evidence 不证明 request-correlated Chunked Prefill、DLC Runtime dispatch、DLCCL/LYP、具体 Attention path、Triton non-execution 或 compile/Dynamo non-execution。
 - **事实 / Fact**：fixture、fake-server、Dummy、DLCsim、static、unknown-provider 和手工 result 不能贡献 operational completion。
 - **事实 / Fact**：v2 operational result 始终 `acceptance_eligible: false`，不能建立或 finalize Verified vLLM Alignment。
-- **事实 / Fact**：Ticket 06 只修改 skills repository 和本知识库的稳定决策文字；vLLM、vllm-dlc、PyTorch DLC Backend、DLCSynapse、DLC Runtime、DLCCL、DLC Custom Kernel 与 `chipltech_smi_lib` 保持 read-only。
+- **事实 / Fact**：Ticket 06 只修改 skills repository 和本知识库的稳定决策文字；vLLM、vllm-cl、PyTorch DLC Backend、DLCSynapse、DLC Runtime、DLCCL、DLC Custom Kernel 与 `chipltech_smi_lib` 保持 read-only。
 - **事实 / Fact**：lease、signature、trusted time、revocation、runtime-stream binding、atomic allocation 和跨仓 instrumentation 属于未来更强 acceptance class，不阻塞 operational regression。
-- **已批准决策 / Approved decision**：内部修改的模型、tokenizer 和 processor 不要求对应上游 Git 或 Hugging Face revision。Ticket 06 operational v2 使用批准的 exact local path 与 recursive byte digest 闭合执行资产身份；revision 仅在独立已知时记录，否则为 null，且不得推测。vLLM 与 vllm-dlc guarded source identity 仍使用 full Git SHA。
+- **已批准决策 / Approved decision**：内部修改的模型、tokenizer 和 processor 不要求对应上游 Git 或 Hugging Face revision。Ticket 06 operational v2 使用批准的 exact local path 与 recursive byte digest 闭合执行资产身份；revision 仅在独立已知时记录，否则为 null，且不得推测。vLLM 与 vllm-cl guarded source identity 仍使用 full Git SHA。
 - **已批准决策 / Approved decision**：production hardware observation 由 skills-owned normalization adapter 调用官方默认版 `cltech_smi`，不从 raw sysfs 自行重建 vendor 查询语义，也不把 vendor executable 复制进 skills repository 或知识库。
 - **事实 / Fact**：完整运行容器需 privileged、host PID namespace，并挂载 host `pci.ids`、`/dev`、`/sys`、`/run`、`/lib/modules`、`/var/log`；当前容器缺少部分挂载只表示当前环境不能完成全部 SMI 功能，不表示未来 skill 无法观测硬件。
 - **建议 / Recommendation**：优先使用 DLC base image 或 host payload 已安装的 `cltech_smi`；若缺失，环境准备可 clone `git@github.com:ChipLTech/chipltech_smi_lib.git` 并按 README build/install 默认版，随后冻结 source full SHA 与 executable digest。Ticket 06 runner 仅执行 allowlisted query，维护和诊断 action 不在回归路径内。
@@ -152,13 +152,13 @@ Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry A
 
 - Ticket 07 publication 阶段不运行模型、server、DLCsim 或 Real DLC Hardware。
 - 本阶段不实现或复制 shared runner、DLC Runtime instrumentation、manifest grammar 或 finalization backend。
-- 本阶段不修改 vllm-dlc，不更新 alignment，不 commit、push 或改变 runtime repository。
+- 本阶段不修改 vllm-cl，不更新 alignment，不 commit、push 或改变 runtime repository。
 - Ticket 06 已完成 exact v12 operational regression；Ticket 07 仅发布 stable Kilo skill surfaces。
 
 ## 相关资料
 
-- [Model Adaptation reusable prompt](../prompt-examples/vllm-dlc-model-adaptation.md)
-- [Main-to-Main Upgrade reusable prompt](../prompt-examples/vllm-dlc-main-to-main-upgrade.md)
+- [Model Adaptation reusable prompt](../prompt-examples/vllm-cl-model-adaptation.md)
+- [Main-to-Main Upgrade reusable prompt](../prompt-examples/vllm-cl-main-to-main-upgrade.md)
 - [precision-debugging/token-divergence-and-moe-contract-debugging.md](../precision-debugging/token-divergence-and-moe-contract-debugging.md)
 - [testing/arsenal-ci-and-blackbox-testing.md](../testing/arsenal-ci-and-blackbox-testing.md)
 - [case-studies/qwen3-32b-dlc-block256-diagnosis.md](../case-studies/qwen3-32b-dlc-block256-diagnosis.md)

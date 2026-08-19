@@ -56,9 +56,9 @@ Hermes 应先读取 `CONTEXT.md` 和 `README.md`，再按问题域检索专题�
 - [全部已支持能力傻瓜式调用总览](all-supported-capabilities-quickstart.md)
 - [新模型验证 Quickstart](new-model-validation-quickstart.md)
 - [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md)
-- [vLLM-DLC Model Adaptation](vllm-dlc-model-adaptation.md)
-- [vLLM-DLC Prefill/Decode Separation](vllm-dlc-prefill-decode-separation.md)
-- [vLLM-DLC Main-to-Main Upgrade](vllm-dlc-main-to-main-upgrade.md)
+- [vLLM-CL Model Adaptation](vllm-cl-model-adaptation.md)
+- [vLLM-CL Prefill/Decode Separation](vllm-cl-prefill-decode-separation.md)
+- [vLLM-CL Main-to-Main Upgrade](vllm-cl-main-to-main-upgrade.md)
 - [DLC Env Setup Skill 使用模板](dlc-env-setup-skill-usage.md)
 
 把需要的 Prompt 作为用户任务提交给 `chipltech-engineering` 即可。Prompt 中的 `<KNOWLEDGE_BASE_ROOT>` 和 `<SKILLS_ROOT>` 由 profile 配置与只读发现闭合。
@@ -100,9 +100,9 @@ writing-for-agents
 | 场景 | 预期知识入口 | 预期 Skill | 缺少关键输入时的状态 |
 | --- | --- | --- | --- |
 | 环境重建 | `runtime-debugging/`、`debugging-workflows/` | `dlc-env-setup` | `blocked_missing_repository` |
-| 单模型兼容 | `vllm-dlc/model-adaptation-and-main-to-main-decisions.md` | `model-adaptation` | `blocked_missing_asset` |
-| 本地模型资格验证 | `vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md` | `modelzoo-image-validation` | `blocked_missing_asset` |
-| Prefill/Decode Separation | `vllm-dlc/prefill-decode-separation.md` | `pd-separation` | `blocked_missing_contract` |
+| 单模型兼容 | `vllm-cl/model-adaptation-and-main-to-main-decisions.md` | `model-adaptation` | `blocked_missing_asset` |
+| 本地模型资格验证 | `vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md` | `modelzoo-image-validation` | `blocked_missing_asset` |
+| Prefill/Decode Separation | `vllm-cl/prefill-decode-separation.md` | `pd-separation` | `blocked_missing_contract` |
 
 每项还必须满足：
 

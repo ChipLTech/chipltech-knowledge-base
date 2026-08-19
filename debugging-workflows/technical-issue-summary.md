@@ -65,7 +65,7 @@
 ```text
 业务/模型调用
   -> framework API
-  -> PyTorch DLC Backend / vLLM DLC Custom Op
+  -> PyTorch DLC Backend / vLLM-CL Custom Op
   -> KernelDesc 参数和 layout 适配
   -> DLCSynapse / DLC Runtime allocation and launch
   -> DLC Custom Kernel execution

@@ -3,7 +3,7 @@
 ## 适用场景
 
 - 需要查看 Real DLC Hardware 或 TYD Chip 设备状态、HBM、功耗、温度、固件版本和进程占用。
-- 需要为 vLLM-DLC operational evidence、DLC Runtime 排障或设备健康报告提供 query-only 观测材料。
+- 需要为 vLLM-CL operational evidence、DLC Runtime 排障或设备健康报告提供 query-only 观测材料。
 - 需要区分只读观测、诊断采集、LYP 检查和维护操作的边界。
 
 ## 核心结论
@@ -166,7 +166,7 @@ Uploader SDK 的职责边界：
 
 ## Operational Evidence 使用边界
 
-用于 vLLM-DLC 或环境验证时，`cltech_smi` query-only 输出可以作为以下材料：
+用于 vLLM-CL 或环境验证时，`cltech_smi` query-only 输出可以作为以下材料：
 
 - run-local device reference。
 - indexed finite positive HBM capacity。
@@ -201,12 +201,12 @@ Real DLC Hardware 上的模型 serving、benchmark、PD、daily-image qualificat
 - 当前官方 `cltech_smi` raw output。
 - executable path/digest、`chipltech_smi_lib` source full SHA（可用时）和当前 `-h`。
 - Host/container PID 与 mount namespace、physical/logical device mapping。
-- skills-owned `vllm-dlc-smi-observation/v1` normalized JSON（adapter 可用时）。
+- skills-owned `vllm-cl-smi-observation/v1` normalized JSON（adapter 可用时）。
 
 完整 skills checkout 中优先使用：
 
 ```text
-<SKILLS_ROOT>/scripts/qualify-vllm-dlc-smi-environment.py
+<SKILLS_ROOT>/scripts/qualify-vllm-cl-smi-environment.py
 <SKILLS_ROOT>/scripts/observe-cltech-smi.py
 ```
 
@@ -256,7 +256,7 @@ Current speed 低于 maximum speed，但 width 未降级、无 AER/设备错误�
 
 - [runtime-troubleshooting.md](runtime-troubleshooting.md)
 - [common-error-log.md](common-error-log.md)
-- [../vllm-dlc/model-adaptation-and-main-to-main-decisions.md](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [../vllm-cl/model-adaptation-and-main-to-main-decisions.md](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
 
 ## 来源
 

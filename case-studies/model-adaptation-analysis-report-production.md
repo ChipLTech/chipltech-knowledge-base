@@ -49,7 +49,7 @@ Technical Attachment 保存 exact image/source/wheel/binary identity、模型结
 ```text
 model forward
   -> framework op
-  -> vLLM-DLC adapter / PyTorch DLC Backend
+  -> vLLM-CL adapter / PyTorch DLC Backend
   -> KernelDesc::launch("custom_xxx")
   -> DLC_Custom_Kernel Repository registry
 ```
@@ -91,5 +91,5 @@ DLCCL collective 属于通信 contract，应在通信/拓扑分析中单独表�
 ## 来源
 
 - 个人过程资产：`external_unavailable`（历史位置已脱敏）
-- [模型适配与 Main-to-Main 决策记录](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
-- [vLLM-DLC Model Adaptation Prompt](../prompt-examples/vllm-dlc-model-adaptation.md)
+- [模型适配与 Main-to-Main 决策记录](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
+- [vLLM-CL Model Adaptation Prompt](../prompt-examples/vllm-cl-model-adaptation.md)

@@ -1,5 +1,5 @@
 ---
-prompt_schema: vllm-dlc-prefill-decode-separation/v2
+prompt_schema: vllm-cl-prefill-decode-separation/v2
 skill_identity: pd-separation
 required_user_inputs:
   - model_name
@@ -17,11 +17,11 @@ missing_input_reason: blocked_missing_contract
 hardware_evidence: not_verified
 ---
 
-# vLLM-DLC Prefill/Decode Separation Prompt
+# vLLM-CL Prefill/Decode Separation Prompt
 
 ## 用途
 
-这是 `pd-separation` skill 的薄入口，用于部署或诊断单机 TCP、qualified `lyp_full` / `dlccl_direct` 或跨机器 TCP 的 Prefill/Decode/Proxy，并要求 transport qualification、request-correlated KV transfer 与 site recovery evidence。稳定知识以 [Prefill/Decode Separation](../vllm-dlc/prefill-decode-separation.md) 为准。
+这是 `pd-separation` skill 的薄入口，用于部署或诊断单机 TCP、qualified `lyp_full` / `dlccl_direct` 或跨机器 TCP 的 Prefill/Decode/Proxy，并要求 transport qualification、request-correlated KV transfer 与 site recovery evidence。稳定知识以 [Prefill/Decode Separation](../vllm-cl/prefill-decode-separation.md) 为准。
 
 ## 最少填写
 
@@ -35,19 +35,19 @@ hardware_evidence: not_verified
 ## 可直接复制 Prompt
 
 ```md
-请使用 `pd-separation` skill 直接完成 vLLM-DLC Prefill/Decode Separation，并持续到 `pd_validated` 或一个不可继续的 terminal blocker；若存在历史失败或过程资产，从最早未闭合阶段恢复。不要要求我预填可自动发现的字段。
+请使用 `pd-separation` skill 直接完成 vLLM-CL Prefill/Decode Separation，并持续到 `pd_validated` 或一个不可继续的 terminal blocker；若存在历史失败或过程资产，从最早未闭合阶段恢复。不要要求我预填可自动发现的字段。
 
 模型名称：<MODEL_NAME>
 模型目录：<ABSOLUTE_LOCAL_MODEL_PATH>
 
-先自动发现 Knowledge base/Skills roots、model/tokenizer digest、vLLM/vllm-dlc/mooncake/PyTorch identities、可用 container/image、空闲设备、LYP/transport 能力、role profile、KV layout/cache contract、API/side-channel/store ports、monolithic baseline、deterministic assertion、artifact root、既有 workload 与 Site Recovery Contract。优先复用同机已验证过程资产和仍匹配当前 identity 的成功配置；不照抄过期 PID 或端口。
+先自动发现 Knowledge base/Skills roots、model/tokenizer digest、vLLM/vllm-cl/mooncake/PyTorch identities、可用 container/image、空闲设备、LYP/transport 能力、role profile、KV layout/cache contract、API/side-channel/store ports、monolithic baseline、deterministic assertion、artifact root、既有 workload 与 Site Recovery Contract。优先复用同机已验证过程资产和仍匹配当前 identity 的成功配置；不照抄过期 PID 或端口。
 
 自动生成 resolved deployment proposal 和 authorization status；在 `qualification_execution` 与 artifact root 闭合前只放在响应中，不写文件。授权后再保存。发现和 proposal 不授权 network、clone/fetch、install、build、qualification execution、device execution、privileged Host integration、task-owned KILL 或 Host maintenance；优先消费已验证 standing authorization，仍缺失时只请求下一步所需的最小 scope，不要求我手工填写整份矩阵。KILL 必须完整满足 Contract 的 `task_owned_kill` 条件。
 
 开始前完整读取：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
-- <KNOWLEDGE_BASE_ROOT>/vllm-dlc/prefill-decode-separation.md
-- <KNOWLEDGE_BASE_ROOT>/vllm-dlc/model-adaptation-and-main-to-main-decisions.md
+- <KNOWLEDGE_BASE_ROOT>/vllm-cl/prefill-decode-separation.md
+- <KNOWLEDGE_BASE_ROOT>/vllm-cl/model-adaptation-and-main-to-main-decisions.md
 - <KNOWLEDGE_BASE_ROOT>/runtime-debugging/performance-profiling.md
 - <KNOWLEDGE_BASE_ROOT>/runtime-debugging/chipltech-smi-observability.md
 - <KNOWLEDGE_BASE_ROOT>/testing/arsenal-ci-and-blackbox-testing.md
@@ -79,8 +79,8 @@ hardware_evidence: not_verified
 
 ## 相关资料
 
-- [Prefill/Decode Separation](../vllm-dlc/prefill-decode-separation.md)
-- [Model Adaptation 与 Main-to-Main 决策](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [Prefill/Decode Separation](../vllm-cl/prefill-decode-separation.md)
+- [Model Adaptation 与 Main-to-Main 决策](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
 - [性能分析](../runtime-debugging/performance-profiling.md)
 - [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md)
 - [Arsenal CI 与黑盒测试](../testing/arsenal-ci-and-blackbox-testing.md)

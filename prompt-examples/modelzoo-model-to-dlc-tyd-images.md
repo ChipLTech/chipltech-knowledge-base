@@ -11,7 +11,7 @@ discovery_policy: local_query_only_then_contract_proposal
 
 ## 用途
 
-这是只有“模型名称 + 本地绝对目录”两个必填字段的薄入口。target、环境、镜像、设备、source、profile、workload、端口、artifact root 和交付路径由 agent 自动发现或提出。具体状态机统一由 [模型运行资格与镜像交付 Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md) 定义，Host 操作统一由 [Host Daily Image Runbook](host-daily-image-to-model-validation.md) 定义。
+这是只有“模型名称 + 本地绝对目录”两个必填字段的薄入口。target、环境、镜像、设备、source、profile、workload、端口、artifact root 和交付路径由 agent 自动发现或提出。具体状态机统一由 [模型运行资格与镜像交付 Contract](../vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md) 定义，Host 操作统一由 [Host Daily Image Runbook](host-daily-image-to-model-validation.md) 定义。
 
 ModelZoo 是可选只读 reference。本入口不重写 C1a/C1b probe、源码重建命令、SMI adapter 或 benchmark runner；它只传递输入、授权、target、artifact root 和完成条件给对应 owner。
 
@@ -48,7 +48,7 @@ ModelZoo 是可选只读 reference。本入口不重写 C1a/C1b probe、源码�
 
 开始前先发现并回显实际的 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 和已安装 skill 路径；不要假定 `/work`、`/home/workspace` 或某个历史 checkout。然后完整读取：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
-- <KNOWLEDGE_BASE_ROOT>/vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md
+- <KNOWLEDGE_BASE_ROOT>/vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md
 - <KNOWLEDGE_BASE_ROOT>/prompt-examples/host-daily-image-to-model-validation.md
 - <KNOWLEDGE_BASE_ROOT>/runtime-debugging/chipltech-smi-observability.md
 - 当前安装的 modelzoo-image-validation、dlc-env-setup、model-adaptation SKILL.md，以及本次实际调用的脚本/`--help`
@@ -70,6 +70,6 @@ ModelZoo 是可选只读 reference。本入口不重写 C1a/C1b probe、源码�
 
 ## 相关资料
 
-- [规范 Contract](../vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md)
+- [规范 Contract](../vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md)
 - [Host Daily Image Runbook](host-daily-image-to-model-validation.md)
 - [新模型 Quickstart](new-model-validation-quickstart.md)

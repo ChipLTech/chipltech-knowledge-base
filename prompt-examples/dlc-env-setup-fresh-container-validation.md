@@ -297,7 +297,7 @@ Kilo 可能在现有 session 中缓存 skill 列表。安装完成后重启 Kilo
 【搜索根目录】/work,$HOME
 【需要切换的批准 ref】无
 【版本策略】不适用；本验证不 clone、不同步、不切换仓库
-【是否包含 vllm / vllm-dlc】否
+【是否包含 vllm / vllm-cl】否
 【是否允许修改 /usr/local】否
 
 不要假设 `/home/workspace`。先做 repo discovery、回显 repo map，并在缺少关键仓库或 build entrypoint 时停止。不要发明路径或假装构建成功。
@@ -344,7 +344,7 @@ touch /tmp/dlc-smoke/pytorch/setup.py
 【搜索根目录】/tmp/dlc-smoke
 【需要切换的批准 ref】无
 【版本策略】不适用；本骨架不是 Git repository，不验证 CI 默认最新或固定 ref
-【是否包含 vllm / vllm-dlc】否
+【是否包含 vllm / vllm-cl】否
 【是否允许修改 /usr/local】否
 【CMake 要求】已安装 `cmake --version` 必须严格大于 `3.27.0`；本骨架只模拟源码入口，不证明系统 CMake 合格
 
@@ -373,7 +373,7 @@ rm -rf /tmp/dlc-smoke
 - `LLVM`
 - `DLC_Custom_Kernel`（文档中称为 DLC_Custom_Kernel Repository）
 - `pytorch`（构建 PyTorch DLC Backend）
-- 可选：`vllm`、`vllm-dlc`
+- 可选：`vllm`、`vllm-cl`
 
 **▶ 可复制 prompt：**
 
@@ -384,7 +384,7 @@ rm -rf /tmp/dlc-smoke
 【搜索根目录】<真实 repo 根目录>
 【版本策略】<CI默认最新 / 固定ref / 混合；已有仓库不需要切换时写“保持当前 checkout”>
 【需要切换的批准 ref】<CI默认最新可写“使用 Arsenal CI 默认分支最新 head”；固定ref/混合时每项提供 repo、批准的 remote URL、branch/tag 和可选 SHA；例如 LLVM|git@github.com:ChipLTech/LLVM.git|feature-x|<sha>；没有就写“无”>
-【是否包含 vllm / vllm-dlc】<是/否>
+【是否包含 vllm / vllm-cl】<是/否>
 【是否允许修改 /usr/local】<是/否>
 ```
 

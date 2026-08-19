@@ -2,12 +2,12 @@
 
 ## 用途
 
-用于 vLLM-DLC serving 已完成部分请求后出现 `synErrorLaunchFailure`、worker abort、EngineCore dead 或 HTTP 500 的场景。目标是找到第一 fatal 和最小执行边界，再用单变量实验捕获首个失败 DLC Custom Kernel。
+用于 vLLM-CL serving 已完成部分请求后出现 `synErrorLaunchFailure`、worker abort、EngineCore dead 或 HTTP 500 的场景。目标是找到第一 fatal 和最小执行边界，再用单变量实验捕获首个失败 DLC Custom Kernel。
 
 ## 可复制 Prompt
 
 ```markdown
-使用 `/diagnosing-bugs` 处理这个 vLLM-DLC serving failure；涉及模型级 Attention、MLA、MoE、量化、MTP 或 distributed compatibility 时同时遵守 `model-adaptation` 的 claim boundary。
+使用 `/diagnosing-bugs` 处理这个 vLLM-CL serving failure；涉及模型级 Attention、MLA、MoE、量化、MTP 或 distributed compatibility 时同时遵守 `model-adaptation` 的 claim boundary。
 
 【Host/容器】<HOST_AND_CONTAINER>
 【模型绝对路径】<ABSOLUTE_MODEL_PATH>
@@ -30,7 +30,7 @@
 2. 按 package/import、distributed init、checkpoint load、weight placement、KV cache、Graph capture、API ready、request admission、prefill、decode、worker exit、Engine death 切分生命周期，列出每段的通过证据和第一失败证据。
 3. 找第一 fatal。把 cancellation、EngineDead、HTTP 500 和 cleanup warning 列为传播结果。异步 DLC Runtime 错误的报告 API 只记为 observation point，不直接当失败 kernel。
 4. 保存 fatal scheduler state：computed/output/scheduled token count、speculative token count/placeholder、position、seq_len、slot mapping、accepted-token metadata、实际 eager/Graph dispatch 和 Graph size。placeholder 必须按当前安装源码解释。
-5. 保存 image digest、PyTorch/vLLM/vllm-dlc/source identity、完整启动命令、预期环境和每个最终 worker 的 `/proc/<pid>/environ`。外层 shell 或 launcher 环境不作为 worker 环境的替代证据。
+5. 保存 image digest、PyTorch/vLLM/vllm-cl/source identity、完整启动命令、预期环境和每个最终 worker 的 `/proc/<pid>/environ`。外层 shell 或 launcher 环境不作为 worker 环境的替代证据。
 6. 形成 3-5 个可证伪假设。优先做 Graph vs eager，然后依次拆 async scheduling、speculative token count、IndexCache/Sparse MLA、量化 MoE/Attention，最后才进入逐设备或 DLCCL/LYP probe；每轮只改一个变量。
 7. 每个 server epoch 独立保存 before_launch、after_ready、during_request、after_cleanup 的 SMI Observation Envelope、进程/端口/HBM/handles、请求响应和日志。SMI 只作为观测，不作为模型正确性证据。
 8. 若 blocking/debug 使服务在初始化或权重加载阶段 stall，登记为新的失败边界并恢复最后一个能到达目标 failure 的 profile；不要将其写成原 decode failure 已前移。

@@ -27,7 +27,7 @@ discovery_policy: local_query_only_then_contract_proposal
 
 先自动发现并回显 `<KNOWLEDGE_BASE_ROOT>`、`<SKILLS_ROOT>` 与已安装 skill 路径，然后读取：
 - <KNOWLEDGE_BASE_ROOT>/CONTEXT.md
-- <KNOWLEDGE_BASE_ROOT>/vllm-dlc/modelzoo-driven-dlc-tyd-image-contract.md
+- <KNOWLEDGE_BASE_ROOT>/vllm-cl/modelzoo-driven-dlc-tyd-image-contract.md
 - <KNOWLEDGE_BASE_ROOT>/prompt-examples/host-daily-image-to-model-validation.md
 - <KNOWLEDGE_BASE_ROOT>/runtime-debugging/chipltech-smi-observability.md
 - 当前可用 dlc-env-setup、model-adaptation 和 modelzoo-image-validation skills/scripts

@@ -15,7 +15,7 @@
 | 资产 | 身份 |
 |---|---|
 | vLLM | `a208f41eee15d15b0da619ded9384fda5efd2e7f` |
-| vLLM-DLC | `ce14cbc726c73df65a3ec6e970da523c6ed22ea8` |
+| vLLM-CL | `ce14cbc726c73df65a3ec6e970da523c6ed22ea8` |
 | Native extension | SHA-256 `66212445c4dfc03716c61818db98e8fe126d570a99c4abb5d10db5ed48a105da` |
 | Base image | `hangzhou-harbor.infraai.top/ci/dlc_base@sha256:0a2dec9c34e87530ad77d9c25967e2e2937fd4c00d6ca648fa1eb8ea7bd42735` |
 | 权威模型 | `/mnt/jfs/models/Qwen3-32B`, 17 shards, BF16 |
@@ -143,7 +143,7 @@ Synthetic 输入下比对 DLC RMSNorm 与 CPU float32 reference。
 2. 必需 mount: `/dev`, `/sys`, `/run`, `/lib/modules`, `/var/log`, workspace (`/workspace`)、site-packages、模型目录
 3. `-e PYTHONPATH` 在 `docker exec` 中应放在 `bash -lc` 内部 export，不要用 `-e` flag (会覆盖容器默认环境)
 4. sealed site-packages 的 `.pth` editable install 不会生效 (PYTHONPATH 添加的目录不处理 `.pth`)；需直接在 PYTHONPATH 中添加实际源码路径
-5. torchvision 依赖在 vLLM-DLC 的 import chain 中是必须的 (transformers → image_utils → torchvision.transforms.InterpolationMode)
+5. torchvision 依赖在 vLLM-CL 的 import chain 中是必须的 (transformers → image_utils → torchvision.transforms.InterpolationMode)
 
 ### Hermes 可靠性
 
@@ -172,7 +172,7 @@ Synthetic 输入下比对 DLC RMSNorm 与 CPU float32 reference。
 - O0 baseline: `/home/xuansun/modelzoo-image-validation-artifacts/2026-07-28/qwen3-32b-tp4-copy-async-o0/`
 - 交接合同: `/tmp/kilo/qwen3-32b-dlc-block256-next-session-handoff.md`
 - [precision-debugging/model-site-dump-to-repro.md](../precision-debugging/model-site-dump-to-repro.md)
-- [vllm-dlc/model-adaptation-and-main-to-main-decisions.md](../vllm-dlc/model-adaptation-and-main-to-main-decisions.md)
+- [vllm-cl/model-adaptation-and-main-to-main-decisions.md](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
 - [precision-debugging/token-divergence-and-moe-contract-debugging.md](../precision-debugging/token-divergence-and-moe-contract-debugging.md)
 
 ## 来源

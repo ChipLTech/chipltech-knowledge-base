@@ -49,7 +49,7 @@
 
 **现象**: 15/19 模型在 `LLM(max_num_seqs=1, ...)` 时报 `Engine core initialization failed`。
 
-**根因**: vLLM DLC engine 初始化要求 ≥2 seqs；`max_num_seqs=1` 触发无法支持的代码路径。
+**根因**: vLLM-CL engine 初始化要求 ≥2 seqs；`max_num_seqs=1` 触发无法支持的代码路径。
 
 **修复**: 始终使用 `max_num_seqs=8`（匹配 vLLM API server 默认值）。
 
@@ -73,7 +73,7 @@
 
 **现象**: 从 ModelZoo README 提取的 `VLLM_USE_DLC_COL_MAJOR_MATMUL=1` 导致 Engine Init 失败。单独/组合测试其他环境变量（DLC_SYN_URING, VLLM_USE_V1）均通过，排除后立即恢复正常。
 
-**根因**: 当前 sealed vLLM-DLC 版本与此变量不兼容。
+**根因**: 当前 sealed vLLM-CL 版本与此变量不兼容。
 
 **修复**: 从 ModelZoo README 提取的环境变量中**永久排除**此变量。
 
