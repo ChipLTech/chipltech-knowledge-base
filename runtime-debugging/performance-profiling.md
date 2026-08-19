@@ -57,6 +57,21 @@ Perfetto 分析层          →  UI timeline、Trace Processor、版本对比
 4. **校验 trace**：先闭合 syntax、byte digest 与实际具备的 localization scope。
 5. **可视化或离线分析**：只解释已闭合的 trace-track/semantic scope；缺失 counter 保持 `not_verified`。
 
+### DLCSynapse launch log 的 kernel/算子 CSV
+
+如果 profile 已导出 `syn_*.ansi` 或 `.log`，使用 `diagnosing-bugs` Skill 的 `scripts/export-dlc-kernel-csv.py` 做 launch-log 后处理：
+
+```bash
+python3 <SKILL_ROOT>/scripts/export-dlc-kernel-csv.py \
+  <ARTIFACT_DIR>/syn_<PID>.ansi \
+  --tool /home/xuansun/llama2-fine-tune/tool.py \
+  --output-dir <ARTIFACT_DIR>/kernel-summary
+```
+
+只落盘 `operators.csv`，不生成 kernel 文本、图片或 manifest。时间口径以 `tool.py` 的 `F=1400` MHz 为准；不要采用 `table.py` 中 1500 MHz 的 `Total Time` 换算。CSV 按总 cycles 排序，适合快速筛选必要算子和比较同一封存 workload 下的 diagnostic profile。命令 stdout 提供源 log、工具和 CSV digest，需要时保存到 task-owned evidence。
+
+CSV 是原始 log 的派生诊断摘要。必须保留原始 log、工具 digest、worker/rank/device 映射和 profile 配置；没有独立语义绑定时，聚合 kernel 不能证明 request、layer、rank、device、shape 或根因。完整步骤见 [Synapse log 与 kernel 摘要工作流](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md)。
+
 ## 分层热点定位方法
 
 Profile 工具给出时间线，热点定位还需要一套从端到端向下收敛的决策流程。不要从某个 DLC Custom Kernel 名称开始猜根因。
@@ -161,6 +176,7 @@ residual 与某个子操作耗时接近只是强线索；在调用次数和来�
 |---|---|---|
 | Instrumented localization | 慢边界、调用顺序、次数和候选 residual | 生产 TTFT/TPOT/throughput 收益 |
 | Perfetto / DLCSynapse trace | timeline、queue、copy、sync、kernel 关联 | 单变量因果关系 |
+| DLCSynapse kernel CSV | 单份 launch log 内按 cycles 聚合的 kernel 次数、时间、ops 和带宽候选 | request/layer/rank/device 归因或正式 benchmark |
 | Microbenchmark | 固定输入下算子/kernel 成本 | 模型端到端收益 |
 | Uninstrumented benchmark | exact workload 下端到端性能 | 其他模型、长度、并发或稳定性 |
 | Repeated stability benchmark | 声明 workload 下的分布和离散度 | 未执行 profile 或其他硬件配置 |

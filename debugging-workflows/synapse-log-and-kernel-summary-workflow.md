@@ -3,7 +3,7 @@
 ## 适用场景
 
 - 需要确认一次模型运行实际 launch 了哪些 DLC runtime kernel。
-- 需要为 dispatch 验证、replay、挂起排障准备 `syn_*.ansi` 和 `*_kernels.txt`。
+- 需要为 dispatch 验证、replay、挂起或性能热点排查从 `syn_*.ansi` 导出算子 CSV。
 - 需要把“开环境变量 -> 跑模型 -> 产生日志 -> 摘要 kernel 列表”做成稳定流程。
 
 ## 核心结论
@@ -13,8 +13,8 @@
 1. 开 Synapse debug 环境变量
 2. 跑模型或最小复现
 3. 收集 `syn_*.ansi`
-4. 用 `python3 tool.py <syn_*.ansi>` 生成 `*_kernels.txt`
-5. 再基于 log 和摘要做 dispatch 判断、replay 或挂起排查
+4. 用 `tool.py` parser 和 1400 MHz 口径生成按总 cycles 排序的 `operators.csv`
+5. 再基于原始 log 和 CSV 做 dispatch、replay、挂起或热点排查
 
 ## 环境变量模板
 
@@ -82,11 +82,30 @@ DLC_SYN_BLOCKING=1 python3 RSThinker_infer_chat_stream.py \
 
 这个文件保存的是本次运行的 runtime kernel launch 细节。
 
-### 步骤 3：生成 `*_kernels.txt`
+### 步骤 3：生成 `operators.csv`
+
+推荐使用已发布的 `diagnosing-bugs` Skill 包装器：
+
+```bash
+python3 <SKILL_ROOT>/scripts/export-dlc-kernel-csv.py \
+  /work/tmpx/syn_1123318.ansi \
+  --tool /home/xuansun/llama2-fine-tune/tool.py \
+  --output-dir /work/tmpx/kernel-summary
+```
+
+固定输出：
+
+```text
+/work/tmpx/kernel-summary/operators.csv
+```
+
+该流程只落盘 `operators.csv`，不输出 kernel 文本、图片或 manifest。命令 stdout 返回原始 log、`tool.py` 和 CSV 的 SHA-256、launch/kernel 数量及 `clock_mhz: 1400`；需要身份审计时把 stdout 保存到 task-owned evidence。
+
+只需要原始文本摘要时，也可以直接运行：
 
 ```bash
 cd /work/llama2-fine-tune
-python3 tool.py /work/tmpx/syn_1123318.ansi
+python3 /home/xuansun/llama2-fine-tune/tool.py /work/tmpx/syn_1123318.ansi
 ```
 
 输出类似：
@@ -95,13 +114,11 @@ python3 tool.py /work/tmpx/syn_1123318.ansi
 /work/tmpx/syn_1123318.ansi -> /work/tmpx/syn_1123318_kernels.txt
 ```
 
-### 步骤 4：阅读 kernel 摘要
+### 步骤 4：阅读 CSV
 
-`*_kernels.txt` 的用途：
+`operators.csv` 按总 cycles 降序，保存 kernel name、调用次数、总 cycles、cycles 占比、总/平均时间、ops、平均/最大 GFLOPS、bytes、平均/最大 bandwidth、crt cycles 和平均 crt 时间。所有时间统一按 `tool.py` 的 `F=1400` MHz 换算。kernel name 可用于快速浏览实际 launch、判断 DLC 路径和提供 replay 候选。
 
-- 快速浏览本次 run 实际 launch 了哪些 kernel
-- 判断某条路径是否仍在走 DLC
-- 给 `pytorch_test --replay -f <kernel>` 提供候选 kernel 名
+`table.py` 可以作为 CSV 字段和排序方式的参考，但它当前把 `Total Time` 按 1500 MHz 换算，与 `tool.py` 的 1400 MHz 不一致。本流程以 `tool.py` 为准，不直接使用 `table.py` 的时间换算，也不生成 PNG。
 
 ## 什么时候需要这个流程
 
@@ -120,6 +137,9 @@ python3 tool.py /work/tmpx/syn_1123318.ansi
 6. **blocking 后出现更早 stall 仍继续归因**：如果新 run 没有到达原失败阶段，它是新的观察边界，不是已经定位的首个失败 kernel。
 7. **多 rank 共用不可区分的日志**：必须保存 PID/rank/device 到 `syn_*.ansi` 的映射，否则不能把 worker rank 映射为物理设备故障。
 8. **把最后一行 kernel 摘要直接当失败 kernel**：异步模式下只能作为候选；首个失败 kernel 需要 blocking 返回、同步边界或其他明确 completion evidence。
+9. **混用 1400/1500 MHz**：会让文本和 CSV 时间不一致；本流程统一使用 1400 MHz，并要求 CSV 明示 `clock_mhz`。
+10. **删除原始 log**：CSV 是派生摘要，必须保留原始 `syn_*.ansi`；需要审计时同时保存命令 stdout 中的 `tool.py` 和 CSV digest。
+11. **把聚合排名当模型归因**：同名 kernel 可跨 request、layer、rank、device 和 shape；缺独立绑定证据时这些 scope 都保持 `not_verified`。
 
 ## 相关资料
 

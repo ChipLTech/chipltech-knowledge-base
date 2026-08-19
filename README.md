@@ -121,6 +121,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [case-studies/host-api22-fullstack-main-to-main-update.md](case-studies/host-api22-fullstack-main-to-main-update.md) — Host API 21→22 全栈主线更新 + TP4/EP 验证，提炼 binary identity、editable source 确认、Git bundle 中转与清理等可复用经验。
 - [case-studies/model-adaptation-analysis-report-production.md](case-studies/model-adaptation-analysis-report-production.md) — 从 Hy3 GPTQ-Int4 报告复盘提炼 Evidence Ledger、Decision Summary/Technical Attachment 分层、真实 kernel launch name 核验和性能口径边界。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) — 可直接复用的 vLLM 性能热点分层定位 prompt。
+- [debugging-workflows/synapse-log-and-kernel-summary-workflow.md](debugging-workflows/synapse-log-and-kernel-summary-workflow.md) — 从 DLCSynapse `.ansi`/`.log` 按 `tool.py` 的 1400 MHz 口径只导出算子 CSV。
 
 ### vLLM-CL workflow
 

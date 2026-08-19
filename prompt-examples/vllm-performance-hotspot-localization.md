@@ -14,6 +14,7 @@
 【固定请求或 benchmark 命令】<WORKLOAD_COMMAND>
 【性能现象或可比较 baseline】<SYMPTOM_OR_BASELINE>
 【artifact 目录】<ARTIFACT_DIRECTORY>
+【已有 DLCSynapse log】<SYN_LOG_PATH_OR_AUTO_DISCOVER>
 
 按以下顺序执行：
 
@@ -23,7 +24,7 @@
 4. 从 request/scheduler -> model forward -> block/layer -> stage -> framework wrapper -> DLC Attention Backend/PyTorch DLC Backend/vLLM-CL Custom Op -> DLC Runtime/DLCSynapse -> DLC Custom Kernel 逐层缩小。每轮只深入当前已确认最慢的边界。
 5. 每个 timer 标记 inclusive/exclusive、parent、request、layer/module、TP rank、prefill/decode、shape、dtype、stride/layout、同步位置和时间单位。对 layout/view/alias/materialization 候选，在可观测时同时记录 source/destination contiguity、storage identity、storage offset 和 logical view relationship。
 6. 比较 parent total、covered child intervals 和 residual。稳定 residual 先列出重复执行、预/后处理、layout conversion、copy、异步等待、queue/collective wait 和计时定义差异等候选，不提前归因。
-7. 对疑似热点统计调用来源、调用次数、累计/平均耗时和输入身份。kernel 名或聚合排名只能提供线索。
+7. 如果已有 `syn_*.ansi` 或 `.log`，使用 `diagnosing-bugs/scripts/export-dlc-kernel-csv.py` 和 `/home/xuansun/llama2-fine-tune/tool.py`，只生成 `operators.csv`。时间统一按 `tool.py` 的 1400 MHz 口径，不使用 `table.py` 的 1500 MHz 时间换算，不生成 kernel 文本、图片或 manifest。对疑似热点统计调用来源、调用次数、累计/平均耗时和输入身份；kernel 名或聚合排名只能提供线索。
 8. 审计 KV cache update、output materialization、layout conversion、quantize/dequantize、collective 和 state update 的跨层执行所有权。声明必须与实际调用行为一致。
 9. 每个修复只改变一个变量，并同时验证 correctness、调用/ownership contract 和局部 timing。
 10. 删除 debug print、强制同步、blocking 和临时 wrapper，用原封存 workload 重跑无插桩端到端 benchmark。稳定 baseline 或回归 claim 需要声明的重复 attempts 和离散度报告。
@@ -33,6 +34,7 @@
 - 无插桩 baseline 与 diagnostic profile diff。
 - 分层 timing 表和计时边界语义。
 - 调用次数、parent、shape/layout、rank、phase 表。
+- 按总 cycles 排序的 DLCSynapse `operators.csv`；需要审计时保存含源 log/tool/CSV digest 的命令 stdout，没有可解析 log 时明确 `not_verified`。
 - 已确认根因或最小未决边界。
 - correctness 与 ownership 验证。
 - 无插桩 benchmark 结果，未执行时明确 `not_verified`。

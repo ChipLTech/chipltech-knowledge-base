@@ -60,6 +60,7 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 | DLC Runtime 报错、hang、worker 退出或进程残留 | 日志、命令、说明 | [业务套餐七](dlc-business-skill-examples-quickstart.md#套餐七dlc-runtime-报错hang-或进程残留) | `diagnosing-bugs` |
 | vLLM 部分 token 后异步 launch failure / HTTP 500 | 启动命令、固定请求、日志 | [异步 Launch Failure 定位](vllm-async-launch-failure-localization.md) | `diagnosing-bugs`，必要时 `model-adaptation` |
 | vLLM TTFT/TPOT/ITL/吞吐性能热点 | serve command、固定 workload、baseline | [性能热点分层定位](vllm-performance-hotspot-localization.md) | `diagnosing-bugs` |
+| 已有 DLCSynapse `.ansi`/`.log`，导出算子 CSV | log 路径、artifact 目录 | [性能热点分层定位](vllm-performance-hotspot-localization.md) 和 [Synapse log 摘要工作流](../debugging-workflows/synapse-log-and-kernel-summary-workflow.md) | `diagnosing-bugs`；只输出 CSV，固定 1400 MHz |
 | 模型 distributed/MoE route 资格边界 | 模型/deployment identity、active route inventory | [Distributed Collective Qualification](../vllm-cl/distributed-collective-qualification.md)（supporting reference，不是独立 capability entrypoint） | `model-adaptation` |
 | Prefill/Decode Separation 部署或诊断 | 模型名、绝对目录 | [Prefill/Decode Separation](vllm-cl-prefill-decode-separation.md) | `pd-separation` |
 | 精确 upstream vLLM Main-to-Main Upgrade | 目标 full SHA、仓库/evidence | [Main-to-Main Upgrade](vllm-cl-main-to-main-upgrade.md) | `main-to-main-upgrade` |
