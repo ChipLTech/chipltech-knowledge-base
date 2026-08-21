@@ -106,6 +106,12 @@
 
 **Technical Attachment**：供技术人员复核 Decision Summary 的详细材料，保存 exact identity、模型结构、量化参数、调用条件、失败边界、原始 evidence、性能口径和后续验证项。
 
+**Capability ID**：`cap.<domain>.<name>` 形式的稳定能力身份。canonical Quickstart 中正式 Capability ID 的集合必须与 `agent-context/capability-manifest.yaml` 完全相等，并由 manifest 绑定到 owning Skill 和 SKILLHUB publication；Supporting navigation 不分配 ID。它是闭包索引，不拥有或复制业务流程规则。
+
+**Validated Lesson**：从一个或多个有 provenance 的 case 中审查出的有界 lesson statement，记录适用/不适用范围、Evidence class、验证/反例、owner、rule/contract/test refs 和 Claim Boundary。`validated` lesson 必须引用能核验该 lesson ID、精确 statement 与对应 rule/contract 内容的 qualified regression test ID，不能只引用测试文件存在。`validated` 只修饰该 statement，不修饰整篇 case，也不表示当前 runtime acceptance；未进入 index 的旧 case 默认 `historical_unreviewed`。
+
+**Ask Output Contract**：自然语言能力发现的统一返回形状，包括 selected capability、selection basis、minimum missing inputs、first safe action、expected terminal states 和 Evidence boundary。它引用 owning Skill 的当前合同，不重写 terminal state 或授权规则。
+
 **DLC_CL**：PyTorch 等 DLC Ecosystem 组件的支持库。
 禁止使用：`OpenCL`（除非明确讨论 OpenCL）。
 
@@ -173,9 +179,13 @@
 
 **Tested Revision**：实际产生 build/runtime evidence 的 exact source revision、dirty state 和 artifact graph。验证期间使用的 merge history 或 working checkout 属于该 identity，不自动等于最终 PR commit。
 
-**Publication Candidate**：从当前目标 main 的隔离 clean worktree 构造、仅包含批准净差异的待发布 revision。它必须显式关联 Tested Revision、base SHA、scoped diff/tree identity 和回归结果；单独的 commit count 或 patch-id 不建立 runtime acceptance。
+**Publication Candidate**：从当前目标 main 的隔离 clean worktree 构造、仅包含声明范围内净差异的候选 revision。它必须显式关联 Tested Revision、base SHA、scoped diff/tree identity，以及针对该 candidate exact source、tree 和 artifact graph 新执行的 build/runtime gate Evidence；其他 candidate、Tested Revision、patch-id 或历史 gate 结果不能替代该 fresh Evidence。Stage C deferred 期间，它只是 structural candidate，不表示 authorization 已认证、publication eligible 或可获得 production trust。
 
 **Patch Equivalence**：Tested Revision 与 Publication Candidate 在声明 path/scope 内净差异等价的证据。stable patch-id 可作为 supporting evidence，但不能替代 base identity、完整 scoped diff/tree、artifact rebuild 或受影响回归。
+
+**Structural Candidate Assessment**：Stage C deferred 期间，B02 assessor 对 Publication Candidate 的 HEAD/base/tree、scoped diff、Patch Equivalence、fresh build/runtime gate Evidence references、remote observation 和 exact lease 所做的只读结构评估。它不认证 authorization，不输出 publication eligibility，不执行 commit、push、rewrite 或 finalize，也不证明生产可用性或 production trust。
+
+**Organization Quality View**：组织闭包的只读派生视图。L1/L2 可由绑定 exact source identity 的 fixture run 派生；L3 的合同存在性和 focused tests 可在当前 session 核验，但持久 view 默认 `not_reported`；Stage C deferred 期间 ST、Hardware 和 runtime 均为 `not_reported`。该 view 不把 source/fixture evidence 升级为 runtime acceptance 或 production trust。
 
 **Static Stack Compatible**：exact immutable image 与 Host stack 的只读身份匹配通过的状态，绑定 Driver/Runtime API、四文件 CRT、DLC Custom Kernel library 和 LLVM 完整身份到一个显式批准或撤销的 policy profile。它只证明 artifact 身份，不代表 Real DLC Hardware execution。
 **Cold First-Compute Completion Ready**：在 fresh process 中完成 allocation、H2D、真实 device operation、synchronize、D2H 和 exact correctness 后得到的有界基础执行状态。它发现静态 policy 尚未认识的兼容性问题，但不能外推模型功能或 benchmark 稳定性。
@@ -229,9 +239,12 @@
 - **Transport Qualification Gate** 在加载双 role 模型前验证实际 data plane；**Site Recovery Contract** 约束会改变 Host 状态的 LYP/driver/firmware/reboot 操作及其收尾。
 - **SMI Observation Envelope** 为模型验证、镜像交付、PD 分离、环境修复和 runtime debug 提供统一的 query-only device/process/HBM evidence seam。
 - **Collective Selection Contract** 在 communicator 侧拥有 topology/payload-aware selection；**Verified Collective Fallback** 在 launch 前消化正常能力边界，DLC Custom Kernel 只按稳定 strategy dispatch 并防御 descriptor ABI 损坏。
-- **Tested Revision** 绑定实际执行证据；**Publication Candidate** 绑定最新目标 main 上的交付表示；二者只能通过声明范围内的 **Patch Equivalence** 和重跑门禁建立可审计关系。
+- **Tested Revision** 绑定实际执行证据；**Publication Candidate** 绑定最新目标 main 上的候选表示；二者只能通过声明范围内的 **Patch Equivalence** 和每个 candidate 独立 fresh build/runtime gate Evidence 建立可审计关系。Stage C deferred 的 **Structural Candidate Assessment** 不认证 authorization 或 publication eligibility。
 - **Evidence Ledger** 约束事实、推断和未知不混写；**Decision Summary** 回答读者决策问题；**Technical Attachment** 保存可复核细节，三者不能把摘要可读性换成证据越界。
 - **Technical Delivery Summary** 把已完成技术工作压缩为一个能力主张；source implemented、integrated、validated 和 released 必须按实际 Evidence 分开表达。
+- **Capability ID** 连接 canonical capability catalog、owning Skill 和 publication surface；**Ask Output Contract** 将选择结果呈现给人类，但两者都不替代 owner contract。
+- **Validated Lesson** 从历史 case 提升有边界的可复用 statement；只有链接到 rule/contract/test 并保留 Evidence ceiling 后才能进入 validated 状态。
+- **Organization Quality View** 只派生组织闭包状态；L3 持久状态以及 ST、Hardware、runtime 默认 `not_reported`，不得据此声称 production trust。
 - **Execution Locus** 决定命令和路径在哪个 namespace 中解释；**Path Coordinate** 绑定 locus 与绝对路径；**Mount Mapping** 才能把 Host 与 Docker Container 中的 identity 关联起来。
 
 ## 核心链路

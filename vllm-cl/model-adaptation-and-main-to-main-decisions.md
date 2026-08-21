@@ -93,6 +93,8 @@ Patch Equivalence 证明声明 scope 的净差异关系，不自动转移 accept
 
 远端并发推进是 publication identity 变化，不是可忽略的 push race。旧 base 或 PR tip 的 exact lease 应阻止发布；随后基于新 main 重建 candidate、更新 identity 并重跑受影响门禁。改写现有远端 PR history 需要独立显式授权，只允许 exact expected old SHA 的 `--force-with-lease`；无 lease force push 不属于批准路径。read-only/no-finalize Skill 只报告这些门禁，不创建 worktree、commit 或 push。
 
+Publication Candidate producer 由外部、明确授权的 publication-preparation workflow 拥有，只负责构造 clean candidate 并生成 sealed `vllm-cl-publication-candidate-handoff/v1`，不能自批。`main-to-main-upgrade` assessor 消费 handoff 和实际 Git roots，重新计算 clean/HEAD/base/tree/scope/equivalence/gate freshness/lease/分离授权，输出 `vllm-cl-publication-candidate-assessment/v1`；它不写 repository，eligibility 也不替代人类 publication authority。没有 proposed publication 时 handoff 必须显式记录 null candidate，assessor 不得虚构。
+
 ### Public Schema、Descriptor 与 Kernel Entry
 
 Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry ABI 的正式定义见 [CONTEXT.md](../CONTEXT.md)。三层必须分别核验，并与 exact source、adapter 和 binary identity 绑定。
@@ -129,6 +131,7 @@ Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry A
 - **事实 / Fact**：DeepSeek TP=2 与 Llama TP=1 的 exact Ticket 06 v12 assignments 已完成 operational regression；该结果仍为 `operational_only` 且 `acceptance_eligible: false`。
 - **事实 / Fact**：stable skill 不修改、commit 或 finalize，alignment outcome 保持 unchanged。
 - **事实 / Fact**：freeze report 必须记录 Tested Revision；提出 publication 时再单独记录 Publication Candidate、base、Patch Equivalence、受影响回归、remote lease 和 publication authorization。纯 read-only impact analysis 不虚构 candidate，这些门禁本身也不授权 commit 或 push。
+- **事实 / Fact**：external producer 只生成 sealed handoff 且不自批；package-owned assessor 只读重算实际 Git facts，报告 eligibility/no-finalize，不执行 commit、push、rewrite 或 finalization。
 
 ## 当前未验证项
 

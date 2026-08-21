@@ -14,6 +14,14 @@
 
 本页只提供薄入口和能力导航。正式执行规则以链接的详细 Prompt、Contract、Runbook、知识专题和当前 owning Skill 为准。本页不会复制维护第二套状态机。
 
+## 三级入口与稳定能力身份
+
+- **30 秒**：完全不知道时使用下一节的 `chipltech-context` Prompt；已知任务时按标题或速查表选入口。
+- **5 分钟**：阅读对应入口的“什么时候用 / 直接这样说 / 关键边界”，再加载 owning Skill 获取最少输入、首个安全动作、硬件/授权要求和 terminal states。
+- **Contributor**：稳定 `capability_id` 和引用闭包维护在 `agent-context/capability-manifest.yaml`；它只引用本页、owning Skill 和 Skills `SKILLHUB.yaml`，不维护第二套流程规则。修改后运行 `<SKILLS_ROOT>/scripts/validate-chipltech-organization.py`。
+
+本页正式业务能力段使用 `Capability ID: cap.<domain>.<name>`，且 ID 集合必须与 `agent-context/capability-manifest.yaml` 完全相等。标为 `Supporting navigation` 的 Runbook、固定环境 helper 或执行器集成不是独立业务能力，不分配 Capability ID。ID 用于发现、日志和引用；执行仍以 detailed Prompt/Contract 和 owning Skill 为准。
+
 Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否则发现 `<SKILLS_ROOT>` 下的正式包；两者都不存在时返回 `blocked_missing_contract`。发现或安装成功不构成任何业务 runtime Evidence。
 
 ## 完全不知道该选哪个
@@ -72,6 +80,8 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 
 ## 1. 新模型只做运行资格验证
 
+Capability ID: `cap.model.runtime-qualification`
+
 什么时候用：只有模型名和本地目录，想确认模型能否在 DLC Platform 上完成 runtime-first 功能验证；默认不交付镜像。
 
 直接这样说：
@@ -88,6 +98,8 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 关键边界：默认 qualification-only；没有合格 `environment_handoff/v1` 不进入 real-weight functional/benchmark；单次 benchmark 不称稳定 baseline。
 
 ## 2. 每日空镜像初始化后做新模型适配
+
+Capability ID: `cap.model.fresh-image-adaptation`
 
 什么时候用：同事示例中的场景。希望从一个每日空镜像开始，先完成 DLC Ecosystem 环境，再处理明确的新模型适配。
 
@@ -107,6 +119,8 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 
 ## 3. 单模型兼容性或 Serving 适配分析
 
+Capability ID: `cap.model.adaptation`
+
 什么时候用：模型已经明确，希望分析 Attention、MLA、MoE、quantization TP ownership、Graph lifecycle、multimodal、MTP 或 distributed compatibility，而不是做 upstream 全局对齐。
 
 直接这样说：
@@ -124,6 +138,8 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 
 ## 3.1 将模型适配证据整理成决策摘要
 
+Capability ID: `cap.model.analysis-summary`
+
 什么时候用：已有模型 config、源码、日志、kernel summary、性能参考或运行 artifacts，需要面向非一线实现人员输出可读的适配判断，而不是重新执行模型适配。
 
 直接这样说：
@@ -140,6 +156,8 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 关键边界：该入口只整理已有证据；读者和决策问题为必填，不执行 build、install、device、benchmark 或 workspace mutation，也不替代 `model-adaptation`、`diagnosing-bugs` 或 Real DLC Hardware qualification。readiness、源码存在、timeout、参考性能和单请求 token/s 不能升级为模型完成、根因、实测或服务吞吐。
 
 ## 3.2 将已完成技术工作提炼成一句话交付总结
+
+Capability ID: `cap.communication.delivery-summary`
 
 什么时候用：实现说明、diff、commit、测试或 review 材料已经存在，需要向 review 同事、日报、Sprint 或跨团队说明“交付了什么能力”，而不是复述跨仓接口和实现过程。故障根因简述使用 `technical-issue-summary`，不要走本入口。
 
@@ -174,6 +192,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 4. 模型验证后交付 DLC/TYD Images
 
+Capability ID: `cap.model.image-delivery`
+
 什么时候用：不仅要验证模型，还要在功能和 benchmark gates 通过后交付 DLC Chip image，并按条件独立交付 TYD Chip image。
 
 直接这样说：
@@ -190,6 +210,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 关键边界：target 不等于 build/export/push 授权；模型权重不得进入 image；DLC 与 TYD 独立判定，TYD 失败不回写 DLC 已完成状态。
 
 ## 5. 按 Host Daily Image Runbook 做完整验证
+
+Supporting navigation：本节是 `cap.model.runtime-qualification` 与 `cap.model.image-delivery` 的 Host/container 编排 Runbook，不是独立 capability entrypoint。
 
 什么时候用：需要明确控制 ordinary daily base、task-owned container、C0-C5、handoff、真实权重、benchmark、failure epoch 和 cleanup。
 
@@ -208,6 +230,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 6. 重建或修复 DLC Ecosystem 环境
 
+Capability ID: `cap.environment.rebuild-repair`
+
 什么时候用：工作站或容器的 PyTorch 2.5.0 wheel、DLC Platform、DLC_Custom_Kernel Repository、vLLM 或 vLLM-CL 环境损坏或需要阶段化重建。
 
 直接这样说：
@@ -225,7 +249,29 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 关键边界：dirty worktree 不切 ref、不 stash、不覆盖；partial rebuild 必须先证明上游依赖健康；package/import smoke 不等于模型或 Real DLC Hardware acceptance。
 
+## 6.1 将 PyTorch DLC Backend 迁移为 PrivateUse1 插件
+
+Capability ID: `cap.migration.pytorch-plugin`
+
+什么时候用：把既有生产 PyTorch DLC Backend 组件迁移到标准 PrivateUse1 loadable plugin，同时保持 operator semantics、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry ABI。
+
+直接这样说：
+
+```markdown
+请使用 `pytorch-dlc-plugin-migration`，参考 `prompt-examples/pytorch-dlc-plugin-migration-prompts.md`，迁移下面的 PyTorch DLC Backend slice。
+
+生产 PyTorch DLC Backend、目标 plugin、DLC_Custom_Kernel Repository 根目录：`<THREE_ABSOLUTE_ROOTS>`
+迁移范围与已有 evidence：`<SCOPE_AND_EVIDENCE>`
+允许动作：`<MUTATION_BUILD_INSTALL_DEVICE_AUTHORIZATION>`
+```
+
+详细规则：[PyTorch DLC Backend 插件化迁移 Prompt](pytorch-dlc-plugin-migration-prompts.md)
+
+关键边界：生产实现仍是 DLC semantics authority；迁移不发明 DLC Custom Kernel 或 CPU fallback。source migration、compile/link、wheel/import、DLC Runtime execution 和 Real DLC Hardware behavior 必须独立报告。
+
 ## 7. 新环境缺仓库或 CMake，先做 Bootstrap
+
+Capability ID: `cap.environment.bootstrap`
 
 什么时候用：新机器/容器连 stable `dlc-env-setup` 所需的仓库、合格 CMake 或 repair source 都没有。
 
@@ -248,6 +294,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 8. 验证新容器中的 `dlc-env-setup`
 
+Capability ID: `cap.environment.skill-validation`
+
 什么时候用：刚装好 Skills，想验证来源、暴露、识别、停止语义和可选完整闭环，而不是立即重建业务环境。
 
 直接这样说：
@@ -262,7 +310,28 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 关键边界：识别回答、文件存在和轻量骨架不能替代真实 build/install/runtime smoke；Kilo 可直接作为日常执行器。Hermes 仅在已选择、已安装并通过独立 profile 验收时作为可选执行器。
 
+## 8.1 独立 Stack Preflight 与 Cold Completion
+
+Capability ID: `cap.environment.stack-preflight`
+
+什么时候用：在模型加载或镜像发布前，不修改运行库地验证 exact immutable image 与 Host stack 的静态兼容性，并在 fresh process 完成最小 Real DLC Hardware first-compute closure。
+
+直接这样说：
+
+```markdown
+请使用 `dlc-env-setup`，参考 `prompt-examples/stack-preflight-and-cold-completion.md`，执行独立 Stack Preflight。
+
+immutable image、Host/Container identity、policy profile、目标设备和 artifact 目录：`<INPUTS>`
+device execution 授权：`<AUTHORIZED_OR_NOT_AUTHORIZED>`
+```
+
+详细规则：[独立 Stack Preflight 与 Cold Completion](stack-preflight-and-cold-completion.md)
+
+关键边界：Static Stack Compatible 与 Cold First-Compute Completion Ready 是不可替代的两个 checkpoint；前者不是 Real DLC Hardware execution，后者不能外推模型功能、benchmark 或 release。
+
 ## 9. 模型卡住或 Unsupported Operator
+
+Capability ID: `cap.diagnosis.unsupported-operator`
 
 什么时候用：模型报 unsupported operator、卡在 op，或不知道第一失败点。
 
@@ -277,6 +346,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 详细规则：[业务套餐二](dlc-business-skill-examples-quickstart.md#套餐二模型卡住或遇到-unsupported-operator)
 
 ## 10. 输出、Logits 或 Token 不一致
+
+Capability ID: `cap.diagnosis.precision-divergence`
 
 什么时候用：模型能运行，但 CPU Reference、其他基线或 DLC Platform 输出存在差异。
 
@@ -294,6 +365,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 关键边界：预期硬件行为应称 DLC Precision Difference，不自动称 precision bug；CPU fallback 是定位手段，不是生产修复。
 
 ## 11. Model-Site Dump 转 pytorch_test Framework 复现
+
+Capability ID: `cap.diagnosis.dump-to-repro`
 
 什么时候用：已有 Model-Site Dump 或明确目标算子，需要压缩成可交付、code-only 的最小回归测试。
 
@@ -314,6 +387,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 12. 验证 Dispatch/Fallback 是否生效
 
+Capability ID: `cap.diagnosis.dispatch-fallback`
+
 什么时候用：修改 `enabled_kernels.hpp` 或 dispatch 配置后，需要证明目标路径真的 fallback 或仍在发射原 kernel。
 
 直接这样说：
@@ -331,6 +406,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 13. 从 DLCSynapse Log 进入 Replay
 
+Capability ID: `cap.diagnosis.synapse-log-replay`
+
 什么时候用：已有 `syn_*.ansi`，或希望从一次模型运行生成 log，再进入 pytorch_test Framework replay。
 
 直接这样说：
@@ -346,6 +423,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 详细规则：[业务套餐六](dlc-business-skill-examples-quickstart.md#套餐六从-dlcsynapse-log-进入-replay)
 
 ## 14. DLC Runtime 报错、Hang 或进程残留
+
+Capability ID: `cap.diagnosis.runtime-failure`
 
 什么时候用：出现 `synErrorLaunchFailure`、模型 hang、多卡异常、worker 退出或任务进程残留。
 
@@ -363,6 +442,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 关键边界：未经授权不得 reset、LYP repair、重启、驱动维护或清理非任务进程；task-owned KILL 前也必须重新核验进程身份。
 
 ## 15. vLLM 异步 Launch Failure 定位
+
+Capability ID: `cap.diagnosis.async-launch-failure`
 
 什么时候用：Serving 已生成部分 token，随后 worker abort、EngineCore dead 或 HTTP 500，希望定位第一 fatal 和首个失败 DLC Custom Kernel。
 
@@ -382,6 +463,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 16. vLLM 性能热点分层定位
 
+Capability ID: `cap.diagnosis.performance-hotspot`
+
 什么时候用：TTFT、TPOT/ITL、decode latency 或 throughput 有回归，需要从端到端逐层定位热点。
 
 直接这样说：
@@ -400,6 +483,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 17. Prefill/Decode Separation
 
+Capability ID: `cap.serving.pd-separation`
+
 什么时候用：部署或诊断单机 TCP、qualified `lyp_full`、qualified `dlccl_direct` 或跨机器 TCP 的 Prefill/Decode Separation。
 
 直接这样说：
@@ -417,6 +502,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 18. Main-to-Main Upgrade
 
+Capability ID: `cap.alignment.main-to-main`
+
 什么时候用：把 vLLM-CL main 对齐到精确 upstream vLLM full SHA、恢复未知基线，或做全局 compatibility impact 分析。
 
 直接这样说：
@@ -426,15 +513,18 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 目标 upstream vLLM 完整 SHA：`<TARGET_VLLM_FULL_SHA>`
 仓库快照、历史范围和已有 evidence：`<PATH_OR_SUMMARY>`
+若提出 publication，external producer sealed handoff：`<PUBLICATION_CANDIDATE_HANDOFF_PATH>`；否则明确为 `null`
 
-参考 `prompt-examples/vllm-cl-main-to-main-upgrade.md`。先核验全部强制输入和当前 Git 状态；缺失时返回精确 blocker。保持 report-only、no-finalize，不修改仓库、不 commit、不写入伪造的 Verified vLLM Alignment。
+参考 `prompt-examples/vllm-cl-main-to-main-upgrade.md`。先核验全部强制输入和当前 Git 状态；缺失时返回精确 blocker。producer 只产 handoff 不自批，assessor 对实际 Git roots 做只读评估并只报告 eligibility。保持 report-only、no-finalize，不修改仓库、不 commit/push/rewrite，不写入伪造的 Verified vLLM Alignment。
 ```
 
 详细规则：[vLLM-CL Main-to-Main Upgrade Prompt](vllm-cl-main-to-main-upgrade.md)
 
-关键边界：target 必须是 full SHA；候选 checkout、README 或历史记录不能称为 Verified vLLM Alignment；单模型适配应改用 `model-adaptation`。
+关键边界：target 必须是 full SHA；候选 checkout、README 或历史记录不能称为 Verified vLLM Alignment；assessment eligibility 不是 publication approval；单模型适配应改用 `model-adaptation`。
 
 ## 19. 可选：固定 Hermes ModelZoo Runner 单模型验证
+
+Supporting navigation：本节是固定环境 helper；通用业务能力仍是 `cap.model.runtime-qualification`，本节不分配独立 Capability ID。
 
 什么时候用：明确选择 Hermes，并且处在文档指定的固定 ModelZoo 环境，使用已有 `run-one-model.py` 验证单个模型。其他环境跳过本节，直接使用 `modelzoo-image-validation`。
 
@@ -455,6 +545,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 20. 长任务换 Session 或交接同事
 
+Capability ID: `cap.collaboration.handoff`
+
 什么时候用：当前 Session 很长、实验很多，或要交给另一个 Session/同事继续。
 
 直接这样说：
@@ -469,6 +561,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 
 ## 21. 把经验反哺知识库
 
+Capability ID: `cap.knowledge.contribution`
+
 什么时候用：问题已定位或形成可复用方法，希望后续任务不再从零排查。
 
 直接这样说：
@@ -482,6 +576,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 详细规则：[业务套餐九](dlc-business-skill-examples-quickstart.md#套餐九把本次经验写回知识库)
 
 ## 22. 为 Host/容器补齐 Git/SSH 能力
+
+Supporting navigation：本节是凭据与工具 bootstrap Contract，不是 Chipltech 业务 capability entrypoint，不分配 Capability ID。
 
 什么时候用：Host 或新容器缺 Git、GitHub SSH 或 private repository clone/fetch/push 能力，但已有一个受信、配置完成的源容器。
 
@@ -504,6 +600,8 @@ QKNorm 拓扑感知 AllReduce 示例：
 关键边界：SSH private key 迁移需要凭据 owner 的明确授权；环境 bootstrap 需要 clone 不等于自动获得私钥复制授权。
 
 ## 23. 可选：验证或修复 Hermes 的 Chipltech 接入
+
+Supporting navigation：本节是可选 Harness/profile 集成验收，不是 Chipltech 业务 capability entrypoint，不分配 Capability ID。
 
 什么时候用：团队明确选择使用 Hermes，并且 Hermes 找不到知识库、Memory、Project 或 Skills，路由错误，默认模型/Provider 异常，或需要验证配置完整性。未使用 Hermes 时跳过本节，不影响其他能力。
 

@@ -1,0 +1,89 @@
+schema: chipltech-validated-lesson-index/v1
+unlisted_case_default: historical_unreviewed
+validation_semantics: validated qualifies only the bounded lesson statement, never the whole source case or current runtime state
+lessons:
+  - lesson_id: lesson.collective.validate-then-commit
+    status: validated
+    statement: A collective fallback is a newly qualified candidate and must remain unknown until graph, channel, rank order, rank domain, uniqueness, and metadata checks all pass.
+    source_cases:
+      - case-studies/qknorm-topology-aware-allreduce-selection.md
+    identity_scope: Historical QKNorm review and source assertions; exact runtime identity unavailable.
+    applies_to: Communicator-owned topology and payload selection with multiple candidate collective implementations.
+    does_not_apply_to: Fixed strategy selection already proven for an exact immutable artifact and deployment identity.
+    evidence_class: historical_report_derived_observation
+    evidence_refs:
+      - case-studies/qknorm-topology-aware-allreduce-selection.md#verified-fallback-状态机
+    validation_method: Review the candidate transition and negative boundaries; reject partial validation that leaks a committed strategy.
+    counterexample: Marking Ring before rank-order validation allows a later failure to retain a false success state.
+    owner_skill: model-adaptation
+    rule_refs:
+      - skills/engineering/model-adaptation/SKILL.md
+      - vllm-cl/distributed-collective-qualification.md
+    test_refs:
+      - tests/chipltech_context/test_organization_discovery.py::ChipltechOrganizationLessonTests::test_collective_validate_then_commit_lesson_contract
+    review_date: 2026-08-21
+    claim_boundary: This validates the bounded selection rule; it does not establish current topology, binary, Real DLC Hardware correctness, performance, or model acceptance.
+  - lesson_id: lesson.abi.optional-schema-is-not-optional-descriptor
+    status: validated
+    statement: An optional public operator argument set to None does not prove that its KernelDesc descriptor slot is absent or compatible with a frozen DLC Custom Kernel Entry ABI.
+    source_cases:
+      - case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md
+    identity_scope: Historical MiniMax delivery artifacts identified by recorded manifest, wheel, and image digests.
+    applies_to: Public schema evolution over a host descriptor adapter targeting a frozen lower-level entry ABI.
+    does_not_apply_to: An exact artifact graph whose schema, descriptor, and entry ABI have independently closed compatibility evidence.
+    evidence_class: historical_artifact_identified_case
+    evidence_refs:
+      - case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md#2-分开-public-schema-和-launch-abi
+    validation_method: Compare ordered public schema, emitted descriptor slots, and exact entry ABI; include None-valued optional arguments in structural tests.
+    counterexample: Appending a None-valued descriptor slot shifts later positional fields consumed by a frozen entry ABI.
+    owner_skill: pytorch-dlc-plugin-migration
+    rule_refs:
+      - skills/engineering/pytorch-dlc-plugin-migration/SKILL.md
+      - CONTEXT.md#平台与运行时
+    test_refs:
+      - tests/chipltech_context/test_organization_discovery.py::ChipltechOrganizationLessonTests::test_optional_schema_descriptor_lesson_contract
+    review_date: 2026-08-21
+    claim_boundary: This validates the three-ABI review rule; it does not establish current build, DLC Runtime execution, Real DLC Hardware behavior, model function, or release.
+  - lesson_id: lesson.quantization.refine-before-partition
+    status: validated
+    statement: Lossless quantization group refinement must close metadata and permutation ownership before Tensor Parallel slicing, while physical padding remains a separate zero-contribution kernel representation concern.
+    source_cases:
+      - case-studies/hy3-gptq-tp8-graph-adaptation.md
+    identity_scope: Contributor-report historical evidence bound to the recorded report digest and partial source/artifact identities.
+    applies_to: Contiguous packed-axis group ownership where refined groups exactly partition checkpoint groups and metadata lookup equivalence is tested.
+    does_not_apply_to: GPTQ layouts with unresolved g_idx, desc_act, permutation, packed-axis, or metadata ownership semantics.
+    evidence_class: contributor_report_derived_historical_evidence
+    evidence_refs:
+      - case-studies/hy3-gptq-tp8-graph-adaptation.md#无损-group-refinement
+    validation_method: Prove qweight invariance, metadata lookup equivalence, complete logical ownership, and zero physical padding tails with positive and negative tests.
+    counterexample: Padding a rank-local logical width fixes alignment but leaves a checkpoint quantization group split across ranks.
+    owner_skill: model-adaptation
+    rule_refs:
+      - skills/engineering/model-adaptation/SKILL.md
+      - vllm-cl/model-adaptation-and-main-to-main-decisions.md
+    test_refs:
+      - tests/chipltech_context/test_organization_discovery.py::ChipltechOrganizationLessonTests::test_quantization_refinement_lesson_contract
+    review_date: 2026-08-21
+    claim_boundary: This validates the bounded ownership rule; it does not establish current source, package, model correctness, Real DLC Hardware performance, image, or release status.
+  - lesson_id: lesson.reporting.evidence-ledger-before-summary
+    status: validated
+    statement: A decision summary must bind each claim to an Evidence Ledger class and identity before compression, preserving separate feasibility, adaptation-completion, and stable-delivery states.
+    source_cases:
+      - case-studies/model-adaptation-analysis-report-production.md
+    identity_scope: Historical report-production method with unavailable external process assets.
+    applies_to: Evidence-backed model adaptation reports and other technical summaries that compress mixed static, historical, inferred, and runtime material.
+    does_not_apply_to: Creation of new runtime evidence or execution of missing qualification work.
+    evidence_class: historical_report_derived_observation
+    evidence_refs:
+      - case-studies/model-adaptation-analysis-report-production.md#1-先建-evidence-ledger
+    validation_method: Trace every summary claim to evidence class, identity, source, and Claim Boundary; reject strength upgrades during editing.
+    counterexample: Converting HTTP readiness or source presence into a claim that model inference passed.
+    owner_skill: model-adaptation
+    rule_refs:
+      - skills/engineering/model-adaptation/SKILL.md
+      - vllm-cl/model-adaptation-and-main-to-main-decisions.md
+      - foundation/technical-delivery-summary.md
+    test_refs:
+      - tests/chipltech_context/test_organization_discovery.py::ChipltechOrganizationLessonTests::test_evidence_ledger_summary_lesson_contract
+    review_date: 2026-08-21
+    claim_boundary: This validates the reporting discipline; it does not establish any target model compatibility, runtime correctness, performance, Real DLC Hardware acceptance, or image acceptance.

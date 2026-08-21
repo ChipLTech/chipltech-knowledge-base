@@ -17,6 +17,32 @@ Chipltech-Family Accelerator（DLC/TYD/HHP）的工程知识底座。
 
 Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置依赖；未选择 Hermes 时，直接使用当前 Kilo/Harness。
 
+## 30 秒 / 5 分钟 / 贡献者入口
+
+- **30 秒**：不知道选什么时直接使用上面的 `chipltech-context` Prompt；已知任务时在 [全部已支持能力 Quickstart](prompt-examples/all-supported-capabilities-quickstart.md) 找到对应 `capability_id`。
+- **5 分钟**：从 Quickstart 确认正式 `capability_id`、薄入口、详细 Prompt/Contract、owning Skill 和关键边界；再实际加载 owning Skill，读取其当前最少输入、首个安全动作、硬件/授权要求和 terminal states。Quickstart 不维护这些执行规则的副本。
+- **Contributor**：先读下方六层架构，再维护 [capability manifest](agent-context/capability-manifest.yaml) 或 [Validated Lesson Index](validated-lessons/index.yaml)，并运行 Skills 仓库的 `scripts/validate-chipltech-organization.py`。
+
+## 六层架构
+
+1. **Terminology**：`CONTEXT.md` 定义正式术语、组件边界和 Evidence 语言。
+2. **Knowledge**：专题、runbook 和 case study 保存解释、历史证据与导航。
+3. **Capability Catalog**：canonical Quickstart 是人类能力入口；manifest 只为其提供稳定 ID 和机器闭包，不复制路由规则。
+4. **Task Contract**：详细 Prompt/Contract 定义任务输入和业务规则，但不是执行 Evidence。
+5. **Owning Skill**：Skills 仓库中已发布的最窄 owner 定义 scope、negative scope、授权、停止语义、terminal states 和 Claim Boundary。
+6. **Task Evidence**：实际业务 workspace 与 task-owned artifact 保存当前执行结果；上面五层均不能替代这一层。
+
+自然语言 Ask 路由必须输出以下字段：
+
+```text
+Selected capability: <capability_id 和 human entry>
+Selection basis: <选择依据>
+Minimum missing inputs: <阻止首个安全动作的最少缺失输入>
+First safe action: <当前授权内的首个动作>
+Expected terminal states: <引用 owning Skill>
+Evidence boundary: <已建立、未建立及 Claim Boundary>
+```
+
 ## 核心用途：AI 任务时的"项目大脑"
 
 用 Kilo / Claude Code 等 AI 工具做 DLC 相关任务时，直接让 AI 先读这个仓库的 `CONTEXT.md`，它就能拿到：
@@ -28,6 +54,9 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - **debug 命令速查和 Runtime 排障**：常用调试命令、环境检查、异步错误定位等。
 - **测试框架用法**：pytorch_test Framework、dlc_kernel_test Framework 的使用指南。
 - **机器可验证合同**：distributed collective qualification、communicator-owned topology/payload selection、identity freshness 和 fail-closed 状态边界。
+- **机器可验证组织闭包**：稳定 `capability_id` 连接 canonical Quickstart、owning Skill 和 SKILLHUB publication，Validated Lesson Index 连接 case、rule/contract 和 regression test。
+- **AI Organization Enablement**：[foundation/ai-organization-enablement-design.md](foundation/ai-organization-enablement-design.md) 定义 Discover、Ask、Handoff、Context Routing、Evidence Return、质量分层和经验晋升的统一设计。
+- **Stage C deferred 边界**：B02 assessor 只建立 structural candidate assessment，不认证 authorization，也不输出 publication eligibility；每个 candidate 必须提供绑定 exact source/tree/artifact graph 的 fresh build/runtime gate Evidence，不得继承其他 candidate 或历史结果。L1/L2 可由 exact source/fixture run 派生；L3 合同存在性和 focused tests 可在当前 session 核验，但持久 quality view 默认 `not_reported`；ST、Hardware 和 runtime 为 `not_reported`。这些结果不表示 production trust。
 - **真实 case study**：跨模型、跨算子的精度问题和运行时故障复盘，AI 可直接参考相似案例。
 - **常用 prompt 示例**：团队内部沉淀的高频、好用的业务 prompt 模板，便于同事直接复用。
 
@@ -48,6 +77,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - **知识库边界**：本仓库提供领域定义、已记录流程和历史 case evidence；仓库文字不能证明当前 Host、package、模型、DLC Runtime、transport 或 Real DLC Hardware 状态。
 - **Skills 边界**：Prompt/Contract 描述任务规则，owning Skill 负责可执行工作流、授权边界、停止语义和 Claim Boundary；Skill 被发现或加载只证明能力可用，不证明任务已经执行。
 - **Evidence 边界**：当前业务/代码 workspace 和 task-owned artifact 目录承载实际执行与 Evidence。结论应区分 `direct repository evidence`、`runtime observation`、`inference` 和 `missing evidence`。
+- **Publication 边界**：Stage C deferred 期间，structural candidate assessment 只闭合候选结构、identity、Patch Equivalence、fresh gate references 和缺口，不认证 authorization、不判定 publication eligibility，也不证明候选可用于生产。
 - **执行边界**：DLC Platform 模型运行和依赖 `/work/...` 的业务测试默认属于任务 Docker Container，而不是 Host shell。路径必须按 `Execution Locus + absolute path` 解读；Host 与 Container 只有通过已记录的 Mount Mapping 才能关联。Host 上没有 `/work/vllm` 只说明当前 shell 不在目标 Container Execution Contract 中，不能判为业务仓库缺失或测试失败。
 
 ## 适合谁读
@@ -168,8 +198,9 @@ chipltech-knowledge-base/
 ├── vllm-cl/                   # vLLM-CL Custom Op、DLC Attention Backend、KV cache
 ├── debugging-workflows/        # VSCode 调试、日志分析、trace 分析
 ├── case-studies/               # 跨模型的真实问题复盘
+├── validated-lessons/          # 经过边界审查的 lesson statements；未列 case 默认 historical_unreviewed
 ├── prompt-examples/            # 团队沉淀的常用、好用、可直接复用的 prompt 示例
-├── agent-context/              # agent 使用的浓缩上下文和模板
+├── agent-context/              # 新 session context refs 与 capability closure manifest
 └── assets/                     # 图片等静态资产
 ```
 

@@ -17,6 +17,7 @@ required_inputs:
   - model_adaptation_handoffs
   - artifact_evidence_references
   - commit_authorization_state
+  - publication_candidate_handoff_or_null
 missing_input_status: blocked
 missing_input_reason: blocked_missing_target
 hardware_evidence: not_verified
@@ -56,8 +57,9 @@ hardware_evidence: not_verified
 - Ticket 03 Model Adaptation child handoff references: <MODEL_ADAPTATION_HANDOFFS>
 - artifact/evidence references: <ARTIFACT_EVIDENCE_REFERENCES>
 - commit authorization state: <COMMIT_AUTHORIZATION_STATE>
+- external producer sealed `vllm-cl-publication-candidate-handoff/v1`, or explicit null when publication is not proposed: <PUBLICATION_CANDIDATE_HANDOFF_OR_NULL>
 
-先列出缺失输入并停止；缺 target 使用 `blocked_missing_target`。保持 unknown baseline 为 unknown，并按历史 mandatory evidence、explicit Git pin、correlated candidate、checkout/install/README clue 的可信度顺序报告。使用 `model-adaptation` 作为唯一模型专属 child seam。通过 `shared_contract: vllm-cl-contract/v1` 的 skills-owned public seam 引用确定性检查。manifest 只生成 future-impact report；不得修改 vllm-cl、commit、finalize、写 metadata 或声称新的 Verified vLLM Alignment。Ticket 06 exact v12 DeepSeek TP=2 与 Llama TP=1 只证明 bounded operational state；不要把该 evidence 继承到此新 target。未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
+先列出缺失输入并停止；缺 target 使用 `blocked_missing_target`。保持 unknown baseline 为 unknown，并按历史 mandatory evidence、explicit Git pin、correlated candidate、checkout/install/README clue 的可信度顺序报告。使用 `model-adaptation` 作为唯一模型专属 child seam。通过 `shared_contract: vllm-cl-contract/v1` 的 skills-owned public seam 引用确定性检查。若 external producer 提供 handoff，使用 package-owned assessor 对实际 Tested Revision、candidate 和 remote Git roots 做只读评估；producer 只产 handoff 不自批，assessor 只报告 eligibility，不写 repository。没有 proposed publication 时保持 candidate 为 null。manifest 只生成 future-impact report；不得修改 vllm-cl、commit、push、rewrite、finalize、写 metadata 或声称新的 Verified vLLM Alignment。Ticket 06 exact v12 DeepSeek TP=2 与 Llama TP=1 只证明 bounded operational state；不要把该 evidence 继承到此新 target。未执行的 real weights、Real DLC Hardware、Chunked Prefill runtime 和 DLC Runtime dispatch 均报告 `not_verified`。
 ```
 
 ## 停止语义与 Evidence
@@ -66,6 +68,7 @@ hardware_evidence: not_verified
 - 当前 prompt dry run 不执行 runner、模型或硬件，也不产生 acceptance 或 finalize eligibility。
 - fake-server、Dummy、DLCsim、静态检查或 HTTP success 不能建立 mandatory acceptance。
 - Ticket 06 exact v12 profiles 只证明 `authoritativeness: operational_only`、`acceptance_eligible: false`、alignment unchanged、manifest report-only 和 finalization `none`，不证明新的 Verified vLLM Alignment。
+- `vllm-cl-publication-candidate-assessment/v1` 的 eligibility 只绑定观察时的本地 Git facts、handoff digest 和 Claim Boundary，不是 publication approval，也不执行 finalize。
 
 ## 相关资料
 

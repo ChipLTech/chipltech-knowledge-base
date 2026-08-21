@@ -1,0 +1,258 @@
+schema: chipltech-capability-catalog/v1
+catalog_ref: prompt-examples/all-supported-capabilities-quickstart.md
+publication_ref: SKILLHUB.yaml
+authority: closure_index_only
+capabilities:
+  - capability_id: cap.model.runtime-qualification
+    human_entry: 新模型运行资格验证
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#1-新模型只做运行资格验证
+    owner_skill: modelzoo-image-validation
+    owner_contract_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#1-新模型只做运行资格验证
+    negative_scope_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    hardware_authorization_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    terminal_states_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#1-新模型只做运行资格验证
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.model.fresh-image-adaptation
+    human_entry: 每日空镜像到模型适配
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#2-每日空镜像初始化后做新模型适配
+    owner_skill: model-adaptation
+    owner_contract_ref: skills/engineering/model-adaptation/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#2-每日空镜像初始化后做新模型适配
+    negative_scope_ref: skills/engineering/model-adaptation/SKILL.md
+    hardware_authorization_ref: skills/engineering/model-adaptation/SKILL.md
+    terminal_states_ref: skills/engineering/model-adaptation/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#2-每日空镜像初始化后做新模型适配
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.model.adaptation
+    human_entry: 单模型兼容性或 Serving 适配
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#3-单模型兼容性或-serving-适配分析
+    owner_skill: model-adaptation
+    owner_contract_ref: skills/engineering/model-adaptation/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#3-单模型兼容性或-serving-适配分析
+    negative_scope_ref: skills/engineering/model-adaptation/SKILL.md
+    hardware_authorization_ref: skills/engineering/model-adaptation/SKILL.md
+    terminal_states_ref: skills/engineering/model-adaptation/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#3-单模型兼容性或-serving-适配分析
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.model.analysis-summary
+    human_entry: 模型适配决策摘要
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#31-将模型适配证据整理成决策摘要
+    owner_skill: model-adaptation
+    owner_contract_ref: skills/engineering/model-adaptation/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#31-将模型适配证据整理成决策摘要
+    negative_scope_ref: skills/engineering/model-adaptation/SKILL.md
+    hardware_authorization_ref: skills/engineering/model-adaptation/SKILL.md
+    terminal_states_ref: skills/engineering/model-adaptation/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#31-将模型适配证据整理成决策摘要
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.communication.delivery-summary
+    human_entry: 一句话技术交付总结
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#32-将已完成技术工作提炼成一句话交付总结
+    owner_skill: technical-delivery-summary
+    owner_contract_ref: skills/engineering/technical-delivery-summary/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#32-将已完成技术工作提炼成一句话交付总结
+    negative_scope_ref: skills/engineering/technical-delivery-summary/SKILL.md
+    hardware_authorization_ref: skills/engineering/technical-delivery-summary/SKILL.md
+    terminal_states_ref: skills/engineering/technical-delivery-summary/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#32-将已完成技术工作提炼成一句话交付总结
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.model.image-delivery
+    human_entry: DLC/TYD Images 交付
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#4-模型验证后交付-dlctyd-images
+    owner_skill: modelzoo-image-validation
+    owner_contract_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#4-模型验证后交付-dlctyd-images
+    negative_scope_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    hardware_authorization_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    terminal_states_ref: skills/engineering/modelzoo-image-validation/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#4-模型验证后交付-dlctyd-images
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.environment.rebuild-repair
+    human_entry: DLC Ecosystem 环境重建或修复
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#6-重建或修复-dlc-ecosystem-环境
+    owner_skill: dlc-env-setup
+    owner_contract_ref: skills/engineering/dlc-env-setup/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#6-重建或修复-dlc-ecosystem-环境
+    negative_scope_ref: skills/engineering/dlc-env-setup/SKILL.md
+    hardware_authorization_ref: skills/engineering/dlc-env-setup/SKILL.md
+    terminal_states_ref: skills/engineering/dlc-env-setup/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#6-重建或修复-dlc-ecosystem-环境
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.migration.pytorch-plugin
+    human_entry: PyTorch DLC Backend PrivateUse1 插件迁移
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#61-将-pytorch-dlc-backend-迁移为-privateuse1-插件
+    owner_skill: pytorch-dlc-plugin-migration
+    owner_contract_ref: skills/engineering/pytorch-dlc-plugin-migration/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#61-将-pytorch-dlc-backend-迁移为-privateuse1-插件
+    negative_scope_ref: skills/engineering/pytorch-dlc-plugin-migration/SKILL.md
+    hardware_authorization_ref: skills/engineering/pytorch-dlc-plugin-migration/SKILL.md
+    terminal_states_ref: skills/engineering/pytorch-dlc-plugin-migration/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#61-将-pytorch-dlc-backend-迁移为-privateuse1-插件
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.environment.bootstrap
+    human_entry: 新环境 Bootstrap
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#7-新环境缺仓库或-cmake先做-bootstrap
+    owner_skill: dlc-env-setup
+    owner_contract_ref: skills/engineering/dlc-env-setup/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#7-新环境缺仓库或-cmake先做-bootstrap
+    negative_scope_ref: skills/engineering/dlc-env-setup/SKILL.md
+    hardware_authorization_ref: skills/engineering/dlc-env-setup/SKILL.md
+    terminal_states_ref: skills/engineering/dlc-env-setup/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#7-新环境缺仓库或-cmake先做-bootstrap
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.environment.skill-validation
+    human_entry: 新容器 dlc-env-setup 验收
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#8-验证新容器中的-dlc-env-setup
+    owner_skill: dlc-env-setup
+    owner_contract_ref: skills/engineering/dlc-env-setup/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#8-验证新容器中的-dlc-env-setup
+    negative_scope_ref: skills/engineering/dlc-env-setup/SKILL.md
+    hardware_authorization_ref: skills/engineering/dlc-env-setup/SKILL.md
+    terminal_states_ref: skills/engineering/dlc-env-setup/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#8-验证新容器中的-dlc-env-setup
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.environment.stack-preflight
+    human_entry: 独立 Stack Preflight 与 Cold Completion
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#81-独立-stack-preflight-与-cold-completion
+    owner_skill: dlc-env-setup
+    owner_contract_ref: skills/engineering/dlc-env-setup/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#81-独立-stack-preflight-与-cold-completion
+    negative_scope_ref: skills/engineering/dlc-env-setup/SKILL.md
+    hardware_authorization_ref: skills/engineering/dlc-env-setup/SKILL.md
+    terminal_states_ref: skills/engineering/dlc-env-setup/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#81-独立-stack-preflight-与-cold-completion
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.unsupported-operator
+    human_entry: 模型卡住或 Unsupported Operator
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#9-模型卡住或-unsupported-operator
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#9-模型卡住或-unsupported-operator
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#9-模型卡住或-unsupported-operator
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.precision-divergence
+    human_entry: 输出、Logits 或 Token 不一致
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#10-输出logits-或-token-不一致
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#10-输出logits-或-token-不一致
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#10-输出logits-或-token-不一致
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.dump-to-repro
+    human_entry: Model-Site Dump 到 pytorch_test Framework 复现
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#11-model-site-dump-转-pytorch_test-framework-复现
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#11-model-site-dump-转-pytorch_test-framework-复现
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#11-model-site-dump-转-pytorch_test-framework-复现
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.dispatch-fallback
+    human_entry: Dispatch/Fallback 生效验证
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#12-验证-dispatchfallback-是否生效
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#12-验证-dispatchfallback-是否生效
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#12-验证-dispatchfallback-是否生效
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.synapse-log-replay
+    human_entry: DLCSynapse Log 到 Replay
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#13-从-dlcsynapse-log-进入-replay
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#13-从-dlcsynapse-log-进入-replay
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#13-从-dlcsynapse-log-进入-replay
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.runtime-failure
+    human_entry: DLC Runtime 报错、Hang 或进程残留
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#14-dlc-runtime-报错hang-或进程残留
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#14-dlc-runtime-报错hang-或进程残留
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#14-dlc-runtime-报错hang-或进程残留
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.async-launch-failure
+    human_entry: vLLM 异步 Launch Failure 定位
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#15-vllm-异步-launch-failure-定位
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#15-vllm-异步-launch-failure-定位
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#15-vllm-异步-launch-failure-定位
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.diagnosis.performance-hotspot
+    human_entry: vLLM 性能热点分层定位
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#16-vllm-性能热点分层定位
+    owner_skill: diagnosing-bugs
+    owner_contract_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#16-vllm-性能热点分层定位
+    negative_scope_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    hardware_authorization_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    terminal_states_ref: skills/engineering/diagnosing-bugs/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#16-vllm-性能热点分层定位
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.serving.pd-separation
+    human_entry: Prefill/Decode Separation
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#17-prefilldecode-separation
+    owner_skill: pd-separation
+    owner_contract_ref: skills/engineering/pd-separation/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#17-prefilldecode-separation
+    negative_scope_ref: skills/engineering/pd-separation/SKILL.md
+    hardware_authorization_ref: skills/engineering/pd-separation/SKILL.md
+    terminal_states_ref: skills/engineering/pd-separation/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#17-prefilldecode-separation
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.alignment.main-to-main
+    human_entry: vLLM-CL Main-to-Main Upgrade
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#18-main-to-main-upgrade
+    owner_skill: main-to-main-upgrade
+    owner_contract_ref: skills/engineering/main-to-main-upgrade/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#18-main-to-main-upgrade
+    negative_scope_ref: skills/engineering/main-to-main-upgrade/SKILL.md
+    hardware_authorization_ref: skills/engineering/main-to-main-upgrade/SKILL.md
+    terminal_states_ref: skills/engineering/main-to-main-upgrade/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#18-main-to-main-upgrade
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.collaboration.handoff
+    human_entry: 长任务换 Session 或交接
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#20-长任务换-session-或交接同事
+    owner_skill: handoff
+    owner_contract_ref: skills/productivity/handoff/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#20-长任务换-session-或交接同事
+    negative_scope_ref: skills/productivity/handoff/SKILL.md
+    hardware_authorization_ref: skills/productivity/handoff/SKILL.md
+    terminal_states_ref: skills/productivity/handoff/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#20-长任务换-session-或交接同事
+    publication_ref: SKILLHUB.yaml
+  - capability_id: cap.knowledge.contribution
+    human_entry: 可复用经验反哺知识库
+    quickstart_ref: prompt-examples/all-supported-capabilities-quickstart.md#21-把经验反哺知识库
+    owner_skill: chipltech-context
+    owner_contract_ref: skills/engineering/chipltech-context/SKILL.md
+    minimum_inputs_ref: prompt-examples/all-supported-capabilities-quickstart.md#21-把经验反哺知识库
+    negative_scope_ref: skills/engineering/chipltech-context/SKILL.md
+    hardware_authorization_ref: skills/engineering/chipltech-context/SKILL.md
+    terminal_states_ref: skills/engineering/chipltech-context/SKILL.md
+    claim_boundary_ref: prompt-examples/all-supported-capabilities-quickstart.md#21-把经验反哺知识库
+    publication_ref: SKILLHUB.yaml

@@ -1,84 +1,44 @@
 # Agent 新 Session 上下文
 
-## 适用场景
+本页是 context references 的 human view，不是流程真源，也不保存机器、runner、container 或历史命令。先发现实际 `<KNOWLEDGE_BASE_ROOT>` 与 `<SKILLS_ROOT>`；不要假定固定部署目录。
 
-启动新的 Chipltech-Family Accelerator 相关 agent session（Hermes、Kilo、Claude 或其他 AI agent），需要快速恢复 DLC Ecosystem 项目背景。
+## 30 秒入口
 
-## 快速启动 Prompt
-
-```
-你正在处理 Chipltech-Family Accelerator 相关任务。请先发现并回显实际的 <KNOWLEDGE_BASE_ROOT> 和 <SKILLS_ROOT>，不要假定固定部署目录。然后读取：
-
-1. <KNOWLEDGE_BASE_ROOT>/CONTEXT.md — 术语表、组件关系
-2. <KNOWLEDGE_BASE_ROOT>/README.md — 仓库导航
-3. <KNOWLEDGE_BASE_ROOT>/foundation/dlc-ecosystem-overview.md — DLC Ecosystem 概述
-
-然后根据任务类型，读取对应专题文档：
-
-- 算子接入 / dispatch: pytorch-dlc-backend/operator-integration-guide.md
-- dispatch fallback: operator-dispatch/enabled-kernels-dispatch.md
-- 测试: testing/pytorch-test-framework-guide.md, testing/dlc-kernel-test-framework-guide.md
-- 精度定位: precision-debugging/precision-debugging-overview.md
-- vLLM: vllm-cl/custom-op-integration-and-testing.md
-- 批量模型验证: `case-studies/modelzoo-batch-validation-all-difficulties.md` → `vllm-cl/modelzoo-startup-params-spec.md` → `prompt-examples/hermes-modelzoo-batch-validation.md`
-- 调试: debugging-workflows/common-debug-commands.md
-- runtime: runtime-debugging/runtime-troubleshooting.md
-- 性能定位: runtime-debugging/performance-profiling.md
-- 案例参考: case-studies/
-
-关键约束：
-- 不使用 TPU、国产 TPU 或 DLC-Family Accelerator，使用 Chipltech-Family Accelerator
-- 不在知识库中用模型名建立一级或二级目录
-- CPU fallback 是定位手段，不是生产修复
-- DLC_CHECK_RESULT lambda name ≠ launch kernel name
-- 知识库文件使用英文 kebab-case 文件名，中文正文
+```text
+请使用 chipltech-context 路由并执行这个 Chipltech-Family Accelerator 任务。
+目标：<一句话目标>
+已有材料：<路径或“请自动发现”>
 ```
 
-## 任务类型快速路由
+只需按顺序读取：
 
-| 任务 | 优先读取 |
-|------|---------|
-| 新增 DLC 算子 | `pytorch-dlc-backend/operator-integration-guide.md` |
-| dispatch 配置 | `operator-dispatch/enabled-kernels-dispatch.md` |
-| 算子精度定位 | `precision-debugging/precision-debugging-overview.md` → `model-site-dump-to-repro.md` |
-| 编写测试 | `testing/pytorch-test-framework-guide.md` / `testing/dlc-kernel-test-framework-guide.md` |
-| vLLM 集成 | `vllm-cl/custom-op-integration-and-testing.md` |
-| 模型功能验证 | `vllm-cl/modelzoo-startup-params-spec.md` → `case-studies/modelzoo-batch-validation-all-difficulties.md` |
-| 环境配置 | 先加载 `dlc-env-setup`，它是唯一 current executable authority；`runtime-debugging/environment-setup-and-update.md` 仅作历史 rationale |
-| 常见报错 | `runtime-debugging/common-error-log.md` |
-| 调试命令 | `debugging-workflows/common-debug-commands.md` |
-| 性能热点或回归 | `runtime-debugging/performance-profiling.md` → `case-studies/` 中最近的性能案例 |
+1. `<KNOWLEDGE_BASE_ROOT>/CONTEXT.md`：正式术语与组件边界。
+2. `<KNOWLEDGE_BASE_ROOT>/README.md`：人类导航与六层架构。
+3. `<KNOWLEDGE_BASE_ROOT>/prompt-examples/all-supported-capabilities-quickstart.md`：canonical capability catalog。
+4. catalog 选择的详细 Prompt/Contract/Runbook。
+5. `<SKILLS_ROOT>` 中实际加载的 owning Skill。
+6. 当前业务 workspace 与 task-owned artifacts：唯一可建立当前执行 Evidence 的位置。
 
-## 关键路径速记
+## Ask 输出合同
 
-### dispatch fallback 操作
-1. 找到 kernel 的 `DLC_CHECK_RESULT(lambda, ...)` lambda name。
-2. 从 authoritative checkout 和 owning Skill 发现当前配置、构建与验证入口，不使用固定系统路径或历史 packaging 命令。
-3. 分别记录 source change、build、DLC Runtime execution 和 Real DLC Hardware evidence。
+自然语言路由必须返回以下 literal labels：
 
-### ModelZoo 批量模型验证
-1. 使用 runner: `python3 /home/xuansun/modelconfig/run-one-model.py <model_name> <model_path>`
-2. 镜像按需降级: Tier 1 (daily vLLM) → 15min 超时 → Tier 2 (chiju_env:0729 O2)
-3. 每模型必读 ModelZoo README 提取启动参数
-4. 排除 `VLLM_USE_DLC_COL_MAJOR_MATMUL` (当前版本不兼容)
-5. 容器: `modelzoo-batch-base` (Tier 1), `qwen32b_env` (Tier 2)
-6. 参考: `case-studies/modelzoo-batch-validation-all-difficulties.md` (16 个已知困难)
-7. 参考: `vllm-cl/modelzoo-startup-params-spec.md` (启动参数规范)
-8. 参考: `prompt-examples/hermes-modelzoo-batch-validation.md` (Hermes 批量验证 prompt)
+```text
+Selected capability: <capability_id 和 human entry>
+Selection basis: <目标与 catalog entry 的匹配依据>
+Minimum missing inputs: <仅列无法只读发现且阻止首个安全动作的输入>
+First safe action: <当前授权内的首个只读或可逆动作>
+Expected terminal states: <从 owning Skill 引用，不在这里重定义>
+Evidence boundary: <已建立、未建立及 Claim Boundary>
+```
 
-### 精度定位原则
-1. CPU 是主要 oracle
-2. 从端到端收敛到算子级：dump → compare → replay → single-variable
-3. 最终交付 code-only repro（无需外部文件）
+机器闭包索引见 `agent-context/capability-manifest.yaml`。它只引用 Quickstart、owning Skill 与 Skills 仓库 `SKILLHUB.yaml`，不复制执行规则。
 
-### 测试
-- PyTorch 原生测试：`<PYTORCH_ROOT>/test/dlc_ops/test_dlc_ops.py`
-- pytorch_test：`<DLC_CUSTOM_KERNEL_ROOT>/pytorch_test/run.py`
+## 贡献者入口
 
-## 已知避免事项
+- 能力身份与 publication closure：`agent-context/capability-manifest.yaml`。
+- 经验晋升：`validated-lessons/index.yaml`；未列出的旧 case 默认 `historical_unreviewed`。
+- 组织验证：`<SKILLS_ROOT>/scripts/validate-chipltech-organization.py`。
+- `validated` 只修饰 lesson statement，不修饰整篇 case，不证明当前 runtime acceptance。
 
-- 不要把 DLC-Family Accelerator 称为 TPU
-- 不要假设 CUDA device execution model
-- 不要一次改多个 dispatch
-- 不要把 CPU fallback 当生产修复
-- 不要在知识库中建立以模型名为一级或二级的目录
+Claim Boundary: 本页只建立 context navigation 与 Ask 输出格式；它不证明当前 Host、Container、source、package、DLC Runtime、模型、transport、Real DLC Hardware、性能或 release 状态。
