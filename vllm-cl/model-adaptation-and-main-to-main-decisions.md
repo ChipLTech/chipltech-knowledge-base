@@ -49,6 +49,7 @@ shared_contract: vllm-cl-contract/v1
 - **事实 / Fact**：`--served-model-name` 会改变 OpenAI-compatible API 中可用的模型名；请求 JSON 的 `model` 必须使用该 alias，否则可能出现 model not found / 404，这不是模型文件缺失。
 - **经验 / Experience**：Qwen3.5-27B 类模型可能对 prompt 长度和 one-shot/CoT 结构敏感，表现为重复 `!`、空输出、长解释、超时或答案截断。此类现象应作为模型/参数/长上下文风险记录，不得把短 prompt smoke 通过提升为长上下文或 one-shot 已验证。
 - **建议 / Recommendation**：量化与 MoE 模型适配必须核对 `quant_method`、`bits`、`group_size`、`zero_point`、processor/tokenizer 类型和实际 kernel 路由。`compressed-tensors`、AWQ、AWQ-Marlin、W4A16、W8A16 不能只按目录名判断兼容。
+- **建议 / Recommendation**：量化 TP 适配应把 checkpoint group metadata ownership、`g_idx`/`desc_act`/packed-axis permutation、rank-local logical partition 和 physical kernel alignment 分开审计。padding 不能修复跨 rank 的 scale/qzero ownership；group refinement 只有在 refined group 完整划分 checkpoint group 与 logical shard、group-index/permutation 转换保持 metadata lookup 等价、qweight 不变、padding tail 为零贡献且 exact kernel capability 支持时才成立，否则 launch 前 fail closed。
 - **事实 / Fact**：如果当前 DLC 软件栈缺少目标量化/MoE fused kernel，Python 层绕路或修改模型 config 不构成长期适配完成；应报告为 kernel capability gap 或 `not_verified`，并说明需要 DLC Custom Op / DLC_Custom_Kernel Repository 支持。
 - **建议 / Recommendation**：需要 serving 稳定性或性能补充证据时，可引用 Arsenal 的 vLLM benchmark 和黑盒 HTTP 测试入口；这些结果应作为 serving 层 evidence 记录，不得提升为 Verified vLLM Alignment 或 Real DLC Hardware acceptance。
 
@@ -61,6 +62,14 @@ shared_contract: vllm-cl-contract/v1
 性能摘要同时给出原始口径和可重算换算：固定 input/output token policy、TP/EP、并发、TPOT、单请求 Decode token/s、是否包含 TTFT，以及固定输出长度的纯 Decode 时间。token/s 不是服务总吞吐，TTFT 不能由 input tokens 乘 TPOT 推导，参考模型数据不是目标模型实测或 SLA。
 
 详细生产步骤和可复制模板见 [Model Adaptation Analysis Summary](../prompt-examples/vllm-cl-model-adaptation-analysis-summary.md)；该 prompt 只生成报告，不替代 `model-adaptation` 的兼容性分析、`diagnosing-bugs` 的根因诊断或 Real DLC Hardware qualification。
+
+### Graph 生命周期与受限 Adapter
+
+Graph failure 的诊断对象是 exact model/deployment lifecycle，而不是最后可见日志。先建立最小 red loop 和同 identity Eager/Graph differential，再通过少量 parent/child boundary synchronization 收敛 last successful stage 与 first incomplete boundary。diagnostic epoch 未到达原 failure 时只建立新边界；定位完成后删除 instrumentation 并重跑无插桩 acceptance。
+
+模型 route 中 collective 不返回不能自动升级为同名 DLCCL 或 DLC Custom Kernel 的通用缺陷。独立 direct harness 用于检验 primitive 的普遍性；如果 primitive 可完成，应把修复限制在 exact model/plugin route。disjoint-range AllReduce 等 adapter 只有在 ownership ranges 完整互斥、非 owner 数据为零、结果与原语义等价、route identity 闭合且 bounded workload predicate 明确时才可采用。Graph profile、capture 与 replay/execute 还必须使用一致的 DLC Platform dispatch 语义。
+
+历史设计与验证阶梯见 [Hy3 GPTQ-Int4 TP8 与 Graph 生命周期适配](../case-studies/hy3-gptq-tp8-graph-adaptation.md)。该案例是 contributor report-derived historical evidence，不是 current runtime acceptance。
 
 ## 跨仓变更归属与 ABI 配对
 
@@ -164,6 +173,7 @@ Public Operator Schema、KernelDesc Descriptor ABI 和 DLC Custom Kernel Entry A
 - [case-studies/qwen3-32b-dlc-block256-diagnosis.md](../case-studies/qwen3-32b-dlc-block256-diagnosis.md)
 - [case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md](../case-studies/vllm-fused-moe-schema-kernel-abi-boundary.md)
 - [case-studies/host-api22-fullstack-main-to-main-update.md](../case-studies/host-api22-fullstack-main-to-main-update.md)
+- [case-studies/hy3-gptq-tp8-graph-adaptation.md](../case-studies/hy3-gptq-tp8-graph-adaptation.md)
 
 ## Qwen3-32B Block-256 Campaign 经验 (2026-07-28)
 

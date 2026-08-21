@@ -181,6 +181,16 @@
 **Cold First-Compute Completion Ready**：在 fresh process 中完成 allocation、H2D、真实 device operation、synchronize、D2H 和 exact correctness 后得到的有界基础执行状态。它发现静态 policy 尚未认识的兼容性问题，但不能外推模型功能或 benchmark 稳定性。
 **Stack Preflight**：不修改运行库的独立启动前资格检查，由 Static Stack Compatible 与 Cold First-Compute Completion Ready 两个不可互相替代的 checkpoint 组成；任一失败即阻止模型加载或镜像发布。
 
+### 执行环境与路径身份
+
+**Execution Locus**：命令、路径、进程和 artifact 实际所属的执行边界，至少区分 Host 与 Docker Container。所有 DLC Platform 模型运行、业务 runtime 测试和依赖 `/work/...` checkout 的验证，默认在任务声明的 Docker Container Execution Locus 中执行；Host 主要承载编排、持久化仓库、挂载源和容器生命周期。除非 contract 明确声明 `execution_locus: host`，不得把 Host 当作模型/runtime 命令的默认执行位置。
+
+**Path Coordinate**：由 `execution_locus + absolute_path` 组成的路径身份。裸绝对路径不是跨 namespace 的全局地址；`/work/vllm`、`/work/vllm-cl`、`/work/chipltech-knowledge-base` 和 `/work/skills` 默认表示容器内 Path Coordinate，不表示 Host 必须存在同名目录。
+
+**Mount Mapping**：Host Path Coordinate 与 Container Path Coordinate 之间由 Docker bind mount 或具备可审计 Host ownership 的 volume 建立的显式映射。只有记录 container identity、mount source、mount destination、read/write mode 和必要的 content/repository identity 后，才可在两个 Execution Locus 之间关联路径。image-internal filesystem 或没有 Host coordinate 的 container volume 只记录 container ownership/content identity，不虚构 Mount Mapping。相同字符串不证明相同内容，不同字符串也不证明内容不同。
+
+**Container Execution Contract**：执行容器的 identity、image、namespace、working directory、Path Coordinates、Mount Mapping、环境变量、设备映射和权限集合。Host 上缺少 container-only Path Coordinate 表示当前 Host shell 没有进入或映射该 contract，不是 `blocked_missing_repository`、模型资产缺失或测试失败。
+
 ## 高效术语速查表
 
 | 禁用叫法 | 应使用 |
@@ -222,6 +232,7 @@
 - **Tested Revision** 绑定实际执行证据；**Publication Candidate** 绑定最新目标 main 上的交付表示；二者只能通过声明范围内的 **Patch Equivalence** 和重跑门禁建立可审计关系。
 - **Evidence Ledger** 约束事实、推断和未知不混写；**Decision Summary** 回答读者决策问题；**Technical Attachment** 保存可复核细节，三者不能把摘要可读性换成证据越界。
 - **Technical Delivery Summary** 把已完成技术工作压缩为一个能力主张；source implemented、integrated、validated 和 released 必须按实际 Evidence 分开表达。
+- **Execution Locus** 决定命令和路径在哪个 namespace 中解释；**Path Coordinate** 绑定 locus 与绝对路径；**Mount Mapping** 才能把 Host 与 Docker Container 中的 identity 关联起来。
 
 ## 核心链路
 
@@ -240,6 +251,7 @@ vLLM / SGLang / PyTorch
 2. 使用正式术语，避免禁用叫法。
 3. 不要假设 CUDA thread/block/device execution model 适用于 Chipltech-Family Accelerator。
 4. Chipltech-Family Accelerator 开发的主路径是 host-side custom kernel launch 生态，不是 CUDA device execution model。
+5. 读取命令、路径、进程或测试结果前先声明 Execution Locus。`/work/...` 默认按 Docker Container Path Coordinate 解释；Host shell 不存在该路径时，不得据此声称业务仓库、模型或验证资产缺失。
 
 ## 文档写作规则
 

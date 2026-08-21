@@ -47,9 +47,11 @@ hardware_evidence: not_verified
 - 先做短 prompt、`temperature=0`、`top_p=1.0`、小 `max_tokens` 的 serving smoke；通过后再增加 prompt 长度、one-shot/CoT、采样温度、Chunked Prefill 或并发，每轮只改变一个变量。
 - 长 prompt 或 one-shot 退化要单独记录 prompt token 数、decode 参数、finish reason、输出内容、latency、server liveness 和日志路径；重复 `!`、空输出、超时、异常截断不能归类为环境已通过。
 - 量化模型要核对 `quant_method`、`bits`、`group_size`、`zero_point` 与实际 kernel 路由，避免把 `compressed-tensors` 误判为 AWQ/AWQ-Marlin 兼容；W8A16、MoE、vision/multimodal processor 路径应单独列风险。
+- 量化 TP profile 要分别核对 checkpoint group、`g_idx`/`desc_act`/packed-axis permutation、rank-local logical partition、effective execution group、physical kernel shape、scale/qzero lookup ownership 和 qweight invariance。padding 只解决 physical alignment；只有 refined group 完整划分 checkpoint group 与 logical shard、group-index/permutation 转换保持 metadata lookup 等价、padding tail 为零贡献且 exact kernel 支持时，才允许 launch，否则 fail closed。
 - 多卡/MoE/精度问题先建立严格等价对照：相同 endpoint、prompt、tokenizer、模型权重、TP/EP、`temperature=0`、`max_tokens` 和可选 `logprobs`；不要混用 chat/completions 与 completions 的结果直接比较。
 - 若生成 token 与基线分叉，把多步 decode 改写为单步 prefill：将分叉前 token 拼入 prompt，仅生成 1 个 token，以隔离 KV cache、scheduler 和历史回灌变量。
 - 如果怀疑算子或设备卡住，记录 DP/TP 初始化日志、shared memory broadcast 日志和服务状态；`peek_stuck.sh`、软重置、LYP repair 或 reboot 必须有对应授权，不作为默认自动步骤。task-owned KILL 必须满足 sealed identity、graceful timeout、impact record 和独立 `task_owned_kill`，禁止终止非任务进程。
+- Graph/异步 failure 先用同 identity 的 Eager/Graph differential 和最小 red loop，再沿 parent/child lifecycle bracket 记录 last successful stage 与 first incomplete boundary。diagnostic synchronization 必须说明是否到达原 failure；同名 collective direct harness 通过时，只能收窄模型生命周期组合，不能宣布通用 kernel 缺陷。定位后移除 instrumentation，再逐级运行单请求、连续请求和正式无插桩 workload。
 - Real DLC Hardware serving epoch 通过 `dlc-hardware-observability` 保存 `before_launch`、`after_ready`、`during_request` 和 `after_cleanup`；SMI 正常不证明模型正确，observer 缺失不改写为硬件 failure。若只做 static/read-only compatibility analysis，填写 `not_applicable` 及依据，不新增 device execution。
 ```
 
@@ -65,3 +67,4 @@ hardware_evidence: not_verified
 
 - [模型适配与 Main-to-Main 决策记录](../vllm-cl/model-adaptation-and-main-to-main-decisions.md)
 - [cltech_smi 设备观测与诊断证据](../runtime-debugging/chipltech-smi-observability.md)
+- [Hy3 GPTQ-Int4 TP8 与 Graph 生命周期适配案例](../case-studies/hy3-gptq-tp8-graph-adaptation.md)

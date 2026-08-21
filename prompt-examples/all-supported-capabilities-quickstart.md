@@ -42,7 +42,7 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 | --- | --- | --- | --- |
 | 新模型只做运行资格验证 | 模型名、绝对目录 | [新模型验证 Quickstart](new-model-validation-quickstart.md) | `modelzoo-image-validation`，委托 `model-adaptation`、`dlc-env-setup` |
 | 从每日空镜像初始化环境并做新模型适配 | 模型名、绝对目录 | [每日空镜像到新模型适配](vllm-cl-fresh-image-to-model-adaptation.md) | Stage 0/2 `model-adaptation`，Stage 1 `dlc-env-setup` |
-| 模型兼容性/加载/Serving 适配分析 | 模型名、绝对目录 | [vLLM-CL Model Adaptation](vllm-cl-model-adaptation.md) | `model-adaptation` |
+| 模型兼容性/加载/Serving/量化 TP/Graph 适配分析 | 模型名、绝对目录 | [vLLM-CL Model Adaptation](vllm-cl-model-adaptation.md) | `model-adaptation` |
 | 将模型适配证据整理成决策摘要 | 模型名、绝对目录、证据路径、读者问题 | [Model Adaptation Analysis Summary](vllm-cl-model-adaptation-analysis-summary.md) | `model-adaptation`（报告模式） |
 | 将已完成技术工作提炼成一句话交付总结 | 实现/验证材料路径、目标读者 | [技术交付一句话总结方法](../foundation/technical-delivery-summary.md) | `technical-delivery-summary` |
 | 模型资格通过后交付 DLC/TYD Images | 模型名、绝对目录 | [ModelZoo 模型到 DLC/TYD Images](modelzoo-model-to-dlc-tyd-images.md) | `modelzoo-image-validation` |
@@ -107,7 +107,7 @@ Skill 加载规则：当前 Harness 已发现 owning Skill 时直接加载；否
 
 ## 3. 单模型兼容性或 Serving 适配分析
 
-什么时候用：模型已经明确，希望分析 Attention、MLA、MoE、quantization、multimodal、MTP 或 distributed compatibility，而不是做 upstream 全局对齐。
+什么时候用：模型已经明确，希望分析 Attention、MLA、MoE、quantization TP ownership、Graph lifecycle、multimodal、MTP 或 distributed compatibility，而不是做 upstream 全局对齐。
 
 直接这样说：
 

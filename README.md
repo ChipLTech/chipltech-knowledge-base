@@ -48,6 +48,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - **知识库边界**：本仓库提供领域定义、已记录流程和历史 case evidence；仓库文字不能证明当前 Host、package、模型、DLC Runtime、transport 或 Real DLC Hardware 状态。
 - **Skills 边界**：Prompt/Contract 描述任务规则，owning Skill 负责可执行工作流、授权边界、停止语义和 Claim Boundary；Skill 被发现或加载只证明能力可用，不证明任务已经执行。
 - **Evidence 边界**：当前业务/代码 workspace 和 task-owned artifact 目录承载实际执行与 Evidence。结论应区分 `direct repository evidence`、`runtime observation`、`inference` 和 `missing evidence`。
+- **执行边界**：DLC Platform 模型运行和依赖 `/work/...` 的业务测试默认属于任务 Docker Container，而不是 Host shell。路径必须按 `Execution Locus + absolute path` 解读；Host 与 Container 只有通过已记录的 Mount Mapping 才能关联。Host 上没有 `/work/vllm` 只说明当前 shell 不在目标 Container Execution Contract 中，不能判为业务仓库缺失或测试失败。
 
 ## 适合谁读
 
@@ -120,6 +121,7 @@ Hermes 是可选执行器，不是知识库、Prompt 或 owning Skill 的前置�
 - [case-studies/qknorm-topology-aware-allreduce-selection.md](case-studies/qknorm-topology-aware-allreduce-selection.md) — 从 QKNorm 三仓闭环提炼 communicator-owned topology/payload selection、Verified Collective Fallback、稳定 strategy ABI 和边界测试方法。
 - [case-studies/host-api22-fullstack-main-to-main-update.md](case-studies/host-api22-fullstack-main-to-main-update.md) — Host API 21→22 全栈主线更新 + TP4/EP 验证，提炼 binary identity、editable source 确认、Git bundle 中转与清理等可复用经验。
 - [case-studies/model-adaptation-analysis-report-production.md](case-studies/model-adaptation-analysis-report-production.md) — 从 Hy3 GPTQ-Int4 报告复盘提炼 Evidence Ledger、Decision Summary/Technical Attachment 分层、真实 kernel launch name 核验和性能口径边界。
+- [case-studies/hy3-gptq-tp8-graph-adaptation.md](case-studies/hy3-gptq-tp8-graph-adaptation.md) — 从 Hy3 GPTQ-Int4 TP8 与 `FULL_DECODE_ONLY` 闭环提炼量化 group refinement、logical/physical shape 分离、Graph 生命周期 bracket、受限 collective adapter 和无插桩验收门禁。
 - [prompt-examples/vllm-performance-hotspot-localization.md](prompt-examples/vllm-performance-hotspot-localization.md) — 可直接复用的 vLLM 性能热点分层定位 prompt。
 - [debugging-workflows/synapse-log-and-kernel-summary-workflow.md](debugging-workflows/synapse-log-and-kernel-summary-workflow.md) — 从 DLCSynapse `.ansi`/`.log` 按 `tool.py` 的 1400 MHz 口径只导出算子 CSV。
 
